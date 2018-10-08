@@ -12,7 +12,7 @@ uint8_t  *sd_buf = (uint8_t *)SD_BUFFER; //TODO move it to sdcard
 FMC_SDRAM_CommandTypeDef command;
 __IO HAL_StatusTypeDef hal_stat;
 
-void sdram_init() {
+void sdramInit() {
   SDRAM_HandleTypeDef *hsdram = &hsdram1;
   __IO uint32_t tmpmrd = 0;
   command.CommandMode = FMC_SDRAM_CMD_CLK_ENABLE;

@@ -155,7 +155,7 @@ int main(void)
   MX_FATFS_Init();
   MX_TIM12_Init();
   /* USER CODE BEGIN 2 */
-  user_main();
+  userMain();
   /* USER CODE END 2 */
 
   /* Infinite loop */

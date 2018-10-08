@@ -5,6 +5,7 @@
 #include "laa_sdram.h"
 #include "laa_tft_led.h"
 #include "laa_tft_ltdc.h"
+#include "laa_tft_lib.h"
 
 
 //extern TIM_HandleTypeDef htim3;
@@ -17,11 +18,24 @@ extern TIM_HandleTypeDef htim10;
 
 volatile uint16_t main_tic_cnt = 0;
 
-void user_main() {
+void userInit() {
   HAL_TIM_Base_Start(&htim10);  // Time source for task dispatcher (flags only)
-  sdram_init();                 // Activate SDRAM 
-  tft_led_init(0, 192);         // Activate TFT backlight
-  tft_ltdc_init();              // Init LTDC layers
+  sdramInit();                 // Activate SDRAM 
+  tftLEDinit(0, 192);         // Activate TFT backlight
+  tftLTDCinit();              // Init LTDC layers
+}  
+   
+   
+
+void userMain() {
+  userInit();
+  
+  tftSetForeground(0x000055);
+  tftRect(0, 0, TFT_W, TFT_H);
+  tftSetForeground(0x00AA00);
+  tftRect(100, 50, TFT_W - 200, TFT_H - 100);
+  tftSetForeground(0xFF0000);
+  tftRect(200, 100, TFT_W - 400, TFT_H - 200);
   
   while (1) {
 
@@ -33,10 +47,10 @@ void user_main() {
       
       if ((main_tic_cnt &= 0x7f) == 0x20) {           // 3.90625 Hz
       } else if ((main_tic_cnt &= 0x3f) == 0x10) {    // 7.8125  Hz #1
-        tft_ltdc_pass_wait_for_retrace();
+        tftLTDCdismissWaitRetrace();
       } else if ((main_tic_cnt &= 0x3f) == 0x30) {    // 7.8125  Hz #2
       } else if ((main_tic_cnt &= 0x07) == 0x02) {    // 62.5    Hz
-        tft_light_adjust();
+        tftLightAdjust();
       }  
       
     }

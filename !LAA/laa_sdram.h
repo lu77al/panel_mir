@@ -27,14 +27,14 @@
 #define SD_BUFFER       (SDRAM_BANK_ADDR + 0x2EB800)    // SD read / write buffer       0x4000 = 16384   
 #define VARS_INTEGER    (SDRAM_BANK_ADDR + 0x2EF800)    // Internal integer vars        0x9C50 = 40016
 #define VARS_REAL       (SDRAM_BANK_ADDR + 0x2F9450)    // Internal real vars           0x9C50 = 40016
-#define TFT_OBJECTS     (SDRAM_BANK_ADDR + 0x3030A0)    // Heap with fonts, bmps, ...   0x385F60 = 3694432
-#define TFT_OBJ_END     TFT_LAYER0
+#define TFT_CACHE       (SDRAM_BANK_ADDR + 0x3030A0)    // Heap with fonts, bmps, ...   0x385F60 = 3694432
+#define TFT_CACHE_END   TFT_LAYER0
 #define TFT_LAYER0      (SDRAM_BANK_ADDR + 0x689000)    // Layer 0 (bottom)             0xBB800 = 768000
 #define TFT_LAYER1      (SDRAM_BANK_ADDR + 0x744800)    // Layer 1 (top)                0xBB800 = 768000
 #define SDRAM_END       (SDRAM_BANK_ADDR + 0x800000)    // Accessing this address causes hard fault
 
 extern uint8_t  *sd_buf;  //TODO move it to sdcard
 
-void sdram_init();
+void sdramInit();
 
 #endif // __AL_SDRAM_H__

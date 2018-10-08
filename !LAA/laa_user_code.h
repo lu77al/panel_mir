@@ -3,6 +3,6 @@
 
 #include "stm32f7xx_hal.h"
 
-void user_main();
+void userMain();
 
 #endif // __AL_USER_CODE_H__

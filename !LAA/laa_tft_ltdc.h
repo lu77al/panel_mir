@@ -3,13 +3,12 @@
 
 #include "stm32f7xx_hal.h"
 
-void tft_ltdc_set_visible_layer(uint8_t layer);
-void tft_ltdc_set_active_layer(uint8_t layer);
-void tft_ltdc_swap_layers();
-void tft_ltdc_go_double();
-void tft_ltdc_go_single();
-void tft_ltdc_init();
-void tft_ltdc_pass_wait_for_retrace();
+void tftLTDCsetVisibleLayer(uint8_t layer);
+void tftLTDCsetActiveLayer(uint8_t layer);
+void tftLTDCswapLayers();
+void tftLTDCsetDoubleMode(uint8_t state);
+void tftLTDCinit();
+void tftLTDCdismissWaitRetrace();
 
 #endif // __AL_TFT_LTDC_H__
 

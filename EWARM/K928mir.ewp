@@ -975,6 +975,12 @@
   <group>
     <name>!LAA</name>
     <group>
+      <name>Global utils</name>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\laa_global_utils.h</name>
+      </file>
+    </group>
+    <group>
       <name>SDCard</name>
     </group>
     <group>
@@ -988,6 +994,12 @@
     </group>
     <group>
       <name>TFT</name>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\laa_tft_cache.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\laa_tft_cache.h</name>
+      </file>
       <file>
         <name>$PROJ_DIR$\..\!LAA\laa_tft_led.c</name>
       </file>
