@@ -14,8 +14,9 @@
  *       20 - font points: chars 0..255, top..bottom, left..right (byte alligned MSB first)
  */
 
-uint8_t   *tft_obj_first = 0; // First object in the queue
-uint8_t   *tft_obj_next;      // Adress to place next object  
+uint8_t   *tft_obj_first = 0; // First object in the queue (search starts here)
+uint8_t   *tft_obj_last  = 0; // Last object in the queue (contains null pointer to the next object, which is changed when next object is added)
+uint8_t   *tft_obj_new;       // Adress to place next new object (also used to calculate free cache space)
 
 #define TFT_ROM_CACHE_PTR  0x20000
 
@@ -50,9 +51,12 @@ uint8_t *tftFindObject(const char *id) {
     found = tftFindObjectAt(id, tft_obj_first);
     if (!found) found = tftFindObjectAt(id, (uint8_t *)(0x08000000 + TFT_ROM_CACHE_PTR));
   } else {
-    found = tftFindObjectAt(id, (uint8_t *)(0x08000000 + TFT_ROM_CACHE_PTR));
+    char id_period[12];      // Find in ROM,RAM with correct delimeter ('.')
+    memcpy(id_period, id, 12);
+    id_period[8] = '.';
+    found = tftFindObjectAt(id_period, (uint8_t *)(0x08000000 + TFT_ROM_CACHE_PTR));
     if (!found) found = tftFindObjectAt(id, tft_obj_first);
-  }  
+  }
   return found;
 }  
 
@@ -60,22 +64,24 @@ uint8_t *tftFindObject(const char *id) {
  */
 uint32_t tftGetFreeCache() {
   if (!tft_obj_first) return TFT_CACHE_END - TFT_CACHE; // [_____________]
-  if (tft_obj_first < tft_obj_next) return TFT_CACHE_END - (uint32_t)tft_obj_next; // [...f****n____]
-  return tft_obj_first - tft_obj_next; // [****n____f***...] "*" - used; "_" - free; "." - uused (leakage)
+  if (tft_obj_first < tft_obj_new) return TFT_CACHE_END - (uint32_t)tft_obj_new; // [...f****n____]
+  return tft_obj_first - tft_obj_new; // [****n____f***...] "*" - used; "_" - free; "." - uused (leakage)
 }  
 
 /* Deletes objects to free chache
  */
-uint32_t tftFreeCache() {
+void tftFreeCache() {
   if (!tft_obj_first) {
     //TODO error - too big object
   }
-  if (tft_obj_first < tft_obj_next) {
-    tft_obj_next = (uint8_t *)TFT_CACHE;
+  if (tft_obj_first < tft_obj_new) {
+    tft_obj_new = (uint8_t *)TFT_CACHE;
   } else { 
     tft_obj_first = *((uint8_t **)(tft_obj_first + 12));
   }
 }  
+
+#if 0
 
 /* Locates space in cache and forms header to object
  */
@@ -94,9 +100,8 @@ uint8_t *tftLocateCache(uint32_t size, const char* id) {
   *((uint8_t **)(newobj + 12)) = 0;
   memcpy((void *)newobj, id, 12);
   return newobj;
-}  
+}
 
-#if 0
 
 
 //uint8_t *tft_find_object(const char* id) {
