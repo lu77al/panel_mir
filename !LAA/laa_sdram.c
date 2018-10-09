@@ -1,8 +1,9 @@
 /******************************************************************************
- *  Connecting SDRAM MT48LC4M32B2 to comtroller
+ *  Connecting SDRAM MT48LC4M32B2 to STM32 controller
  *  copied from here http://narodstream.ru/stm-urok-62-fmc-sdram-chast-1/
  *  (see pdf copies to recall how it was tuned in CubeMX)
  ******************************************************************************/
+
 #include "laa_sdram.h"
    
 extern SDRAM_HandleTypeDef hsdram1;

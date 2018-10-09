@@ -1,3 +1,10 @@
+/******************************************************************************
+ *  Handling LTDC system (bridge between SDRAM and TFT display)
+ *   - init
+ *   - manipulating layers (visibility and active address to draw at)
+ *   - switching layers between retraces to prevent blinking
+ ******************************************************************************/
+
 #include "laa_tft_ltdc.h"
 #include "laa_sdram.h"
 #include "laa_global_utils.h"

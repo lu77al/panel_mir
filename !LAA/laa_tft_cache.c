@@ -1,4 +1,11 @@
+/******************************************************************************
+ *  Routines to manipulate graphical objects such as fonts and bmp's in
+ *  the RAM and ROM. Search and select, locate new, delete ...
+ ******************************************************************************/
+
 #include "string.h"
+#include "laa_global_utils.h"
+#include "laa_tft_cache.h"
 #include "laa_sdram.h"
 #include "laa_tft_lib.h"
 
@@ -14,11 +21,10 @@
  *       20 - font points: chars 0..255, top..bottom, left..right (byte alligned MSB first)
  */
 
+uint8_t   tft_search_bouth = OFF;   
 uint8_t   *tft_obj_first = 0; // First object in the queue (search starts here)
 uint8_t   *tft_obj_last  = 0; // Last object in the queue (contains null pointer to the next object, which is changed when next object is added)
 uint8_t   *tft_obj_new;       // Adress to place next new object (also used to calculate free cache space)
-
-#define TFT_ROM_CACHE_PTR  0x20000
 
 //    --case setFont (user)
 //   find in RAM  -> return if found
@@ -36,26 +42,25 @@ uint8_t   *tft_obj_new;       // Adress to place next new object (also used to c
  */
 uint8_t *tftFindObjectAt(const char *id, uint8_t *addr) {
   while (addr) {
-    if (!memcmp(addr, id, 12)) break;
-    addr = *((uint8_t **)(addr + 12));
+    if (!strncmp((char *)addr, id, 12)) break;
+    addr = *(uint8_t **)(addr + 12);
   }
   return addr;
 }
 
-/* If delimiter is '.' find in RAM then in ROM
- *  else find in ROM then in RAM
+/* If first char is '*' find in ROM then in RAM
+ *  else find in RAM then in ROM
+ *   - char '*' is not used in search
  */
 uint8_t *tftFindObject(const char *id) {
   uint8_t *found;
-  if (id[8] == '.') {
+  if (id[0] == '*') {
+    id++;      // Find in ROM then in RAM without '*'
+    found = tftFindObjectAt(id, (uint8_t *)TFT_ROM_CACHE);
+    if (!found && tft_search_bouth) found = tftFindObjectAt(id, tft_obj_first);
+  } else {      // find in RAM then in ROM
     found = tftFindObjectAt(id, tft_obj_first);
-    if (!found) found = tftFindObjectAt(id, (uint8_t *)(0x08000000 + TFT_ROM_CACHE_PTR));
-  } else {
-    char id_period[12];      // Find in ROM,RAM with correct delimeter ('.')
-    memcpy(id_period, id, 12);
-    id_period[8] = '.';
-    found = tftFindObjectAt(id_period, (uint8_t *)(0x08000000 + TFT_ROM_CACHE_PTR));
-    if (!found) found = tftFindObjectAt(id, tft_obj_first);
+    if (!found && tft_search_bouth) found = tftFindObjectAt(id, (uint8_t *)TFT_ROM_CACHE);
   }
   return found;
 }  
@@ -74,44 +79,32 @@ void tftFreeCache() {
   if (!tft_obj_first) {
     //TODO error - too big object
   }
-  if (tft_obj_first < tft_obj_new) {
-    tft_obj_new = (uint8_t *)TFT_CACHE;
+  if (tft_obj_first < tft_obj_new) { // if not enough space in the end of cache
+    tft_obj_new = (uint8_t *)TFT_CACHE;  // try to replace tft_obj_new to the start
   } else { 
-    tft_obj_first = *((uint8_t **)(tft_obj_first + 12));
+    tft_obj_first = *((uint8_t **)(tft_obj_first + 12)); // otherwise delete first object
   }
 }  
 
-#if 0
-
-/* Locates space in cache and forms header to object
+/* Locates space in cache and forms header of a new object
  */
 uint8_t *tftLocateCache(uint32_t size, const char* id) {
   size = (size + 16 + 3) & ~3; // +16 bytes (header = id + pntr) +fit size to 4 byte step
-  while (size > tftGetFreeCache()) tftFreeCache;
-  uint8_t *new_obj;
+  while (size > tftGetFreeCache()) tftFreeCache();
   if (tft_obj_first) {
-    *((uint8_t **)(tft_obj_last + 12)) = newobj = tft_obj_tail;
+    *((uint8_t **)(tft_obj_last + 12)) = tft_obj_new;
   } else {
-    tft_obj_head = newobj = (uint8_t *)TFT_OBJECTS;
+    tft_obj_first = tft_obj_new = tft_obj_last = (uint8_t *)TFT_CACHE;
   }
-  tft_obj_tail = newobj + size;
-  tft_obj_last = newobj;
-  memcpy(saved_heap_header, (void *)newobj, 16);
-  *((uint8_t **)(newobj + 12)) = 0;
-  memcpy((void *)newobj, id, 12);
-  return newobj;
+  tft_obj_last = tft_obj_new;
+  tft_obj_new += size;
+  *((uint8_t **)(tft_obj_last + 12)) = 0;
+  strncpy((void *)tft_obj_last, id, 12);
+  return tft_obj_last;
 }
 
 
-
-//uint8_t *tft_find_object(const char* id) {
-//  uint8_t *found = tft_obj_head;
-//  while (found) {
-//    if (!memcmp(found, id, 12)) break;
-//    found = *((uint8_t **)(found + 12));
-//  }
-//  return found;
-//}
+#if 0
 
 
 

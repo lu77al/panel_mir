@@ -982,6 +982,12 @@
     </group>
     <group>
       <name>SDCard</name>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\laa_sdcard.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\laa_sdcard.h</name>
+      </file>
     </group>
     <group>
       <name>SDRAM</name>

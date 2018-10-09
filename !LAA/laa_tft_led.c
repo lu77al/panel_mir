@@ -1,3 +1,8 @@
+/******************************************************************************
+ *  Handling TFT backlight (using PWM channel of htim3)
+ *   - init, set instant value, set target value, smooth sshift to target
+ ******************************************************************************/
+
 #include "laa_tft_led.h"
 extern TIM_HandleTypeDef htim3;     // Timer for backlight PWM
 
@@ -12,9 +17,9 @@ uint8_t  tft_light_target;  // Point adjust to ...
  *  tft_light_inst = 0   -> TFT_LIGHT_BOTTOM %
  *  tft_light_inst = 255 -> TFT_LIGHT_TOP %
  */
-void tftLEDapply() {
+void tftLEDapply() {    // * Higher PWM corresponds dimmer backlight
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1,
-   TFT_LIGHT_RANGE * TFT_LIGHT_BOTTOM / 100 +
+   TFT_LIGHT_RANGE * TFT_LIGHT_TOP / 100 -
    (((TFT_LIGHT_RANGE * (TFT_LIGHT_TOP - TFT_LIGHT_BOTTOM) / 100) * tft_light_inst) >> 8));
 }
 
@@ -31,7 +36,7 @@ void tftLEDinit(uint8_t start_val, uint8_t target_val) {
 /* Immediate change of TFT backlight 0..255  */
 void tftLEDsetInst(uint8_t newval) {
   tft_light_inst = tft_light_target = newval;
-  void tft_led_apply();
+  tftLEDapply();
 }
 
 /* Set target value of TFT backlight 0..255 (adjust to it smoothly) */
@@ -43,5 +48,5 @@ void tftLEDsetTarget(uint8_t newval) {
 void tftLightAdjust() {
   if (tft_light_inst == tft_light_target) return;
   if (tft_light_inst < tft_light_target) tft_light_inst++; else tft_light_inst--;
-  void tft_led_apply();
+  tftLEDapply();
 }
