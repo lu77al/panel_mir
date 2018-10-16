@@ -17,7 +17,7 @@
  *      --- font ---
  *       16 - width  (1 byte)
  *       17 - height (1 byte)
- *       18 - reserved (2 bytes)
+ *       18 - bytes per char (2 bytes)
  *       20 - font points: chars 0..255, top..bottom, left..right (byte alligned MSB first)
  */
 
@@ -103,56 +103,8 @@ uint8_t *tftLocateCache(uint32_t size, const char* id) {
   return tft_obj_last;
 }
 
-
-#if 0
-
-
-
-uint8_t *tft_find_sys_font(const char* id) {
-  uint8_t *found = (uint8_t *)(0x08000000 + TFT_SYSFONT_PTR);
-  while (found) {
-    if (!memcmp(found, id, 12)) break;
-    found = *((uint8_t **)(found + 12));
-  }
-  return found;
-}
-
-uint32_t tft_get_heap_free_space() {
-  if (!tft_obj_head) return TFT_OBJ_END - TFT_OBJECTS;
-  if (tft_obj_head < tft_obj_tail) return TFT_OBJ_END - (uint32_t)tft_obj_tail;
-  return tft_obj_head - tft_obj_tail;
-}  
-
-/* Locates new object in the heap (erases old objects if not enough space)
- * returns pointer to new object
+/* Free all the cache
  */
-uint8_t *tft_locate_object(uint32_t size, const char* id) {
-  saved_heap_pnt[0] = tft_obj_head;
-  saved_heap_pnt[1] = tft_obj_last;
-  saved_heap_pnt[2] = tft_obj_tail;
-  size = (size + 12 + 3) & 0xfffffffc; // fit size to 4 byte step + 12 bytes heading
-  while (size > tft_get_heap_free_space()) { // Free space
-    if (tft_obj_head < tft_obj_tail) tft_obj_tail = (uint8_t *)TFT_OBJECTS;
-    tft_obj_head = *((uint8_t **)(tft_obj_head + 12));
-  }  
-  uint8_t *newobj;
-  if (tft_obj_head) {
-    *((uint8_t **)(tft_obj_last + 12)) = newobj = tft_obj_tail;
-  } else {
-    tft_obj_head = newobj = (uint8_t *)TFT_OBJECTS;
-  }
-  tft_obj_tail = newobj + size;
-  tft_obj_last = newobj;
-  memcpy(saved_heap_header, (void *)newobj, 16);
-  *((uint8_t **)(newobj + 12)) = 0;
-  memcpy((void *)newobj, id, 12);
-  return newobj;
-}  
-
-void tft_restore_heap() {
-  memcpy((void *)tft_obj_last, saved_heap_header, 16);
-  tft_obj_head = saved_heap_pnt[0];
-  tft_obj_last = saved_heap_pnt[1];
-  tft_obj_tail = saved_heap_pnt[2];
+void tftClearCache() {
+  tft_obj_first = 0;
 }
-#endif

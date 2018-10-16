@@ -7,6 +7,7 @@
 #include "laa_tft_led.h"
 #include "laa_tft_ltdc.h"
 #include "laa_tft_lib.h"
+#include "laa_tst_tft.h"
 
 
 //extern TIM_HandleTypeDef htim3;
@@ -27,6 +28,7 @@ void userInit() {
   tftLEDinit(0, 192);           // Activate TFT backlight
   HAL_TIM_Base_Start(&htim10);  // Time source for task dispatcher (flags only)
   sdMount();                    // Mount SD card
+  tftResetObjects();
 }  
    
    
@@ -34,12 +36,8 @@ void userInit() {
 void userMain() {
   userInit();
   
-  tftSetForeground(0x000055);
-  tftRect(0, 0, TFT_W, TFT_H);
-  tftSetForeground(0x00AA00);
-  tftRect(100, 50, TFT_W - 200, TFT_H - 100);
-  tftSetForeground(0xFF0000);
-  tftRect(200, 100, TFT_W - 400, TFT_H - 200);
+  tftTest_1();
+  tftTest_2();
   
   while (1) {
 

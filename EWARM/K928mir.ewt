@@ -1210,6 +1210,12 @@
       <file>
         <name>$PROJ_DIR$\..\!LAA\laa_tft_ltdc.h</name>
       </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\laa_tst_tft.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\laa_tst_tft.h</name>
+      </file>
     </group>
     <file>
       <name>$PROJ_DIR$\..\!LAA\laa_user_code.c</name>

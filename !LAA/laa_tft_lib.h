@@ -11,6 +11,13 @@ void tftRect(int16_t x, int16_t y, uint16_t w, uint16_t h);
 void tftSetForeground(uint32_t color);
 void tftSetBackground(uint32_t color);
 void tftClearScreen(uint32_t color);
+void tftResetObjects();
+void tftSetFont(const char* name);
+void tftSetTextPos(int16_t x, int16_t y);
+void tftSetTextTransparency(int8_t tr);
+void tftPrint(char *text, uint8_t length);
+
+
 
 #endif // __AL_TFT_LIB_H__
 
