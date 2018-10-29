@@ -28,7 +28,7 @@ void userInit() {
   tftLEDinit(0, 192);           // Activate TFT backlight
   HAL_TIM_Base_Start(&htim10);  // Time source for task dispatcher (flags only)
   sdMount();                    // Mount SD card
-  tftResetObjects();
+  tftResetObjects();            // Clear cache ...
 }  
    
    
@@ -37,7 +37,7 @@ void userMain() {
   userInit();
   
   tftTest_1();
-  tftTest_2();
+//  tftTest_2();
   
   while (1) {
 

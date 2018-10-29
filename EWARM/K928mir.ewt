@@ -1223,6 +1223,9 @@
     <file>
       <name>$PROJ_DIR$\..\!LAA\laa_user_code.h</name>
     </file>
+    <file>
+      <name>$PROJ_DIR$\..\!LAA\urls_thoughts.txt</name>
+    </file>
   </group>
   <group>
     <name>Application</name>

@@ -309,4 +309,37 @@ void tftResetObjects() {
 }
 
 #if 0
+
+//https://electronix.ru/forum/lofiversion/index.php/t143598-50.html
+
+void tft_draw_bmp(int16_t x, int16_t y) {
+  uint16_t w = bmp_w;
+  uint16_t h = bmp_h;
+  uint16_t bmp_x = 0;
+  uint16_t bmp_y = 0;
+  if (bmp_addr == 0) return;
+  if (x >= TFT_W) return;
+  if (y >= TFT_H) return;
+  if ((x + w) < 1) return;
+  if ((y + h) < 1) return;
+  if ((x + w) > TFT_W) w = TFT_W - x;
+  if ((y + h) > TFT_H) h = TFT_H - y;
+  if (x < 0) { w += x; bmp_x = -x; x = 0; }
+  if (y < 0) { h += y; bmp_y = -y; y = 0; }
+  uint32_t s_addr = tft_addr + TFT_PS * (y * TFT_W + x);
+  uint32_t i_addr = (uint32_t)bmp_addr + TFT_PS * (bmp_y * bmp_w + bmp_x);
+  hdma2d.Init.Mode = DMA2D_M2M;
+  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
+  hdma2d.Init.OutputOffset = TFT_W - w;
+  hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+  hdma2d.LayerCfg[1].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB565;
+  hdma2d.LayerCfg[1].InputOffset = bmp_w - w;
+  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) return;
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) != HAL_OK) return;
+  if (HAL_DMA2D_Start(&hdma2d, i_addr, s_addr, w, h) == HAL_OK) {
+    if (tft_wait_dma) HAL_DMA2D_PollForTransfer(&hdma2d, 50);
+  }  
+}  
+
 #endif

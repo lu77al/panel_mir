@@ -1,0 +1,7 @@
+---- DMA2D with transparency ---
+https://github.com/JoeMerten/Stm32/blob/master/Lib/Stm/Stm32F4xx_DSP_StdPeriph_Lib_V1.3.0/Project/STM32F4xx_StdPeriph_Examples/DMA2D/DMA2D_MemToMemWithBlending/main.c
+https://github.com/fboris/STM32Cube_FW_F4/tree/master/Projects/STM324x9I_EVAL/Examples/LTDC/LTDC_Display_2Layers
+---- FAT_FS ----
+http://elm-chan.org/fsw/ff/doc/mount.html
+---- CHAR CODETABLES ---
+http://www.script-coding.com/CodePages.html
