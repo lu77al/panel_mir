@@ -28,7 +28,8 @@
 #define VARS_INTEGER    (SDRAM_BANK_ADDR + 0x2EF800)    // Internal integer vars        0x9C50 = 40016
 #define VARS_REAL       (SDRAM_BANK_ADDR + 0x2F9450)    // Internal real vars           0x9C50 = 40016
 #define TFT_CACHE       (SDRAM_BANK_ADDR + 0x3030A0)    // Heap with fonts, bmps, ...   0x385F60 = 3694432
-#define TFT_CACHE_END   TFT_LAYER0
+#define TFT_CACHE_END   TFT_LAYER_TOP
+#define TFT_LAYER_TOP   (SDRAM_BANK_ADDR + 0x600000)    // Layer 0 (bottom)             0xBB800 = 768000
 #define TFT_LAYER0      (SDRAM_BANK_ADDR + 0x689000)    // Layer 0 (bottom)             0xBB800 = 768000
 #define TFT_LAYER1      (SDRAM_BANK_ADDR + 0x744800)    // Layer 1 (top)                0xBB800 = 768000
 #define SDRAM_END       (SDRAM_BANK_ADDR + 0x800000)    // Accessing this address causes hard fault

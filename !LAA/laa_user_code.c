@@ -25,7 +25,8 @@ void userInit() {
   tftLTDCinit();                // Init LTDC layers
   tftClearScreen(0);            // Black screen to start with
   HAL_Delay(100);
-  tftLEDinit(0, 192);           // Activate TFT backlight
+//  tftLEDinit(0, 192);           // Activate TFT backlight
+  tftLEDinit(192, 192);           // Activate TFT backlight
   HAL_TIM_Base_Start(&htim10);  // Time source for task dispatcher (flags only)
   sdMount();                    // Mount SD card
   tftResetObjects();            // Clear cache ...
@@ -36,7 +37,9 @@ void userInit() {
 void userMain() {
   userInit();
   
+  tftTest_simple_copy();
   tftTest_blending_copy();
+  tftSwitchLayerAdressTest();
   
   while (1) {
 
