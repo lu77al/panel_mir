@@ -210,7 +210,12 @@ void tftSwitchLayerAdressTest() {
   for (int32_t i = 0; i < 200*100; i++) {
     *(pixel++) = 0xFFFF;
   }  
- 
+  for (int32_t i = 30; i < 70; i++) {
+    for (int32_t j = 30; j < 170; j++) {
+        *((uint16_t *)TFT_LAYER_TOP + i*200 + j) = 0;
+    }    
+  }  
+  
   tft_addr = TFT_LAYER0;
   tftDrawScreenWithBrick();
   HAL_LTDC_SetAddress(&hltdc, TFT_LAYER0, 0);

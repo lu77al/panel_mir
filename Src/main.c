@@ -331,10 +331,10 @@ static void MX_LTDC_Init(void)
   pLayerCfg1.WindowX1 = 500;
   pLayerCfg1.WindowY0 = 150;
   pLayerCfg1.WindowY1 = 250;
-  pLayerCfg1.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
+  pLayerCfg1.PixelFormat = LTDC_PIXEL_FORMAT_ARGB1555;
   pLayerCfg1.Alpha = 0;
   pLayerCfg1.Alpha0 = 0;
-  pLayerCfg1.BlendingFactor1 = LTDC_BLENDING_FACTOR1_CA;
+  pLayerCfg1.BlendingFactor1 = LTDC_BLENDING_FACTOR1_PAxCA;
   pLayerCfg1.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA;
   pLayerCfg1.FBStartAdress = 0;
   pLayerCfg1.ImageWidth = 200;
