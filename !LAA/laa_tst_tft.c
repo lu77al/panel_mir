@@ -53,7 +53,7 @@ void tftTest_1() {
 extern uint32_t tft_addr;  // Address of memory region to draw primitives
 extern DMA2D_HandleTypeDef hdma2d;
 
-void tftTest_2() {
+void tftTest_simple_copy() {
   tftClearScreen(0x000055);
 // --- Prepare source test region
   tftSetForeground(0x000000); // -> Converts to 0x0000 (high bit Alpha = 0 - transparent)
@@ -67,6 +67,7 @@ void tftTest_2() {
 // --- Prepare destination test region
   for (uint8_t i = 0; i < 10; i++) {
     uint32_t color = 0xFF00FF + i * 0x1BE4;
+    tftSetForeground(color);
     tftRect(300, i*30, 300, 30);
   }  
 // --- Prepare DMA2D
@@ -74,12 +75,58 @@ void tftTest_2() {
   uint32_t d_addr = tft_addr + 2 * 300;
   uint32_t offset = TFT_W - 300;
 // output  
+  hdma2d.Init.Mode = DMA2D_M2M;
+  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
+  hdma2d.Init.OutputOffset = offset;
+// foreground layer  
+  hdma2d.LayerCfg[1].AlphaMode = DMA2D_REPLACE_ALPHA;
+  hdma2d.LayerCfg[1].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB565;
+  hdma2d.LayerCfg[1].InputOffset = offset;
+// Apply configuration
+  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) {
+    asm("nop");
+    return;
+  }
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) != HAL_OK) {
+    asm("nop");
+    return;
+  }  
+// start transfer  
+  if (HAL_DMA2D_Start(&hdma2d, s_addr, d_addr, 300, 300) != HAL_OK) {
+    asm("nop");
+    return;
+  }
+    
+  HAL_DMA2D_PollForTransfer(&hdma2d, 200);
+}
+
+void tftTest_blending_copy() {
+  tftClearScreen(0x000055);
+// --- Prepare source test region
+  tftSetForeground(0x000000); // -> Converts to 0x0000 (high bit Alpha = 0 - transparent)
+  tftRect(0, 0, 250, 250);
+  tftSetForeground(0x80FFFF);
+  tftRect(50, 50, 150, 150);
+  tftSetForeground(0x000000);
+  tftRect(75, 75, 100, 100);
+  tftSetForeground(0x80FF00);
+  tftRect(100, 100, 50, 50);
+// --- Prepare destination test region
+  for (uint8_t i = 0; i < 10; i++) {
+    uint32_t color = 0xFF00FF + i * 0x1BE4;
+    tftSetForeground(color);
+    tftRect(250, i*25, 250, 25);
+  }  
+// --- Prepare DMA2D
+  uint32_t offset = TFT_W - 250;
+// output  
   hdma2d.Init.Mode = DMA2D_M2M_BLEND;
   hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
   hdma2d.Init.OutputOffset = offset;
 // foreground layer  
-  hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
-  hdma2d.LayerCfg[1].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[1].AlphaMode = DMA2D_COMBINE_ALPHA;
+  hdma2d.LayerCfg[1].InputAlpha = 0x80;
   hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_ARGB1555;
   hdma2d.LayerCfg[1].InputOffset = offset;
 // background layer  
@@ -87,7 +134,49 @@ void tftTest_2() {
   hdma2d.LayerCfg[0].InputAlpha = 0xFF;
   hdma2d.LayerCfg[0].InputColorMode = DMA2D_INPUT_RGB565;
   hdma2d.LayerCfg[0].InputOffset = offset;
+// Apply configuration
+  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) {
+    asm("nop");
+    return;
+  }
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) != HAL_OK) {
+    asm("nop");
+    return;
+  }  
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 0) != HAL_OK) {
+    asm("nop");
+    return;
+  }  
 // start transfer  
-  HAL_DMA2D_BlendingStart(&hdma2d, s_addr, d_addr, d_addr, 300, 300);
+  uint32_t fg_addr = tft_addr;
+  uint32_t bg_addr = tft_addr + 2 * 250;
+//  uint32_t dst_addr = tft_addr + 2 * 500;
+  
+  if (HAL_DMA2D_BlendingStart(&hdma2d, fg_addr, bg_addr, bg_addr, 250, 250) != HAL_OK) {
+    asm("nop");
+    return;
+  }  
   HAL_DMA2D_PollForTransfer(&hdma2d, 200);
 }
+
+
+
+void tftTest_3() {
+  tftClearScreen(0x000055);
+// --- Prepare source test region
+  tftSetForeground(0x000000); // -> Converts to 0x0000 (high bit Alpha = 0 - transparent)
+  tftRect(0, 0, 300, 300);
+  tftSetForeground(0x80FFFF);
+  tftRect(50, 50, 200, 200);
+  tftSetForeground(0x000000);
+  tftRect(75, 75, 150, 150);
+  tftSetForeground(0x80FF00);
+  tftRect(100, 100, 100, 100);
+// --- Prepare destination test region
+  for (uint8_t i = 0; i < 10; i++) {
+    uint32_t color = 0xFF00FF + i * 0x1BE4;
+    tftSetForeground(color);
+    tftRect(300, i*30, 300, 30);
+  }  
+}
+

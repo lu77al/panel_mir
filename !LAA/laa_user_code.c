@@ -36,8 +36,7 @@ void userInit() {
 void userMain() {
   userInit();
   
-  tftTest_1();
-//  tftTest_2();
+  tftTest_blending_copy();
   
   while (1) {
 
