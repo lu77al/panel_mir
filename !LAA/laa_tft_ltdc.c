@@ -65,9 +65,9 @@ void tftLTDCsetDoubleMode(uint8_t state) {
 void tftLTDCinit() {
   tft_wait_for_retrace_cnt = 0;
   HAL_LTDC_SetAddress(&hltdc, TFT_LAYER0, 0);   // LTDC layers' adresses
-  HAL_LTDC_SetAddress(&hltdc, TFT_LAYER1, 1);
-  HAL_LTDC_SetAlpha(&hltdc, 255, 0);            // Bouth opaque
-  HAL_LTDC_SetAlpha(&hltdc, 255, 1);
+  HAL_LTDC_SetAddress(&hltdc, TFT_LAYER_TOP, 1);
+//  HAL_LTDC_SetAlpha(&hltdc, 255, 0);            // Bouth opaque
+//  HAL_LTDC_SetAlpha(&hltdc, 255, 1);
   tft_visible_layer = 1;
   tft_active_layer =  0;     // to force setSetActive to update address        
   tftLTDCsetActiveLayer(1);  // Visible == Active -> single layer mode

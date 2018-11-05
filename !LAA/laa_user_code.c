@@ -37,8 +37,8 @@ void userInit() {
 void userMain() {
   userInit();
   
-  tftTest_simple_copy();
-  tftTest_blending_copy();
+//  tftTest_simple_copy();
+//  tftTest_blending_copy();
   tftSwitchLayerAdressTest();
   
   while (1) {

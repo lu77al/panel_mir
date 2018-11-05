@@ -164,7 +164,7 @@ void tftTest_blending_copy() {
 }
 
 #define IMG_SIZE 60
-#define BALL_CNT 45
+#define BALL_CNT 120
 
 int16_t ballX[BALL_CNT]; //  = 100;
 int16_t ballY[BALL_CNT]; //  = 0;
@@ -298,6 +298,12 @@ void tftSwitchLayers() {
   tft_addr = (tft_addr ==  TFT_LAYER0) ? TFT_LAYER1 : TFT_LAYER0;
 }  
 
+/****************************
+LTDC.background - bottom background
+Layer.background - color out of active window
+Layer.Alpha / BlendingFactor1? - active window blending   
+Layer.Alpha0 / BlendingFactor2? - background blending   
+*****************************/  
 void tftSwitchLayerAdressTest() {
   uint16_t *pixel = (uint16_t *)TFT_LAYER_TOP;
   for (int32_t i = 0; i < 200*100; i++) {
@@ -312,14 +318,9 @@ void tftSwitchLayerAdressTest() {
   tstPrepareImg();
 
   tstInitBalls();
-  
-  
+ 
   tft_addr = TFT_LAYER0;
   tftDrawLayer0();
-  HAL_LTDC_SetAddress(&hltdc, TFT_LAYER0, 0);
-  HAL_LTDC_SetAddress(&hltdc, TFT_LAYER_TOP, 1);
-  HAL_LTDC_SetAlpha(&hltdc, 255, 0);
-  HAL_LTDC_SetAlpha(&hltdc, 128, 1);
   
   while (1) {
     tftSwitchLayers();
