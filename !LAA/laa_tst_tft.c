@@ -228,8 +228,8 @@ void tstDrawBall(uint16_t x, uint16_t y) {
   hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
   hdma2d.Init.OutputOffset = offset;
 // foreground layer  
-  hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
-  hdma2d.LayerCfg[1].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[1].AlphaMode = DMA2D_COMBINE_ALPHA;
+  hdma2d.LayerCfg[1].InputAlpha = 0x60;
   hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_ARGB1555;
   hdma2d.LayerCfg[1].InputOffset = 0;
 // background layer  
