@@ -179,13 +179,15 @@ int16_t msgDY = 5;
 int16_t msgW = 200;
 int16_t msgH = 100;
 
+extern RNG_HandleTypeDef hrng;
+
 void tstInitBalls() {
 //int r = rand();      // Returns a pseudo-random integer between 0 and RAND_MAX.  
   for (uint8_t i = 0; i < BALL_CNT; i++) {
-    ballX[i] = rand() % (TFT_W - IMG_SIZE);
-    ballY[i] = rand() % (TFT_H - IMG_SIZE);
-    ballDX[i] = rand() % 23 - 11;
-    ballDY[i] = rand() % 23 - 11;
+    ballX[i] = HAL_RNG_GetRandomNumber(&hrng) % (TFT_W - IMG_SIZE);
+    ballY[i] = HAL_RNG_GetRandomNumber(&hrng) % (TFT_H - IMG_SIZE);
+    ballDX[i] = HAL_RNG_GetRandomNumber(&hrng) % 23 - 11;
+    ballDY[i] = HAL_RNG_GetRandomNumber(&hrng) % 23 - 11;
   }  
 }  
 
