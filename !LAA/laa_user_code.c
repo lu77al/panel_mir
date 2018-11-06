@@ -22,7 +22,7 @@ volatile uint16_t main_tic_cnt = 0;
 
 void userInit() {
   sdramInit();                  // Activate SDRAM 
-  tftLTDCinit(1);               // Init LTDC layers (double buffer mode)
+  tftLTDCuserSetup();           // Init LTDC layers
   tftClearScreen(0);            // Black screen to start with
   HAL_Delay(100);
   tftLEDinit(0, 192);           // Activate TFT backlight
@@ -50,7 +50,7 @@ void userMain() {
       
       if ((main_tic_cnt &= 0x7f) == 0x20) {           // 3.90625 Hz
       } else if ((main_tic_cnt &= 0x3f) == 0x10) {    // 7.8125  Hz #1
-        tftLTDCdismissWaitRetrace();
+//        tftLTDCdismissWaitRetrace();
       } else if ((main_tic_cnt &= 0x3f) == 0x30) {    // 7.8125  Hz #2
       } else if ((main_tic_cnt &= 0x07) == 0x02) {    // 62.5    Hz
         tftLightAdjust();

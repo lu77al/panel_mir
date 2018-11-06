@@ -5,6 +5,7 @@
 #include "laa_tst_tft.h"
 #include "laa_sdram.h"
 #include "laa_tft_led.h"
+#include "laa_tft_ltdc.h"
 #include "string.h"
 #include "math.h"
 #include "stdlib.h"
@@ -263,6 +264,8 @@ void tstDrawBall(uint16_t x, uint16_t y) {
   HAL_DMA2D_PollForTransfer(&hdma2d, 200);
 }
 
+extern LTDC_HandleTypeDef hltdc;
+
 void tftDrawLayer0() {
   for (uint16_t i = 0; i < 48; i++) {
     uint32_t color = 0xFF0020 - (i << 16) * 5 + (i << 8) * 5;
@@ -278,26 +281,28 @@ void tftDrawLayer0() {
  
 }  
 
-extern LTDC_HandleTypeDef hltdc;
-extern uint8_t  tft_wait_for_retrace_cnt;
-
-void tftSwitchLayers() {
-  tft_wait_for_retrace_cnt = 1;
-  HAL_LTDC_SetAddress_NoReload(&hltdc, tft_addr, 0);
-  HAL_LTDC_Reload(&hltdc, LTDC_RELOAD_VERTICAL_BLANKING);
-  while (tft_wait_for_retrace_cnt) {
-    asm("nop");
-  }
-  tft_addr = (tft_addr ==  TFT_MAIN_BUF_0) ? TFT_MAIN_BUF_1 : TFT_MAIN_BUF_0;
-}  
+//void tftSwitchLayers() {
+//  tft_wait_for_retrace_cnt = 1;
+//  HAL_LTDC_SetAddress_NoReload(&hltdc, tft_addr, 0);
+//  tst_LTDC_need_reload = true;
+//  tft_addr = (tft_addr ==  TFT_MAIN_LAYER) ? TFT_MAIN_BUF_1 : TFT_MAIN_LAYER;
+//}  
+//
+//void tstWaitForReload() {
+//  if (!tst_LTDC_need_reload) return;
+//  tst_LTDC_need_reload = false;
+//  HAL_LTDC_Reload(&hltdc, LTDC_RELOAD_VERTICAL_BLANKING);
+//  tft_wait_for_retrace_cnt = 1;
+//  while (tft_wait_for_retrace_cnt) {}
+//}
 
 
 void tstDrawCross() {
-  memset((void *)TFT_MSG_BUF, 0x00, 205*65*2);
+  memset((void *)TFT_MSG_LAYER, 0x00, 205*65*2);
   for (uint8_t i = 0; i < 65; i++) {
-    memset((void *)(TFT_MSG_BUF + i*205*2 + 97*2), 0xFF , 20); 
+    memset((void *)(TFT_MSG_LAYER + i*205*2 + 97*2), 0xFF , 20); 
   }  
-  memset((void *)(TFT_MSG_BUF + 27*205*2), 0xFF, 205*10*2);
+  memset((void *)(TFT_MSG_LAYER + 27*205*2), 0xFF, 205*10*2);
 }  
 
 
@@ -311,20 +316,20 @@ void tftSwitchLayerAdressTest() {
   tstDrawCross();
 
   HAL_LTDC_SetWindowSize(&hltdc, 50, 50, 1);
-  HAL_LTDC_SetAddress(&hltdc, TFT_MSG_BUF + 7*205*2 + 77*2, 1);
+  HAL_LTDC_SetAddress(&hltdc, TFT_MSG_LAYER + 7*205*2 + 77*2, 1);
   HAL_LTDC_SetPitch(&hltdc, 205, 1);
   
   tstPrepareImg();
 
   tstInitBalls();
- 
-  tft_addr = TFT_MAIN_BUF_0;
-  tftDrawLayer0();
-  
+
   tftLEDsetInst(200);
   
+  tftLTDCsetActiveLayer(&tft_main_layer);
+
+  tftDrawLayer0();
+  
   while (1) {
-    tftSwitchLayers();
     tftDrawLayer0();
 
     tftMoveAxis(&msgX, &msgDX, TFT_W - 50);
@@ -332,10 +337,12 @@ void tftSwitchLayerAdressTest() {
 
     HAL_LTDC_SetWindowPosition_NoReload(&hltdc, msgX, msgY, 1);
     HAL_LTDC_SetPitch_NoReload(&hltdc, 205, 1);
-    HAL_LTDC_Reload(&hltdc, LTDC_RELOAD_VERTICAL_BLANKING);
-    while (tft_wait_for_retrace_cnt) {
-      asm("nop");
-    }
+
+    tftLTDCswapBuffers(&tft_main_layer);
+    tftLTDCforceReload();
+    tftLTDCwaitForReload();
+//    while (tftLTDCisWaitingForReload()) {};
+    
   }  
 }  
 
