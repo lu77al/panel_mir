@@ -254,8 +254,8 @@ void tstDrawBall(uint16_t x, uint16_t y) {
 // start transfer  
   uint32_t fg_addr = (uint32_t)image;
   uint32_t bg_addr = tft_addr + 2 * (y * TFT_W + x);
-//  uint32_t dst_addr = tft_addr + 2 * 500;
-  
+// uint32_t dst_addr = tft_addr + 2 * 500;
+   
   if (HAL_DMA2D_BlendingStart(&hdma2d, fg_addr, bg_addr, bg_addr, IMG_SIZE, IMG_SIZE) != HAL_OK) {
     asm("nop");
     return;
@@ -269,21 +269,13 @@ void tftDrawLayer0() {
     tftSetForeground(color);
     tftRect(0, i * 10, 800, 10);
   }  
-
   
   for (uint8_t i = 0; i < BALL_CNT; i++) {
     tstDrawBall(ballX[i], ballY[i]);
     tftMoveAxis(&ballX[i], &ballDX[i], TFT_W - IMG_SIZE);
     tftMoveAxis(&ballY[i], &ballDY[i], TFT_H - IMG_SIZE);
   }  
-
-  
-  
-  
-//  tftSetForeground(0x4040FF);
-//  tftRect(ballX, ballY, ballSize, ballSize);
-//  tftMoveAxis(&ballX, &ballDX, TFT_W - ballSize);
-//  tftMoveAxis(&ballY, &ballDY, TFT_H - ballSize);
+ 
 }  
 
 extern LTDC_HandleTypeDef hltdc;
@@ -317,6 +309,10 @@ Layer.Alpha0 / BlendingFactor2? - background blending
 *****************************/  
 void tftSwitchLayerAdressTest() {
   tstDrawCross();
+
+  HAL_LTDC_SetWindowSize(&hltdc, 50, 50, 1);
+  HAL_LTDC_SetAddress(&hltdc, TFT_MSG_BUF + 7*205*2 + 77*2, 1);
+  HAL_LTDC_SetPitch(&hltdc, 205, 1);
   
   tstPrepareImg();
 
@@ -331,10 +327,11 @@ void tftSwitchLayerAdressTest() {
     tftSwitchLayers();
     tftDrawLayer0();
 
-    tftMoveAxis(&msgX, &msgDX, TFT_W - msgW);
-    tftMoveAxis(&msgY, &msgDY, TFT_H - msgH);
+    tftMoveAxis(&msgX, &msgDX, TFT_W - 50);
+    tftMoveAxis(&msgY, &msgDY, TFT_H - 50);
 
     HAL_LTDC_SetWindowPosition_NoReload(&hltdc, msgX, msgY, 1);
+    HAL_LTDC_SetPitch_NoReload(&hltdc, 205, 1);
     HAL_LTDC_Reload(&hltdc, LTDC_RELOAD_VERTICAL_BLANKING);
     while (tft_wait_for_retrace_cnt) {
       asm("nop");

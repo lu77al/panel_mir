@@ -8,6 +8,9 @@
 #include "laa_tft_ltdc.h"
 #include "laa_sdram.h"
 #include "laa_global_utils.h"
+#include <stdbool.h>
+
+#define TFT_PS  2
 
 extern LTDC_HandleTypeDef hltdc;
 
@@ -20,11 +23,43 @@ extern LTDC_HandleTypeDef hltdc;
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-uint8_t  tft_vis_buf_index;       
+typedef struct {
+  uint32_t  memoryAddr;     // Addrress of memory buffer
+  uint16_t  width, height;  // Size in pixels
+  uint16_t  x0, y0;         // Layer position at the TFT (see LTDC)
+  uint8_t   ltdcIndex;      // 0..1 - corresponding LTDC layer index
+  uint8_t   visibleBuffer;  // 0..1 - index of visible sublayer (pointed by LTDC)
+  uint8_t   activeBuffer;   // 0..1 - index of active sublayer to draw (pointed by tft_lib engine)
+  uint8_t   alpha;          // blending factor (0 - transparent; 255 - opaque)
+} TFT_LTDC_layer;
+
+uint32_t tft_addr;  // Address of memory region to draw primitives
+
+void tftLTDCinitLayer(TFT_LTDC_layer *layer, bool doubleBuffered) {
+  HAL_LTDC_SetAddress(&hltdc, layer->memoryAddr, layer->ltdcIndex);   // LTDC layers' adress
+  HAL_LTDC_SetWindowSize(&hltdc, layer->width, layer->height, layer->ltdcIndex);
+  HAL_LTDC_SetWindowPosition(&hltdc, layer->x0, layer->y0, layer->ltdcIndex);
+  HAL_LTDC_SetAlpha(&hltdc, layer->alpha, layer->ltdcIndex);
+  layer->visibleBuffer = 0;
+  layer->activeBuffer = doubleBuffered ? 1 : 0;
+}
+
+void tftLTDCsetActiveLayer(TFT_LTDC_layer *layer) {
+  tft_addr = layer->memoryAddr + layer->activeBuffer * layer->width * layer->height * TFT_PS;
+}
+
+void tftLTDCsetLayerAlpha(TFT_LTDC_layer *layer, uint8_t alpha) {
+  layer->alpha = alpha;
+  HAL_LTDC_SetAlpha(&hltdc, alpha, layer->ltdcIndex);
+}
+
+
+
+
+uint8_t  tft_vis_buf_index;
 uint8_t  tft_active_buf_index;        
 uint8_t  tft_wait_for_retrace_cnt;   // Flag to wait with drawing in memory
 
-uint32_t tft_addr;  // Address of memory region to draw primitives
 
 /* Command LTDC to make buffer visible after vertical retrace */
 void tftLTDCsetVisibleBuffer(uint8_t index) {
