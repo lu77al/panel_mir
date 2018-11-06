@@ -4,6 +4,7 @@
 #include "laa_tft_lib.h"
 #include "laa_tst_tft.h"
 #include "laa_sdram.h"
+#include "laa_tft_led.h"
 #include "string.h"
 #include "math.h"
 #include "stdlib.h"
@@ -176,8 +177,8 @@ int16_t msgX  = 300;
 int16_t msgY  = 10;
 int16_t msgDX = -3;
 int16_t msgDY = 5;
-int16_t msgW = 200;
-int16_t msgH = 100;
+int16_t msgW = 205;
+int16_t msgH = 65;
 
 extern RNG_HandleTypeDef hrng;
 
@@ -295,8 +296,18 @@ void tftSwitchLayers() {
   while (tft_wait_for_retrace_cnt) {
     asm("nop");
   }
-  tft_addr = (tft_addr ==  TFT_LAYER0) ? TFT_LAYER1 : TFT_LAYER0;
+  tft_addr = (tft_addr ==  TFT_MAIN_BUF_0) ? TFT_MAIN_BUF_1 : TFT_MAIN_BUF_0;
 }  
+
+
+void tstDrawCross() {
+  memset((void *)TFT_MSG_BUF, 0x00, 205*65*2);
+  for (uint8_t i = 0; i < 65; i++) {
+    memset((void *)(TFT_MSG_BUF + i*205*2 + 97*2), 0xFF , 20); 
+  }  
+  memset((void *)(TFT_MSG_BUF + 27*205*2), 0xFF, 205*10*2);
+}  
+
 
 /****************************
 LTDC.background - bottom background
@@ -305,22 +316,16 @@ Layer.Alpha / BlendingFactor1? - active window blending
 Layer.Alpha0 / BlendingFactor2? - background blending   
 *****************************/  
 void tftSwitchLayerAdressTest() {
-  uint16_t *pixel = (uint16_t *)TFT_LAYER_TOP;
-  for (int32_t i = 0; i < 200*100; i++) {
-    *(pixel++) = 0xFFFF;
-  }  
-  for (int32_t i = 30; i < 70; i++) {
-    for (int32_t j = 30; j < 170; j++) {
-        *((uint16_t *)TFT_LAYER_TOP + i*200 + j) = 0;
-    }    
-  }  
+  tstDrawCross();
   
   tstPrepareImg();
 
   tstInitBalls();
  
-  tft_addr = TFT_LAYER0;
+  tft_addr = TFT_MAIN_BUF_0;
   tftDrawLayer0();
+  
+  tftLEDsetInst(200);
   
   while (1) {
     tftSwitchLayers();

@@ -22,11 +22,10 @@ volatile uint16_t main_tic_cnt = 0;
 
 void userInit() {
   sdramInit();                  // Activate SDRAM 
-  tftLTDCinit();                // Init LTDC layers
+  tftLTDCinit(1);               // Init LTDC layers (double buffer mode)
   tftClearScreen(0);            // Black screen to start with
   HAL_Delay(100);
-//  tftLEDinit(0, 192);           // Activate TFT backlight
-  tftLEDinit(192, 192);           // Activate TFT backlight
+  tftLEDinit(0, 192);           // Activate TFT backlight
   HAL_TIM_Base_Start(&htim10);  // Time source for task dispatcher (flags only)
   sdMount();                    // Mount SD card
   tftResetObjects();            // Clear cache ...
