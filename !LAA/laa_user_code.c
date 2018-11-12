@@ -9,7 +9,6 @@
 #include "laa_tft_lib.h"
 #include "laa_tst_tft.h"
 
-
 //extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim10;
 //extern UART_HandleTypeDef huart6;
@@ -28,15 +27,15 @@ void userInit() {
   tftResetObjects();            // Clear cache ...
   tftLEDinit(0, 192);           // Activate TFT backlight
 }  
-   
-   
+  
 
 void userMain() {
   userInit();
+
+  tftSwitchLayerAdressTest();
   
 //  tftTest_simple_copy();
 //  tftTest_blending_copy();
-  tftSwitchLayerAdressTest();
   
   while (1) {
 

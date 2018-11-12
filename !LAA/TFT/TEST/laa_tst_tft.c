@@ -316,9 +316,8 @@ void tftSwitchLayerAdressTest() {
 
   tstDrawCross();
 
-  HAL_LTDC_SetWindowSize(&hltdc, 50, 50, 1);
-  HAL_LTDC_SetAddress(&hltdc, TFT_MSG_LAYER + 7*205*2 + 77*2, 1);
-  HAL_LTDC_SetPitch(&hltdc, 205, 1);
+  tftLTDCsetClipping(1, 77, 7, 50, 50);
+  tftLTDCsetLayerAlpha(1, 0x40);
   
   tstPrepareImg();
 
@@ -336,14 +335,19 @@ void tftSwitchLayerAdressTest() {
     tftMoveAxis(&msgX, &msgDX, TFT_W - 50);
     tftMoveAxis(&msgY, &msgDY, TFT_H - 50);
 
-    HAL_LTDC_SetWindowPosition_NoReload(&hltdc, msgX, msgY, 1);
-    HAL_LTDC_SetPitch_NoReload(&hltdc, 205, 1);
+    tftLTDCsetPosition(1, msgX, msgY);
+    
+//  uint8_t tst[] = {0,1,2,3,4,5,6,7,8,9};
+//
+//  while (1) {
+//    CDC_Transmit_FS(tst, 10);
+//    HAL_Delay(500);
+//  }  
+    
 
     tftLTDCswapBuffers(0);
     tftLTDCforceReload();
     tftLTDCwaitForReload();
-//    while (tftLTDCisWaitingForReload()) {};
-    
   }  
 }  
 
