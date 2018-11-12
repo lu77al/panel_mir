@@ -49,6 +49,7 @@
 #include "main.h"
 #include "stm32f7xx_hal.h"
 #include "fatfs.h"
+#include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
 #include "laa_user_code.h"
@@ -154,6 +155,7 @@ int main(void)
   MX_SDMMC1_SD_Init();
   MX_FATFS_Init();
   MX_TIM12_Init();
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
   userMain();
   /* USER CODE END 2 */

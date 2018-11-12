@@ -9,6 +9,7 @@
 #include "string.h"
 #include "math.h"
 #include "stdlib.h"
+#include "usbd_cdc_if.h"
 
 void tftTestFonts() {
   tftClearScreen(0x000055);
@@ -306,12 +307,20 @@ void tstDrawCross() {
 }  
 
 
+uint8_t  rx_buf[100];
+volatile uint16_t rx_len = 0;
+
+uint8_t  tx_buf[100];
+uint16_t tx_len = 0;
+
+
 /****************************
 LTDC.background - bottom background
 Layer.background - color out of active window
 Layer.Alpha / BlendingFactor1? - active window blending   
 Layer.Alpha0 / BlendingFactor2? - background blending   
 *****************************/  
+
 void tftSwitchLayerAdressTest() {
 
   tstDrawCross();
@@ -330,7 +339,21 @@ void tftSwitchLayerAdressTest() {
   tftDrawLayer0();
   
   while (1) {
+    
     tftDrawLayer0();
+    
+    if (tx_len) {
+      tftSetTextPos(10, 10);
+      tftSetForeground(0xFFFF00);
+      tftSetTextTransparency(1);
+      tftSetFont("F16X32.FNT");
+      tftPrint((char *)tx_buf, tx_len);
+      for (uint8_t i = 0; i < tx_len; i++) {
+        tx_buf[i]++;
+      }  
+      CDC_Transmit_FS(tx_buf, tx_len);
+      tx_len = 0;
+    }  
 
     tftMoveAxis(&msgX, &msgDX, TFT_W - 50);
     tftMoveAxis(&msgY, &msgDY, TFT_H - 50);
@@ -346,8 +369,21 @@ void tftSwitchLayerAdressTest() {
     
 
     tftLTDCswapBuffers(0);
+    
+    
+//    uint8_t tst[] = {0,1,2,3,4,5,6,7,8,9};
+//    CDC_Transmit_FS(tst, 5);
+//    HAL_Delay(1000);
+    
+    
     tftLTDCforceReload();
     tftLTDCwaitForReload();
+    
+    while (!rx_len) {
+    }
+    memcpy(tx_buf, rx_buf, rx_len);
+    tx_len = rx_len;
+    rx_len = 0;
   }  
 }  
 
