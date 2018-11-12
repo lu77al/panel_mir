@@ -1161,61 +1161,70 @@
   <group>
     <name>!LAA</name>
     <group>
-      <name>Global utils</name>
+      <name>UTILS</name>
       <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_global_utils.h</name>
+        <name>$PROJ_DIR$\..\!LAA\UTILS\laa_global_utils.h</name>
       </file>
     </group>
     <group>
       <name>SDCard</name>
       <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_sdcard.c</name>
+        <name>$PROJ_DIR$\..\!LAA\SDCARD\laa_sdcard.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_sdcard.h</name>
+        <name>$PROJ_DIR$\..\!LAA\SDCARD\laa_sdcard.h</name>
       </file>
     </group>
     <group>
       <name>SDRAM</name>
       <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_sdram.c</name>
+        <name>$PROJ_DIR$\..\!LAA\SDRAM\laa_sdram.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_sdram.h</name>
+        <name>$PROJ_DIR$\..\!LAA\SDRAM\laa_sdram.h</name>
       </file>
     </group>
     <group>
       <name>TFT</name>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_cache.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_cache.h</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_led.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_led.h</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_lib.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_lib.h</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_ltdc.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_ltdc.h</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tst_tft.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tst_tft.h</name>
-      </file>
+      <group>
+        <name>GLIB</name>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_cache.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_cache.h</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_lib.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_lib.h</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_ltdc.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_ltdc.h</name>
+        </file>
+      </group>
+      <group>
+        <name>LED</name>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\LED\laa_tft_led.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\LED\laa_tft_led.h</name>
+        </file>
+      </group>
+      <group>
+        <name>TEST</name>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\TEST\laa_tst_tft.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\TEST\laa_tst_tft.h</name>
+        </file>
+      </group>
     </group>
     <file>
       <name>$PROJ_DIR$\..\!LAA\laa_user_code.c</name>

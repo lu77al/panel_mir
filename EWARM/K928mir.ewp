@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="iso-8859-1"?>
+
 <project>
   <fileVersion>2</fileVersion>
   <configuration>
@@ -225,19 +226,19 @@
         </option>
         <option>
           <name>CCDiagSuppress</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>CCDiagRemark</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>CCDiagWarning</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>CCDiagError</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>CCObjPrefix</name>
@@ -266,7 +267,7 @@
         </option>
         <option>
           <name>IExtraOptions</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>CCLangConformance</name>
@@ -306,7 +307,7 @@
         </option>
         <option>
           <name>PreInclude</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>CompilerMisraOverride</name>
@@ -316,65 +317,18 @@
           <name>CCIncludePath2</name>
           <state>$PROJ_DIR$/../Inc</state>
           <state>$PROJ_DIR$/../!LAA</state>
+          <state>$PROJ_DIR$/../!LAA/TFT</state>
+          <state>$PROJ_DIR$/../!LAA/TFT/GLIB</state>
+          <state>$PROJ_DIR$/../!LAA/TFT/LED</state>
+          <state>$PROJ_DIR$/../!LAA/TFT/TEST</state>
+          <state>$PROJ_DIR$/../!LAA/SDRAM</state>
+          <state>$PROJ_DIR$/../!LAA/SDCARD</state>
+          <state>$PROJ_DIR$/../!LAA/UTILS</state>
           <state>D:/LIUSHNIA/Soft/CubeMX/F7/STM32Cube_FW_F7_V1.9.0/Drivers/STM32F7xx_HAL_Driver/Inc</state>
           <state>D:/LIUSHNIA/Soft/CubeMX/F7/STM32Cube_FW_F7_V1.9.0/Drivers/STM32F7xx_HAL_Driver/Inc/Legacy</state>
           <state>D:/LIUSHNIA/Soft/CubeMX/F7/STM32Cube_FW_F7_V1.9.0/Drivers/CMSIS/Device/ST/STM32F7xx/Include</state>
           <state>D:/LIUSHNIA/Soft/CubeMX/F7/STM32Cube_FW_F7_V1.9.0/Middlewares/Third_Party/FatFs/src</state>
           <state>D:/LIUSHNIA/Soft/CubeMX/F7/STM32Cube_FW_F7_V1.9.0/Drivers/CMSIS/Include</state>
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
-          <state />
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -516,15 +470,15 @@
         </option>
         <option>
           <name>AWarnOne</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>AWarnRange1</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>AWarnRange2</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>ADebug</name>
@@ -536,7 +490,7 @@
         </option>
         <option>
           <name>ADefines</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>AList</name>
@@ -632,7 +586,7 @@
         </option>
         <option>
           <name>AUserIncludes</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>AExtraOptionsCheckV2</name>
@@ -640,7 +594,7 @@
         </option>
         <option>
           <name>AExtraOptionsV2</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>AsmNoLiteralPool</name>
@@ -666,7 +620,7 @@
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>Project.srec</state>
+          <state>K928mir.srec</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>
@@ -682,22 +636,22 @@
       <name>CUSTOM</name>
       <archiveVersion>3</archiveVersion>
       <data>
-        <extensions />
-        <cmdline />
+        <extensions></extensions>
+        <cmdline></cmdline>
         <hasPrio>0</hasPrio>
       </data>
     </settings>
     <settings>
       <name>BICOMP</name>
       <archiveVersion>0</archiveVersion>
-      <data />
+      <data/>
     </settings>
     <settings>
       <name>BUILDACTION</name>
       <archiveVersion>1</archiveVersion>
       <data>
-        <prebuild />
-        <postbuild />
+        <prebuild></prebuild>
+        <postbuild></postbuild>
       </data>
     </settings>
     <settings>
@@ -729,31 +683,31 @@
         </option>
         <option>
           <name>IlinkKeepSymbols</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkRawBinaryFile</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkRawBinarySymbol</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkRawBinarySegment</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkRawBinaryAlign</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkDefines</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkConfigDefines</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkMapFile</name>
@@ -789,7 +743,7 @@
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkEnableRemarks</name>
@@ -797,19 +751,19 @@
         </option>
         <option>
           <name>IlinkSuppressDiags</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkTreatAsRem</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkTreatAsWarn</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkTreatAsErr</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkWarningsAreErrors</name>
@@ -821,7 +775,7 @@
         </option>
         <option>
           <name>IlinkExtraOptions</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkLowLevelInterfaceSlave</name>
@@ -833,7 +787,7 @@
         </option>
         <option>
           <name>IlinkAdditionalLibs</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkOverrideProgramEntryLabel</name>
@@ -968,11 +922,11 @@
         </option>
         <option>
           <name>IlinkStackControlFile</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IlinkStackCallGraphFile</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>CrcAlgorithm</name>
@@ -994,7 +948,7 @@
         </option>
         <option>
           <name>IlinkIcfFile_AltDefault</name>
-          <state />
+          <state></state>
         </option>
       </data>
     </settings>
@@ -1007,7 +961,7 @@
         <debug>1</debug>
         <option>
           <name>IarchiveInputs</name>
-          <state />
+          <state></state>
         </option>
         <option>
           <name>IarchiveOverride</name>
@@ -1022,67 +976,76 @@
     <settings>
       <name>BILINK</name>
       <archiveVersion>0</archiveVersion>
-      <data />
+      <data/>
     </settings>
   </configuration>
   <group>
     <name>!LAA</name>
     <group>
-      <name>Global utils</name>
+      <name>UTILS</name>
       <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_global_utils.h</name>
+        <name>$PROJ_DIR$\..\!LAA\UTILS\laa_global_utils.h</name>
       </file>
     </group>
     <group>
       <name>SDCard</name>
       <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_sdcard.c</name>
+        <name>$PROJ_DIR$\..\!LAA\SDCARD\laa_sdcard.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_sdcard.h</name>
+        <name>$PROJ_DIR$\..\!LAA\SDCARD\laa_sdcard.h</name>
       </file>
     </group>
     <group>
       <name>SDRAM</name>
       <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_sdram.c</name>
+        <name>$PROJ_DIR$\..\!LAA\SDRAM\laa_sdram.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_sdram.h</name>
+        <name>$PROJ_DIR$\..\!LAA\SDRAM\laa_sdram.h</name>
       </file>
     </group>
     <group>
       <name>TFT</name>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_cache.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_cache.h</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_led.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_led.h</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_lib.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_lib.h</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_ltdc.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tft_ltdc.h</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tst_tft.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\laa_tst_tft.h</name>
-      </file>
+      <group>
+        <name>GLIB</name>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_cache.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_cache.h</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_lib.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_lib.h</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_ltdc.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_ltdc.h</name>
+        </file>
+      </group>
+      <group>
+        <name>LED</name>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\LED\laa_tft_led.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\LED\laa_tft_led.h</name>
+        </file>
+      </group>
+      <group>
+        <name>TEST</name>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\TEST\laa_tst_tft.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\TEST\laa_tst_tft.h</name>
+        </file>
+      </group>
     </group>
     <file>
       <name>$PROJ_DIR$\..\!LAA\laa_user_code.c</name>
@@ -1230,4 +1193,5 @@
     </group>
   </group>
 </project>
+
 
