@@ -9,15 +9,14 @@
 #include "string.h"
 #include "math.h"
 #include "stdlib.h"
-#include "usbd_cdc_if.h"
 
 void tftTestFonts() {
   tftClearScreen(0x000055);
 
   tftSetForeground(0x00AA00);
-  tftRect(100, 50, TFT_W - 200, TFT_H - 100);
+  tftRect(100, 50, tft_w - 200, tft_h - 100);
   tftSetForeground(0xFF0000);
-  tftRect(200, 100, TFT_W - 400, TFT_H - 200);
+  tftRect(200, 100, tft_w - 400, tft_h - 200);
 
   tftSetFont("F16X32.FNT");
   tftSetTextPos(10, 10);
@@ -41,11 +40,11 @@ void tftTestFonts() {
 }  
   
 /*
-  uint32_t s_addr = tft_addr + TFT_PS * (y * TFT_W + x);
+  uint32_t s_addr = tft_addr + TFT_PS * (y * tft_w + x);
   uint32_t i_addr = (uint32_t)bmp_addr + TFT_PS * (bmp_y * bmp_w + bmp_x);
   hdma2d.Init.Mode = DMA2D_M2M;
   hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
-  hdma2d.Init.OutputOffset = TFT_W - w;
+  hdma2d.Init.OutputOffset = tft_w - w;
   hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
   hdma2d.LayerCfg[1].InputAlpha = 0xFF;
   hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB565;
@@ -80,7 +79,7 @@ void tftTest_simple_copy() {
 // --- Prepare DMA2D
   uint32_t s_addr = tft_addr;
   uint32_t d_addr = tft_addr + 2 * 300;
-  uint32_t offset = TFT_W - 300;
+  uint32_t offset = tft_w - 300;
 // output  
   hdma2d.Init.Mode = DMA2D_M2M;
   hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
@@ -126,7 +125,7 @@ void tftTest_blending_copy() {
     tftRect(250, i*5, 250, 5);
   }  
 // --- Prepare DMA2D
-  uint32_t offset = TFT_W - 250;
+  uint32_t offset = tft_w - 250;
 // output  
   hdma2d.Init.Mode = DMA2D_M2M_BLEND;
   hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
@@ -186,9 +185,10 @@ extern RNG_HandleTypeDef hrng;
 
 void tstInitBalls() {
 //int r = rand();      // Returns a pseudo-random integer between 0 and RAND_MAX.  
+  HAL_RNG_Init(&hrng);
   for (uint8_t i = 0; i < BALL_CNT; i++) {
-    ballX[i] = HAL_RNG_GetRandomNumber(&hrng) % (TFT_W - IMG_SIZE);
-    ballY[i] = HAL_RNG_GetRandomNumber(&hrng) % (TFT_H - IMG_SIZE);
+    ballX[i] = HAL_RNG_GetRandomNumber(&hrng) % (tft_w - IMG_SIZE);
+    ballY[i] = HAL_RNG_GetRandomNumber(&hrng) % (tft_h - IMG_SIZE);
     ballDX[i] = HAL_RNG_GetRandomNumber(&hrng) % 23 - 11;
     ballDY[i] = HAL_RNG_GetRandomNumber(&hrng) % 23 - 11;
   }  
@@ -225,7 +225,7 @@ void tstPrepareImg() {
 
 void tstDrawBall(uint16_t x, uint16_t y) {
   // --- Prepare DMA2D
-  uint32_t offset = TFT_W - IMG_SIZE;
+  uint32_t offset = tft_w - IMG_SIZE;
 // output  
   hdma2d.Init.Mode = DMA2D_M2M_BLEND;
   hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
@@ -255,7 +255,7 @@ void tstDrawBall(uint16_t x, uint16_t y) {
   }  
 // start transfer  
   uint32_t fg_addr = (uint32_t)image;
-  uint32_t bg_addr = tft_addr + 2 * (y * TFT_W + x);
+  uint32_t bg_addr = tft_addr + 2 * (y * tft_w + x);
 // uint32_t dst_addr = tft_addr + 2 * 500;
    
   if (HAL_DMA2D_BlendingStart(&hdma2d, fg_addr, bg_addr, bg_addr, IMG_SIZE, IMG_SIZE) != HAL_OK) {
@@ -268,6 +268,7 @@ void tstDrawBall(uint16_t x, uint16_t y) {
 extern LTDC_HandleTypeDef hltdc;
 
 void tftDrawLayer0() {
+  tftLTDCsetActiveLayer(0);
   for (uint16_t i = 0; i < 48; i++) {
     uint32_t color = 0xFF0020 - (i << 16) * 5 + (i << 8) * 5;
     tftSetForeground(color);
@@ -276,8 +277,8 @@ void tftDrawLayer0() {
   
   for (uint8_t i = 0; i < BALL_CNT; i++) {
     tstDrawBall(ballX[i], ballY[i]);
-    tftMoveAxis(&ballX[i], &ballDX[i], TFT_W - IMG_SIZE);
-    tftMoveAxis(&ballY[i], &ballDY[i], TFT_H - IMG_SIZE);
+    tftMoveAxis(&ballX[i], &ballDX[i], tft_w - IMG_SIZE);
+    tftMoveAxis(&ballY[i], &ballDY[i], tft_h - IMG_SIZE);
   }  
  
 }  
@@ -306,14 +307,6 @@ void tstDrawCross() {
   memset((void *)(TFT_MSG_LAYER + 27*205*2), 0xFF, 205*10*2);
 }  
 
-
-uint8_t  rx_buf[100];
-volatile uint16_t rx_len = 0;
-
-uint8_t  tx_buf[100];
-uint16_t tx_len = 0;
-
-
 /****************************
 LTDC.background - bottom background
 Layer.background - color out of active window
@@ -323,68 +316,48 @@ Layer.Alpha0 / BlendingFactor2? - background blending
 
 void tftSwitchLayerAdressTest() {
 
-  tstDrawCross();
+//  tstDrawCross();
+  tftLTDCsetActiveLayer(1);
+  tftClearScreen(0x000055);
 
-  tftLTDCsetClipping(1, 77, 7, 50, 50);
-  tftLTDCsetLayerAlpha(1, 0x40);
+  tftLTDCsetClipping(1, 0, 0, 16 * 5 + 32, 32);
+  tftLTDCsetLayerAlpha(1, 0xFF);
   
   tstPrepareImg();
 
+  tftLTDCsetActiveLayer(0);
+  
   tstInitBalls();
 
   tftLEDsetInst(200);
   
-  tftLTDCsetActiveLayer(0);
-
-  tftDrawLayer0();
+  uint16_t counter = 0;
+  tftSetFont("F16X32.FNT");
+  tftSetTextTransparency(0);
   
   while (1) {
-    
     tftDrawLayer0();
-    
-    if (tx_len) {
-      tftSetTextPos(10, 10);
-      tftSetForeground(0xFFFF00);
-      tftSetTextTransparency(1);
-      tftSetFont("F16X32.FNT");
-      tftPrint((char *)tx_buf, tx_len);
-      for (uint8_t i = 0; i < tx_len; i++) {
-        tx_buf[i]++;
-      }  
-      CDC_Transmit_FS(tx_buf, tx_len);
-      tx_len = 0;
-    }  
+    tftLTDCswapBuffers(0);
 
-    tftMoveAxis(&msgX, &msgDX, TFT_W - 50);
-    tftMoveAxis(&msgY, &msgDY, TFT_H - 50);
+    tftLTDCsetActiveLayer(1);
+    tftSetForeground(0xFFFFFF);
+    tftSetBackground(0x000055);
+    char msg[6];
+    sprintf(msg, "%05d", counter++);
+    tftSetTextPos(16, 0);
+    tftPrint(msg, 5);
+    
+    tftMoveAxis(&msgX, &msgDX, 800 - 16 * 5 - 32);
+    tftMoveAxis(&msgY, &msgDY, 480 - 32);
 
     tftLTDCsetPosition(1, msgX, msgY);
-    
-//  uint8_t tst[] = {0,1,2,3,4,5,6,7,8,9};
-//
-//  while (1) {
-//    CDC_Transmit_FS(tst, 10);
-//    HAL_Delay(500);
-//  }  
-    
 
-    tftLTDCswapBuffers(0);
-    
-    
-//    uint8_t tst[] = {0,1,2,3,4,5,6,7,8,9};
-//    CDC_Transmit_FS(tst, 5);
-//    HAL_Delay(1000);
-    
+//    tftLTDCswapBuffers(1);
     
     tftLTDCforceReload();
     tftLTDCwaitForReload();
-    
-    while (!rx_len) {
-    }
-    memcpy(tx_buf, rx_buf, rx_len);
-    tx_len = rx_len;
-    rx_len = 0;
-  }  
+  }
+  
 }  
 
 

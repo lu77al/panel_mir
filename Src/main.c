@@ -49,7 +49,6 @@
 #include "main.h"
 #include "stm32f7xx_hal.h"
 #include "fatfs.h"
-#include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
 #include "laa_user_code.h"
@@ -155,7 +154,6 @@ int main(void)
   MX_SDMMC1_SD_Init();
   MX_FATFS_Init();
   MX_TIM12_Init();
-  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
   userMain();
   /* USER CODE END 2 */
@@ -314,8 +312,8 @@ static void MX_LTDC_Init(void)
   pLayerCfg.WindowY0 = 0;
   pLayerCfg.WindowY1 = 480;
   pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
-  pLayerCfg.Alpha = 0;
-  pLayerCfg.Alpha0 = 0;
+  pLayerCfg.Alpha = 255;
+  pLayerCfg.Alpha0 = 255;
   pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_CA;
   pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_CA;
   pLayerCfg.FBStartAdress = 0;
@@ -333,11 +331,11 @@ static void MX_LTDC_Init(void)
   pLayerCfg1.WindowX1 = 205;
   pLayerCfg1.WindowY0 = 0;
   pLayerCfg1.WindowY1 = 65;
-  pLayerCfg1.PixelFormat = LTDC_PIXEL_FORMAT_ARGB1555;
-  pLayerCfg1.Alpha = 0;
+  pLayerCfg1.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
+  pLayerCfg1.Alpha = 255;
   pLayerCfg1.Alpha0 = 0;
-  pLayerCfg1.BlendingFactor1 = LTDC_BLENDING_FACTOR1_CA;
-  pLayerCfg1.BlendingFactor2 = LTDC_BLENDING_FACTOR2_CA;
+  pLayerCfg1.BlendingFactor1 = LTDC_BLENDING_FACTOR1_PAxCA;
+  pLayerCfg1.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA;
   pLayerCfg1.FBStartAdress = 0;
   pLayerCfg1.ImageWidth = 205;
   pLayerCfg1.ImageHeight = 65;

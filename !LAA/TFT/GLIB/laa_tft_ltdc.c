@@ -10,8 +10,6 @@
 #include "laa_sdram.h"
 #include "laa_global_utils.h"
 
-#define TFT_PS  2
-
 uint8_t  tft_LTDC_need_reload  = 0;
 uint32_t tft_LTDC_retrace_time;
 uint8_t  tft_LTDC_wait_retrace = 0;
@@ -62,7 +60,7 @@ void tftLTDCuserSetup() {
   // Select active layer0 / GoDouble / ClearScreen / Apply settings
   tftLTDCsetActiveLayer(0);
   tftClearScreen(0);
-  tftLTDCsetDoubleMode(1, 1);
+//  tftLTDCsetDoubleMode(1, 1);
   tftLTDCsetDoubleMode(0, 1);
   tftLTDCforceReload();
   tftLTDCwaitForReload();
@@ -84,7 +82,7 @@ void tftLTDCsetupLayer(uint8_t layerIndex, uint8_t doubleBuffered) {
   L->clipH = L->height;
   HAL_LTDC_SetWindowPosition_NoReload(&hltdc, L->posX, L->posY, layerIndex);
   HAL_LTDC_SetAddress_NoReload(&hltdc, L->memoryAddr, layerIndex);
-  HAL_LTDC_SetAlpha_NoReload(&hltdc, L->alpha, layerIndex);
+//  HAL_LTDC_SetAlpha_NoReload(&hltdc, L->alpha, layerIndex);
   tft_LTDC_need_reload = 1;
 }
 
@@ -93,7 +91,7 @@ void tftLTDCsetupLayer(uint8_t layerIndex, uint8_t doubleBuffered) {
 void tftLTDCsetLayerAlpha(uint8_t layerIndex, uint8_t alpha) {
   TFT_LTDC_layer *L = &tft_layer[layerIndex];
   L->alpha = alpha;
-  HAL_LTDC_SetAlpha_NoReload(&hltdc, alpha, layerIndex);
+//  HAL_LTDC_SetAlpha_NoReload(&hltdc, alpha, layerIndex);
   tft_LTDC_need_reload = 1;
 }
 
@@ -102,6 +100,8 @@ void tftLTDCsetLayerAlpha(uint8_t layerIndex, uint8_t alpha) {
 void tftLTDCsetActiveLayer(uint8_t layerIndex) {
   TFT_LTDC_layer *L = &tft_layer[layerIndex];
   tft_addr = L->memoryAddr + L->activeBuffer * L->width * L->height * TFT_PS;
+  tft_h = L->height;
+  tft_w = L->width;
 }
 
 /* - Set Active buffer and layer (to draw primitives) - setting pointer to memory buffer

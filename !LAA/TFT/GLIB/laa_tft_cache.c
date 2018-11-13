@@ -11,15 +11,20 @@
 
 /* Cahche for graphical objects
  *  object structure:
- *    00 - ID (12 bytes) - Filename name(8) + delimiter(1) + extension(3) (if len<12 -> rest 0)
- *    12 - pointer to next object (4 bytes). 0 - last object
- *    16 - data
+ *    00 - ID (16 bytes) BMPtransparent(4) + Filename name(8) + delimiter(1) + extension(3)
+ *    16 - pointer to next object (4 bytes). 0 - last object
+ *    20 - data
  *      --- font ---
- *       16 - width  (1 byte)
- *       17 - height (1 byte)
- *       18 - bytes per char (2 bytes)
- *       20 - font points: chars 0..255, top..bottom, left..right (byte alligned MSB first)
+ *       0 - width  (1 byte)
+ *       1 - height (1 byte)
+ *       2 - bytes per char (2 bytes)
+ *       4 - font points: chars 0..255, top..bottom, left..right (byte alligned MSB first)
  */
+
+#define OBJ_ID_LENGHT   16
+#define OBJ_NEXT_OFFS   16
+#define OBJ_DATA_OFFS   20
+#define OBJ_HEADER_SIZE 20
 
 uint8_t   tft_search_bouth = OFF;   
 uint8_t   *tft_obj_first = 0; // First object in the queue (search starts here)
@@ -42,10 +47,10 @@ uint8_t   *tft_obj_new;       // Adress to place next new object (also used to c
  */
 uint8_t *tftFindObjectAt(const char *id, uint8_t *addr) {
   while (addr) {
-    if (!strncmp((char *)addr, id, 12)) break;
-    addr = *(uint8_t **)(addr + 12);
+    if (!strncmp((char *)addr, id, OBJ_ID_LENGHT)) break;
+    addr = *(uint8_t **)(addr + OBJ_NEXT_OFFS);
   }
-  return addr;
+return addr ? addr + OBJ_DATA_OFFS : 0;
 }
 
 /* If first char is '*' find in ROM then in RAM
@@ -54,8 +59,8 @@ uint8_t *tftFindObjectAt(const char *id, uint8_t *addr) {
  */
 uint8_t *tftFindObject(const char *id) {
   uint8_t *found;
-  if (id[0] == '*') {
-    id++;      // Find in ROM then in RAM without '*'
+  if (id[0] == '*') { // Find in ROM then in RAM
+    id++;      // skip '*'
     found = tftFindObjectAt(id, (uint8_t *)TFT_ROM_CACHE);
     if (!found && tft_search_bouth) found = tftFindObjectAt(id, tft_obj_first);
   } else {      // find in RAM then in ROM
@@ -82,25 +87,25 @@ void tftFreeCache() {
   if (tft_obj_first < tft_obj_new) { // if not enough space in the end of cache
     tft_obj_new = (uint8_t *)TFT_CACHE;  // try to replace tft_obj_new to the start
   } else { 
-    tft_obj_first = *((uint8_t **)(tft_obj_first + 12)); // otherwise delete first object
+    tft_obj_first = *((uint8_t **)(tft_obj_first + OBJ_NEXT_OFFS)); // otherwise delete first object
   }
 }  
 
 /* Locates space in cache and forms header of a new object
  */
 uint8_t *tftLocateCache(uint32_t size, const char* id) {
-  size = (size + 16 + 3) & ~3; // +16 bytes (header = id + pntr) +fit size to 4 byte step
+  size = (size + OBJ_HEADER_SIZE + 3) & ~3; // +OBJ_HEADER_SIZE bytes  +fit size to 4 byte step
   while (size > tftGetFreeCache()) tftFreeCache();
   if (tft_obj_first) {
-    *((uint8_t **)(tft_obj_last + 12)) = tft_obj_new;
+    *((uint8_t **)(tft_obj_last + OBJ_NEXT_OFFS)) = tft_obj_new;
   } else {
     tft_obj_first = tft_obj_new = tft_obj_last = (uint8_t *)TFT_CACHE;
   }
   tft_obj_last = tft_obj_new;
   tft_obj_new += size;
-  *((uint8_t **)(tft_obj_last + 12)) = 0;
-  strncpy((void *)tft_obj_last, id, 12);
-  return tft_obj_last;
+  *((uint8_t **)(tft_obj_last + OBJ_NEXT_OFFS)) = 0;
+  strncpy((void *)tft_obj_last, id, OBJ_ID_LENGHT);
+  return tft_obj_last + OBJ_DATA_OFFS;
 }
 
 /* Free all the cache

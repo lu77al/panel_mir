@@ -12,7 +12,8 @@
 extern DMA2D_HandleTypeDef hdma2d;
 extern uint32_t tft_addr;      // Address of memory region to draw primitives
 
-#define TFT_PS    2
+//#define TFT_W     800
+//#define TFT_H     480
 
 typedef struct {
   uint8_t   *d;    // pointer to pixels data
@@ -25,6 +26,8 @@ typedef struct {
   char      name[13];  // 12char name + "*" for system fonts
 } TFTfont;
 
+uint16_t  tft_w = 100;
+uint16_t  tft_h = 100;
 uint8_t   tft_wait_dma = 1;
 uint32_t  tft_fg = 0xffffff;
 uint32_t  tft_bg = 0x000000;
@@ -70,24 +73,24 @@ void tftSetTextTransparency(int8_t tr) {
 void tftClearScreen(uint32_t color) {
   uint32_t save_fg = tft_fg;
   tft_fg = color;
-  tftRect(0, 0, TFT_W, TFT_H);
+  tftRect(0, 0, tft_w, tft_h);
   tft_fg = save_fg;
 }  
 
 /* Rectangle at x,y of w,h size with fg color (withput out;ine) */
 void tftRect(int16_t x, int16_t y, uint16_t w, uint16_t h) {
   if ((w | h) == 0) return;
-  if (x >= TFT_W) return;
-  if (y >= TFT_H) return;
+  if (x >= tft_w) return;
+  if (y >= tft_h) return;
   if ((x + w) < 1) return;
   if ((y + h) < 1) return;
-  if ((x + w) > TFT_W) w = TFT_W - x;
-  if ((y + h) > TFT_H) h = TFT_H - y;
+  if ((x + w) > tft_w) w = tft_w - x;
+  if ((y + h) > tft_h) h = tft_h - y;
   if (x < 0) { w += x; x = 0; }
   if (y < 0) { h += y; y = 0; }
-  uint32_t addr = tft_addr + TFT_PS * (y * TFT_W + x);
+  uint32_t addr = tft_addr + TFT_PS * (y * tft_w + x);
   hdma2d.Init.Mode = DMA2D_R2M;
-  hdma2d.Init.OutputOffset = TFT_W - w;
+  hdma2d.Init.OutputOffset = tft_w - w;
   if (HAL_DMA2D_Init(&hdma2d) == HAL_OK) {
     if (HAL_DMA2D_Start(&hdma2d, tft_fg, addr, w, h) == HAL_OK) {
       if (tft_wait_dma) HAL_DMA2D_PollForTransfer(&hdma2d, 200);
@@ -105,7 +108,7 @@ void tftCharFullBG(uint16_t *scr, uint8_t *chr) {
       *(pixel++) = (chunk & 0x8000) ? tft_fg16 : tft_bg16;
       chunk <<= 1;
     }
-    scr += TFT_W;
+    scr += tft_w;
   }
 }  
 
@@ -120,7 +123,7 @@ void tftCharFullTR(uint16_t *scr, uint8_t *chr) {
       pixel++;
       chunk <<= 1;
     }
-    scr += TFT_W;
+    scr += tft_w;
   }
 }  
 
@@ -128,7 +131,7 @@ void tftCharFullTR(uint16_t *scr, uint8_t *chr) {
 void tftCharClipped(uint8_t *chr) { 
   int16_t x_lim = tft_fnt.x + tft_fnt.w;
   int16_t y_lim = tft_fnt.y + tft_fnt.h;
-  uint16_t *line_addr = (uint16_t *)tft_addr + tft_fnt.y * TFT_W;
+  uint16_t *line_addr = (uint16_t *)tft_addr + tft_fnt.y * tft_w;
   for (int16_t y = tft_fnt.y; y < y_lim; y++) {
     uint16_t chunk = 0;
     for (int16_t x = tft_fnt.x; x < x_lim; x++) {
@@ -136,8 +139,8 @@ void tftCharClipped(uint8_t *chr) {
       do {
         if (x < 0) break;
         if (y < 0) break;
-        if (x >= TFT_W) break;
-        if (y >= TFT_H) break;
+        if (x >= tft_w) break;
+        if (y >= tft_h) break;
         if (chunk & 0x8000) {
           *(line_addr + x) = tft_fg16;
         } else if (!tft_fnt.transparent) {
@@ -146,24 +149,24 @@ void tftCharClipped(uint8_t *chr) {
       } while (0);
       chunk <<= 1;
     }
-    line_addr += TFT_W;
+    line_addr += tft_w;
   }  
 }  
 
 /* Draw one character and move carret pos */
 void tftChar(char ch) {
   if (tft_fnt.d == 0) return;
-  if (tft_fnt.x >= TFT_W) return;
-  if (tft_fnt.y >= TFT_H) return;
+  if (tft_fnt.x >= tft_w) return;
+  if (tft_fnt.y >= tft_h) return;
   if ((tft_fnt.x + tft_fnt.w) < 1) return;
   if ((tft_fnt.y + tft_fnt.h) < 1) return;
   uint8_t *chr = tft_fnt.d + ch * tft_fnt.bpc;
   if ((tft_fnt.x < 0) || (tft_fnt.y < 0) ||
-      ((tft_fnt.x + tft_fnt.w) > TFT_W) ||
-      ((tft_fnt.y + tft_fnt.h) > TFT_H)) {
+      ((tft_fnt.x + tft_fnt.w) > tft_w) ||
+      ((tft_fnt.y + tft_fnt.h) > tft_h)) {
     tftCharClipped(chr);
   } else {
-    uint16_t *scr = (uint16_t *)tft_addr + tft_fnt.y * TFT_W + tft_fnt.x;
+    uint16_t *scr = (uint16_t *)tft_addr + tft_fnt.y * tft_w + tft_fnt.x;
     if (tft_fnt.transparent) {
       tftCharFullTR(scr, chr);
     } else {
@@ -187,7 +190,7 @@ void tftPrint(char *text, uint8_t length) {
 void tftDrawChar(char ch) {
   if (tft_fnt.d == 0) return;
   if (tft_fnt.x >= TFT_W) return;
-  if (tft_fnt.y >= TFT_H) return;
+  if (tft_fnt.y >= tft_h) return;
   if ((tft_fnt.x + tft_fnt.w) < 1) return;
   if ((tft_fnt.y + tft_fnt.h) < 1) return;
   
@@ -265,10 +268,10 @@ uint8_t *tftLoadFont(const char* name) {
     if (w > 100) break;
     uint16_t bpc = ((w + 7) / 8) * h; // bytes per char (line consistst of integer amount of bytes)
     font_obj = tftLocateCache((bpc << 8) + 4, name);
-    font_obj[16] = w;
-    font_obj[17] = h;
-    *(uint16_t *)(&font_obj[18]) = bpc;
-    sdRead(font_obj + 20, bpc << 8);
+    font_obj[0] = w;
+    font_obj[1] = h;
+    *(uint16_t *)(&font_obj[2]) = bpc;
+    sdRead(font_obj + 4, bpc << 8);
   } while (0);
   sdClose();
   return font_obj;
@@ -291,10 +294,10 @@ void tftSetFont(const char* name) {
   } else {
     strncpy(tft_fnt.name, name, 13);
   }  
-  tft_fnt.w = found[16];
-  tft_fnt.h = found[17];
-  tft_fnt.bpc = *(uint16_t *)(&found[18]);
-  tft_fnt.d = found + 20;
+  tft_fnt.w = found[0];
+  tft_fnt.h = found[1];
+  tft_fnt.bpc = *(uint16_t *)(&found[2]);
+  tft_fnt.d = found + 4;
 }  
 
 
@@ -318,19 +321,19 @@ void tft_draw_bmp(int16_t x, int16_t y) {
   uint16_t bmp_x = 0;
   uint16_t bmp_y = 0;
   if (bmp_addr == 0) return;
-  if (x >= TFT_W) return;
-  if (y >= TFT_H) return;
+  if (x >= tft_w) return;
+  if (y >= tft_h) return;
   if ((x + w) < 1) return;
   if ((y + h) < 1) return;
-  if ((x + w) > TFT_W) w = TFT_W - x;
-  if ((y + h) > TFT_H) h = TFT_H - y;
+  if ((x + w) > tft_w) w = tft_w - x;
+  if ((y + h) > tft_h) h = tft_h - y;
   if (x < 0) { w += x; bmp_x = -x; x = 0; }
   if (y < 0) { h += y; bmp_y = -y; y = 0; }
-  uint32_t s_addr = tft_addr + TFT_PS * (y * TFT_W + x);
+  uint32_t s_addr = tft_addr + TFT_PS * (y * tft_w + x);
   uint32_t i_addr = (uint32_t)bmp_addr + TFT_PS * (bmp_y * bmp_w + bmp_x);
   hdma2d.Init.Mode = DMA2D_M2M;
   hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
-  hdma2d.Init.OutputOffset = TFT_W - w;
+  hdma2d.Init.OutputOffset = tft_w - w;
   hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
   hdma2d.LayerCfg[1].InputAlpha = 0xFF;
   hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB565;
