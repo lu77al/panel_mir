@@ -194,6 +194,14 @@ void tftLTDCsetPosition(uint8_t layerIndex, int16_t x, int16_t y) {
 /* - Init waiting for retrace to reoad LTDC parameters
  */
 void tftLTDCforceReload() {
+  for (uint8_t i = 0; i < 2; i++) {
+    TFT_LTDC_layer *L = &tft_layer[i];
+    if (L->activeBuffer == L->visibleBuffer) continue;
+    if (L->alpha == 0 && !L->setAlpha) continue;
+    tftLTDCsetActiveBuffer(i, !L->activeBuffer);
+    L->visibleBuffer = !L->visibleBuffer;
+    tftLTDCsetAddress(i);
+  }  
   if (tft_LTDC_need_reload) {
     tft_LTDC_need_reload = 0;
     tft_LTDC_wait_retrace = 1;
@@ -201,7 +209,7 @@ void tftLTDCforceReload() {
     HAL_LTDC_Reload(&hltdc, LTDC_RELOAD_VERTICAL_BLANKING);
   } else {
     tft_LTDC_wait_retrace = 0;
-  }  
+  }
 }  
 
 /* - Wait for reload (blocking mode)

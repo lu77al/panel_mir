@@ -345,9 +345,8 @@ void tftSwitchLayerAdressTest() {
   
   while (1) {
     tftDrawLayer0();
-    tftLTDCswapBuffers(0);
+//    tftLTDCswapBuffers(0);
 
-    
     tftLTDCsetActiveLayer(1);
     tftClearScreen(0x000055);
     tftSetForeground(0xFFFFFF);
@@ -356,7 +355,7 @@ void tftSwitchLayerAdressTest() {
     sprintf(msg, "%05d", counter++);
     tftSetTextPos(16 + 16, 16 + 0);
     tftPrint(msg, 5);
-    tftLTDCswapBuffers(1);
+//    tftLTDCswapBuffers(1);
     
     tftMoveAxis(&margin, &dMargin, 16);
     tftMoveAxis(&factor, &dFactor, 127+64);
