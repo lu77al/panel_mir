@@ -320,8 +320,12 @@ void tftSwitchLayerAdressTest() {
   tftLTDCsetActiveLayer(1);
   tftClearScreen(0x000055);
 
+  HAL_LTDC_SetAlpha(&hltdc, 0x60, 1);
+  
   tftLTDCsetClipping(1, 0, 0, 16 * 5 + 32, 32);
-  tftLTDCsetLayerAlpha(1, 0x40);
+//  tftLTDCsetLayerAlpha(1, 0x40);
+//  HAL_LTDC_SetAlpha(&hltdc, 0xff, 0);
+  //HAL_LTDC_SetAlpha(&hltdc, 0x60, 1);
   
   tstPrepareImg();
 

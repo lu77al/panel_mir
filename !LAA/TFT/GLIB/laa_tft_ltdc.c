@@ -85,8 +85,10 @@ void tftLTDCsetupLayer(uint8_t layerIndex, uint8_t doubleBuffered) {
   L->clipX = L->clipY = 0; 
   L->clipW = L->width;
   L->clipH = L->height;
+  L->drawAddr = L->memoryAddr;
+  L->alpha = hltdc.LayerCfg[layerIndex].Alpha;
   HAL_LTDC_SetWindowPosition_NoReload(&hltdc, L->posX, L->posY, layerIndex);
-  HAL_LTDC_SetAddress_NoReload(&hltdc, L->memoryAddr, layerIndex);
+  HAL_LTDC_SetAddress_NoReload(&hltdc, L->drawAddr, layerIndex);
   tft_LTDC_need_reload = 1;
 }
 
@@ -99,7 +101,24 @@ void tftLTDCsetLayerAlpha(uint8_t layerIndex, uint8_t alpha) {
     HAL_LTDC_SetAlpha_NoReload(&hltdc, alpha, layerIndex);
     tft_LTDC_need_reload = 1;
   }  
+
+  
+//  TFT_LTDC_layer *L = &tft_layer[layerIndex];
+//  if (L->alpha == alpha) return;
+//  L->alpha = alpha;
+//  tft_LTDC_need_reload = 1;
+//  if (hltdc.LayerCfg[layerIndex].Alpha != alpha) {
+//    HAL_LTDC_SetAlpha_NoReload(&hltdc, alpha, layerIndex);
+//    tft_LTDC_need_reload = 1;
+//  }  
 }
+//  TFT_LTDC_layer *L = &tft_layer[layerIndex];
+//  L->alpha = alpha;
+//  if (hltdc.LayerCfg[layerIndex].Alpha != alpha) {
+//    HAL_LTDC_SetAlpha_NoReload(&hltdc, alpha, layerIndex);
+//    tft_LTDC_need_reload = 1;
+//  }  
+
 
 /* - Set Active layer (to draw primitives) - setting pointer to memory buffer
  */
@@ -118,7 +137,7 @@ void tftLTDCsetActiveBuffer(uint8_t layerIndex, uint8_t buferIndex) {
   L->activeBuffer = buferIndex;
   L->drawAddr = L->memoryAddr + L->activeBuffer * L->width * L->height * TFT_PS;
   if (isActive) {
-    buferIndex = L->activeBuffer;
+    tft_addr = L->drawAddr;
   }  
 }
 
