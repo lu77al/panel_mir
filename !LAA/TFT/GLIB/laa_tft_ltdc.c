@@ -25,13 +25,15 @@ extern LTDC_HandleTypeDef hltdc;
 
 typedef struct {
   uint32_t  memoryAddr;     // Addrress of memory buffer
+  uint32_t  drawAddr;       // Current address to draw
   uint16_t  width, height;  // Size of buffer in pixels
   uint16_t  posX, posY;     // Layer position at the TFT (see LTDC)
   uint16_t  clipX, clipY;   // Visible clip (inside buffer) position
   uint16_t  clipW, clipH;   // Visible clip (inside buffer) size
   uint8_t   visibleBuffer;  // 0..1 - index of visible sublayer (pointed by LTDC)
   uint8_t   activeBuffer;   // 0..1 - index of active sublayer to draw (pointed by tft_lib engine)
-//  uint8_t   alpha;          // blending factor (0 - transparent; 255 - opaque)
+  uint8_t   alpha;          // blending factor (0 - transparent; 255 - opaque)
+  uint8_t   setAlpha, setClipping, setPosition; // Flags to perform action after retrace
 } TFT_LTDC_layer;
 
 TFT_LTDC_layer tft_layer[2];
@@ -60,8 +62,11 @@ void tftLTDCuserSetup() {
   // Select active layer0 / GoDouble / ClearScreen / Apply settings
   tftLTDCsetActiveLayer(0);
   tftClearScreen(0);
-//  tftLTDCsetDoubleMode(1, 1);
+  tftLTDCsetActiveLayer(1);
+  tftClearScreen(0);
+  tftLTDCsetDoubleMode(1, 1);
   tftLTDCsetDoubleMode(0, 1);
+  tftLTDCsetLayerAlpha(0, 0xFF);
   tftLTDCforceReload();
   tftLTDCwaitForReload();
 }
@@ -82,24 +87,25 @@ void tftLTDCsetupLayer(uint8_t layerIndex, uint8_t doubleBuffered) {
   L->clipH = L->height;
   HAL_LTDC_SetWindowPosition_NoReload(&hltdc, L->posX, L->posY, layerIndex);
   HAL_LTDC_SetAddress_NoReload(&hltdc, L->memoryAddr, layerIndex);
-//  HAL_LTDC_SetAlpha_NoReload(&hltdc, L->alpha, layerIndex);
   tft_LTDC_need_reload = 1;
 }
 
 /* - Change layer blending factor
  */
 void tftLTDCsetLayerAlpha(uint8_t layerIndex, uint8_t alpha) {
-//  TFT_LTDC_layer *L = &tft_layer[layerIndex];
-//  L->alpha = alpha;
-  HAL_LTDC_SetAlpha_NoReload(&hltdc, alpha, layerIndex);
-  tft_LTDC_need_reload = 1;
+  TFT_LTDC_layer *L = &tft_layer[layerIndex];
+  L->alpha = alpha;
+  if (hltdc.LayerCfg[layerIndex].Alpha != alpha) {
+    HAL_LTDC_SetAlpha_NoReload(&hltdc, alpha, layerIndex);
+    tft_LTDC_need_reload = 1;
+  }  
 }
 
 /* - Set Active layer (to draw primitives) - setting pointer to memory buffer
  */
 void tftLTDCsetActiveLayer(uint8_t layerIndex) {
   TFT_LTDC_layer *L = &tft_layer[layerIndex];
-  tft_addr = L->memoryAddr + L->activeBuffer * L->width * L->height * TFT_PS;
+  tft_addr = L->drawAddr;
   tft_h = L->height;
   tft_w = L->width;
 }
@@ -107,8 +113,13 @@ void tftLTDCsetActiveLayer(uint8_t layerIndex) {
 /* - Set Active buffer and layer (to draw primitives) - setting pointer to memory buffer
  */
 void tftLTDCsetActiveBuffer(uint8_t layerIndex, uint8_t buferIndex) {
-  tft_layer[layerIndex].activeBuffer = buferIndex;
-  tftLTDCsetActiveLayer(layerIndex);
+  TFT_LTDC_layer *L = &tft_layer[layerIndex];
+  uint8_t isActive = L->drawAddr == tft_addr;
+  L->activeBuffer = buferIndex;
+  L->drawAddr = L->memoryAddr + L->activeBuffer * L->width * L->height * TFT_PS;
+  if (isActive) {
+    buferIndex = L->activeBuffer;
+  }  
 }
 
 /* - Set LTDC layer adress
@@ -145,7 +156,6 @@ void tftLTDCsetDoubleMode(uint8_t layerIndex, uint8_t doubleMode) {
     tftLTDCsetActiveBuffer(layerIndex, L->visibleBuffer);
   }
 }  
-
 
 /* - Clip subarea from buffer
  * TODO - noreload mode or synchronized mode
