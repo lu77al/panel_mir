@@ -321,7 +321,8 @@ void tftSwitchLayerAdressTest() {
   tftClearScreen(0x000055);
 
   tftLTDCsetClipping(1, 0, 0, 16 * 5 + 32, 32);
-  tftLTDCsetLayerAlpha(1, 0xFF);
+  tftLTDCsetLayerAlpha(0, 0xFF);
+  tftLTDCsetLayerAlpha(1, 40);
   
   tstPrepareImg();
 

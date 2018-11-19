@@ -31,7 +31,7 @@ typedef struct {
   uint16_t  clipW, clipH;   // Visible clip (inside buffer) size
   uint8_t   visibleBuffer;  // 0..1 - index of visible sublayer (pointed by LTDC)
   uint8_t   activeBuffer;   // 0..1 - index of active sublayer to draw (pointed by tft_lib engine)
-  uint8_t   alpha;          // blending factor (0 - transparent; 255 - opaque)
+//  uint8_t   alpha;          // blending factor (0 - transparent; 255 - opaque)
 } TFT_LTDC_layer;
 
 TFT_LTDC_layer tft_layer[2];
@@ -48,14 +48,14 @@ void tftLTDCuserSetup() {
   L->memoryAddr = TFT_MAIN_LAYER;
   L->posX = 0;
   L->posY = 0;
-  L->alpha = 0xFF;
+//  L->alpha = 0xFF;
   tftLTDCsetupLayer(0, 0);
   // Message layer
   L = &tft_layer[1];
   L->memoryAddr = TFT_MSG_LAYER;
   L->posX = 297;
   L->posY = 207;
-  L->alpha = 0x00;
+//  L->alpha = 0x00;
   tftLTDCsetupLayer(1, 0);
   // Select active layer0 / GoDouble / ClearScreen / Apply settings
   tftLTDCsetActiveLayer(0);
@@ -89,9 +89,9 @@ void tftLTDCsetupLayer(uint8_t layerIndex, uint8_t doubleBuffered) {
 /* - Change layer blending factor
  */
 void tftLTDCsetLayerAlpha(uint8_t layerIndex, uint8_t alpha) {
-  TFT_LTDC_layer *L = &tft_layer[layerIndex];
-  L->alpha = alpha;
-//  HAL_LTDC_SetAlpha_NoReload(&hltdc, alpha, layerIndex);
+//  TFT_LTDC_layer *L = &tft_layer[layerIndex];
+//  L->alpha = alpha;
+  HAL_LTDC_SetAlpha_NoReload(&hltdc, alpha, layerIndex);
   tft_LTDC_need_reload = 1;
 }
 
