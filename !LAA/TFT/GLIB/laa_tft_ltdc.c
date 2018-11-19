@@ -96,21 +96,9 @@ void tftLTDCsetupLayer(uint8_t layerIndex, uint8_t doubleBuffered) {
  */
 void tftLTDCsetLayerAlpha(uint8_t layerIndex, uint8_t alpha) {
   TFT_LTDC_layer *L = &tft_layer[layerIndex];
+  if (L->alpha == alpha) return;
   L->alpha = alpha;
-  if (hltdc.LayerCfg[layerIndex].Alpha != alpha) {
-    HAL_LTDC_SetAlpha_NoReload(&hltdc, alpha, layerIndex);
-    tft_LTDC_need_reload = 1;
-  }  
-
-  
-//  TFT_LTDC_layer *L = &tft_layer[layerIndex];
-//  if (L->alpha == alpha) return;
-//  L->alpha = alpha;
-//  tft_LTDC_need_reload = 1;
-//  if (hltdc.LayerCfg[layerIndex].Alpha != alpha) {
-//    HAL_LTDC_SetAlpha_NoReload(&hltdc, alpha, layerIndex);
-//    tft_LTDC_need_reload = 1;
-//  }  
+  L->setAlpha = tft_LTDC_need_reload = 1;
 }
 //  TFT_LTDC_layer *L = &tft_layer[layerIndex];
 //  L->alpha = alpha;
@@ -181,25 +169,38 @@ void tftLTDCsetDoubleMode(uint8_t layerIndex, uint8_t doubleMode) {
  */
 void tftLTDCsetClipping(uint8_t layerIndex, int16_t x, int16_t y, int16_t w, int16_t h) {
   TFT_LTDC_layer *L = &tft_layer[layerIndex];
+  if (L->clipX == x &&
+      L->clipY == y &&
+      L->clipW == w &&
+      L->clipH == h) return;
   L->clipX = x;
   L->clipY = y;
   L->clipW = w;
   L->clipH = h;
   tftLTDCsetAddress(layerIndex);
-  HAL_LTDC_SetWindowSize(&hltdc, w, h, layerIndex);
-  HAL_LTDC_SetPitch(&hltdc, L->width, layerIndex);
+  L->setClipping = 1;
 }  
+//  TFT_LTDC_layer *L = &tft_layer[layerIndex];
+//  L->clipX = x;
+//  L->clipY = y;
+//  L->clipW = w;
+//  L->clipH = h;
+//  tftLTDCsetAddress(layerIndex);
+//  HAL_LTDC_SetWindowSize(&hltdc, w, h, layerIndex);
+//  HAL_LTDC_SetPitch(&hltdc, L->width, layerIndex);
 
 /* - Clip subarea from buffer
  */
 void tftLTDCsetPosition(uint8_t layerIndex, int16_t x, int16_t y) {
   TFT_LTDC_layer *L = &tft_layer[layerIndex];
+  if (L->posX == x && L->posY == y) return;
   L->posX = x;
   L->posY = y;
-  HAL_LTDC_SetWindowPosition_NoReload(&hltdc, x, y, layerIndex);
-  HAL_LTDC_SetPitch_NoReload(&hltdc, L->width, layerIndex);
-  tft_LTDC_need_reload = 1;
+  L->setPosition = tft_LTDC_need_reload = 1;
 }  
+//  HAL_LTDC_SetWindowPosition_NoReload(&hltdc, x, y, layerIndex);
+//  HAL_LTDC_SetPitch_NoReload(&hltdc, L->width, layerIndex);
+//  tft_LTDC_need_reload = 1;
 
 /* - Init waiting for retrace to reoad LTDC parameters
  */
@@ -233,4 +234,12 @@ uint8_t tftLTDCisWaitingForReload() {
  */
 void HAL_LTDC_ReloadEventCallback(LTDC_HandleTypeDef *hltdc) {
   tft_LTDC_wait_retrace = 0;
+  for (uint8_t i=0; i<2; i++) {
+    TFT_LTDC_layer *L = &tft_layer[i];
+    if (L->setAlpha) HAL_LTDC_SetAlpha(hltdc, L->alpha, i);
+    if (L->setClipping) HAL_LTDC_SetWindowSize(hltdc, L->clipW, L->clipH, i);
+    if (L->setPosition) HAL_LTDC_SetWindowPosition(hltdc, L->posX, L->posY, i);
+    if (L->setAlpha || L->setClipping || L->setPosition) HAL_LTDC_SetPitch(hltdc, L->width, i);
+    L->setAlpha = L->setClipping = L->setPosition = 0;
+  }  
 }  
