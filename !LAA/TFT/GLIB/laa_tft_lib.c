@@ -77,7 +77,7 @@ void tftClearScreen(uint32_t color) {
   tft_fg = save_fg;
 }  
 
-/* Rectangle at x,y of w,h size with fg color (withput out;ine) */
+/* Rectangle at x,y of w,h size with fg color (withput outline) */
 void tftRect(int16_t x, int16_t y, uint16_t w, uint16_t h) {
   if ((w | h) == 0) return;
   if (x >= tft_w) return;

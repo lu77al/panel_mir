@@ -180,14 +180,6 @@ void tftLTDCsetClipping(uint8_t layerIndex, int16_t x, int16_t y, int16_t w, int
   tftLTDCsetAddress(layerIndex);
   L->setClipping = 1;
 }  
-//  TFT_LTDC_layer *L = &tft_layer[layerIndex];
-//  L->clipX = x;
-//  L->clipY = y;
-//  L->clipW = w;
-//  L->clipH = h;
-//  tftLTDCsetAddress(layerIndex);
-//  HAL_LTDC_SetWindowSize(&hltdc, w, h, layerIndex);
-//  HAL_LTDC_SetPitch(&hltdc, L->width, layerIndex);
 
 /* - Clip subarea from buffer
  */
@@ -198,9 +190,6 @@ void tftLTDCsetPosition(uint8_t layerIndex, int16_t x, int16_t y) {
   L->posY = y;
   L->setPosition = tft_LTDC_need_reload = 1;
 }  
-//  HAL_LTDC_SetWindowPosition_NoReload(&hltdc, x, y, layerIndex);
-//  HAL_LTDC_SetPitch_NoReload(&hltdc, L->width, layerIndex);
-//  tft_LTDC_need_reload = 1;
 
 /* - Init waiting for retrace to reoad LTDC parameters
  */

@@ -176,10 +176,14 @@ int16_t ballSize = 25;
 
 int16_t msgX  = 300;
 int16_t msgY  = 10;
-int16_t msgDX = -3;
-int16_t msgDY = 5;
+int16_t msgDX = -1;
+int16_t msgDY = 2;
 int16_t msgW = 205;
 int16_t msgH = 65;
+int16_t margin = 0;
+int16_t factor = 0;
+int16_t dMargin = 1;
+int16_t dFactor = 1;
 
 extern RNG_HandleTypeDef hrng;
 
@@ -322,8 +326,8 @@ void tftSwitchLayerAdressTest() {
 
 //  HAL_LTDC_SetAlpha(&hltdc, 0x60, 1);
   
-  tftLTDCsetClipping(1, 0, 0, 16 * 5 + 32, 32);
-  tftLTDCsetLayerAlpha(1, 0x40);
+//  tftLTDCsetClipping(1, 20, 20, 16 * 5 + 32, 32);
+//  tftLTDCsetLayerAlpha(1, 0x40);
 //  HAL_LTDC_SetAlpha(&hltdc, 0xff, 0);
   //HAL_LTDC_SetAlpha(&hltdc, 0x60, 1);
   
@@ -343,19 +347,24 @@ void tftSwitchLayerAdressTest() {
     tftDrawLayer0();
     tftLTDCswapBuffers(0);
 
+    
     tftLTDCsetActiveLayer(1);
+    tftClearScreen(0x000055);
     tftSetForeground(0xFFFFFF);
     tftSetBackground(0x000055);
     char msg[6];
     sprintf(msg, "%05d", counter++);
-    tftSetTextPos(16, 0);
+    tftSetTextPos(16 + 16, 16 + 0);
     tftPrint(msg, 5);
     tftLTDCswapBuffers(1);
-
     
-    tftMoveAxis(&msgX, &msgDX, 800 - 16 * 5 - 32);
-    tftMoveAxis(&msgY, &msgDY, 480 - 32);
+    tftMoveAxis(&margin, &dMargin, 16);
+    tftMoveAxis(&factor, &dFactor, 127+64);
+    tftMoveAxis(&msgX, &msgDX, 800 - 16 * 5 - 32 - margin * 2);
+    tftMoveAxis(&msgY, &msgDY, 480 - 32 - margin * 2);
 
+    tftLTDCsetClipping(1, 16 - margin, 16 - margin, 16 * 5 + 32 + margin * 2, 32 + margin * 2);
+    tftLTDCsetLayerAlpha(1, factor + 64);
     tftLTDCsetPosition(1, msgX, msgY);
 
 //    tftLTDCswapBuffers(1);
