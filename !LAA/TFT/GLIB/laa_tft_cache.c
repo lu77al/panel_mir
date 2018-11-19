@@ -11,7 +11,7 @@
 
 /* Cahche for graphical objects
  *  object structure:
- *    00 - ID (16 bytes) BMPtransparent(4) + Filename name(8) + delimiter(1) + extension(3)
+ *    00 - ID (16 bytes) BMPtransparentHash(4) + Filename name(8) + delimiter(1) + extension(3)
  *    16 - pointer to next object (4 bytes). 0 - last object
  *    20 - data
  *      --- font ---
@@ -50,7 +50,7 @@ uint8_t *tftFindObjectAt(const char *id, uint8_t *addr) {
     if (!strncmp((char *)addr, id, OBJ_ID_LENGHT)) break;
     addr = *(uint8_t **)(addr + OBJ_NEXT_OFFS);
   }
-return addr ? addr + OBJ_DATA_OFFS : 0;
+  return addr ? addr + OBJ_DATA_OFFS : 0;
 }
 
 /* If first char is '*' find in ROM then in RAM

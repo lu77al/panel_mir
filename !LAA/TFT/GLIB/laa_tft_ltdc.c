@@ -100,13 +100,6 @@ void tftLTDCsetLayerAlpha(uint8_t layerIndex, uint8_t alpha) {
   L->alpha = alpha;
   L->setAlpha = tft_LTDC_need_reload = 1;
 }
-//  TFT_LTDC_layer *L = &tft_layer[layerIndex];
-//  L->alpha = alpha;
-//  if (hltdc.LayerCfg[layerIndex].Alpha != alpha) {
-//    HAL_LTDC_SetAlpha_NoReload(&hltdc, alpha, layerIndex);
-//    tft_LTDC_need_reload = 1;
-//  }  
-
 
 /* - Set Active layer (to draw primitives) - setting pointer to memory buffer
  */
@@ -238,5 +231,5 @@ void HAL_LTDC_ReloadEventCallback(LTDC_HandleTypeDef *hltdc) {
     if (L->setPosition) HAL_LTDC_SetWindowPosition(hltdc, L->posX, L->posY, i);
     if (L->setAlpha || L->setClipping || L->setPosition) HAL_LTDC_SetPitch(hltdc, L->width, i);
     L->setAlpha = L->setClipping = L->setPosition = 0;
-  }  
-}  
+  }
+}

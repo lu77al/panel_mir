@@ -300,8 +300,7 @@ void tftSetFont(const char* name) {
   tft_fnt.d = found + 4;
 }  
 
-
-/* Clear cache and assingn current font and image to null
+/* Clear cache and assign current font and image to null
  */
 void tftResetObjects() {
   tftClearCache();
@@ -310,6 +309,59 @@ void tftResetObjects() {
   tft_fnt.y = 0;
   tft_fnt.transparent = 1;
 }
+
+
+
+void tft_line(uint16_t px1, uint16_t py1, uint16_t px2, uint16_t py2) {
+  uint16_t x1,y1,x2,y2;
+  if ((x1 = px1) > TFT_W) return;
+  if ((x2 = px2) > TFT_W) return;
+  if ((y1 = py1) > TFT_H) return;
+  if ((y2 = py2) > TFT_H) return;
+  uint16_t mlen, slen;
+  uint32_t mstp, sstp;
+  if (x1 <= x2) {
+    mlen = x2 - x1;
+    mstp = 1;
+  } else {
+    mlen = x1 - x2;
+    mstp = (uint32_t)(-1);
+  }    
+  if (y1 <= y2) {
+    slen = y2 - y1;
+    sstp = TFT_W;
+  } else {
+    slen = y1 - y2;
+    sstp = (uint32_t)(-TFT_W);
+  }
+  uint16_t *pix = (uint16_t *)tft_addr + x1 + y1 * TFT_W;
+  if (mlen < slen) {
+    swap_u16(mlen, slen);
+    swap_u32(mstp, sstp);
+  }
+  uint16_t cnt = mlen >> 1;
+  uint16_t color = ((tft_fg & 0x0000F8) >> 3) | ((tft_fg & 0x00FC00) >> 5) | ((tft_fg & 0xF80000) >> 8);
+  uint8_t pos = 0;
+  for (uint16_t i=mlen+1; i; i--) {
+    if (tft_line_msk & tft_line_msk_point) *pix = color;
+    pix += mstp;
+    if ((cnt += slen) >= mlen) {
+      cnt -= mlen;
+      pix += sstp;
+      pos += 38;
+      if (pos & 0x80) {
+        tft_line_msk_point <<= 1;
+        if (tft_line_msk_point == 0) tft_line_msk_point = 1;
+        pos &= 0x7f;
+      }  
+    }
+    tft_line_msk_point <<= 1;
+    if (tft_line_msk_point == 0) tft_line_msk_point = 1;
+    pos &= 0x7f;
+  }  
+}
+
+
 
 #if 0
 
