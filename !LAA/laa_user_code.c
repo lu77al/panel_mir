@@ -5,8 +5,8 @@
 #include "laa_sdram.h"
 #include "laa_sdcard.h"
 #include "laa_tft_led.h"
-#include "laa_tft_ltdc.h"
 #include "laa_tft_lib.h"
+#include "laa_tft_buffers.h"
 #include "laa_tst_tft.h"
 
 //extern TIM_HandleTypeDef htim3;
@@ -21,11 +21,10 @@ volatile uint16_t main_tic_cnt = 0;
 
 void userInit() {
   sdramInit();                  // Activate SDRAM 
-  tftLTDCuserSetup();           // Init LTDC layers
   HAL_TIM_Base_Start(&htim10);  // Time source for task dispatcher (flags only)
   sdMount();                    // Mount SD card
   tftResetObjects();            // Clear cache ...
-  tftLEDinit(0, 192);           // Activate TFT backlight
+  tftInit();
 }  
   
 

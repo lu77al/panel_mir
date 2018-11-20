@@ -1161,12 +1161,6 @@
   <group>
     <name>!LAA</name>
     <group>
-      <name>UTILS</name>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\UTILS\laa_global_utils.h</name>
-      </file>
-    </group>
-    <group>
       <name>SDCard</name>
       <file>
         <name>$PROJ_DIR$\..\!LAA\SDCARD\laa_sdcard.c</name>
@@ -1189,6 +1183,12 @@
       <group>
         <name>GLIB</name>
         <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_buffers.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_buffers.h</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_cache.c</name>
         </file>
         <file>
@@ -1199,12 +1199,6 @@
         </file>
         <file>
           <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_lib.h</name>
-        </file>
-        <file>
-          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_ltdc.c</name>
-        </file>
-        <file>
-          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_ltdc.h</name>
         </file>
       </group>
       <group>
@@ -1225,6 +1219,12 @@
           <name>$PROJ_DIR$\..\!LAA\TFT\TEST\laa_tst_tft.h</name>
         </file>
       </group>
+    </group>
+    <group>
+      <name>UTILS</name>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\UTILS\laa_global_utils.h</name>
+      </file>
     </group>
     <file>
       <name>$PROJ_DIR$\..\!LAA\laa_user_code.c</name>

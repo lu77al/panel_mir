@@ -3,10 +3,10 @@
 
 #include "stm32f7xx_hal.h"
 
-#define TFT_PS 2
-
-extern uint16_t  tft_w;
-extern uint16_t  tft_h;
+#define TFT_PIXEL  2
+#define TFT_WIDTH  800
+#define TFT_HEIGHT 480
+#define TFT_BUFFER_SIZE (TFT_WIDTH * TFT_HEIGHT * TFT_PIXEL)
 
 void tftSetWaitDMA(uint8_t mode);
 void tftRect(int16_t x, int16_t y, uint16_t w, uint16_t h);
