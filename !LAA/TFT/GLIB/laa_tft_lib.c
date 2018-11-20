@@ -310,7 +310,7 @@ void tftResetObjects() {
   tft_fnt.transparent = 1;
 }
 
-
+#if 0
 
 void tft_line(uint16_t px1, uint16_t py1, uint16_t px2, uint16_t py2) {
   uint16_t x1,y1,x2,y2;
@@ -363,7 +363,6 @@ void tft_line(uint16_t px1, uint16_t py1, uint16_t px2, uint16_t py2) {
 
 
 
-#if 0
 
 //https://electronix.ru/forum/lofiversion/index.php/t143598-50.html
 
