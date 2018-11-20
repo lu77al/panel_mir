@@ -53,10 +53,13 @@ void sdClose() {
   f_close(&SDFile);
 }  
 
-
 uint8_t sdRead(uint8_t *buffer, uint32_t size) {
   uint32_t byteread;
   if (f_read(&SDFile, buffer, size, (void *)&byteread) != FR_OK) return 0;
   return (size == byteread);
+}  
+
+uint8_t sdSeek(uint32_t pos) {
+  return f_lseek(&SDFile, pos) == FR_OK;
 }  
 

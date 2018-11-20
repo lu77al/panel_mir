@@ -23,7 +23,6 @@ void userInit() {
   sdramInit();                  // Activate SDRAM 
   HAL_TIM_Base_Start(&htim10);  // Time source for task dispatcher (flags only)
   sdMount();                    // Mount SD card
-  tftResetObjects();            // Clear cache ...
   tftInit();
 }  
   

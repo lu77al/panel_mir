@@ -324,11 +324,14 @@ void tftSwitchLayerAdressTest() {
 
   tftLEDsetInst(200);
   
-  tftSetFont("F16X32.FNT");
-  tftSetTextTransparency(0);
+//  tftSelectFont("F16X32.FNT");
+//  tftSetTextTransparency(0);
+  tftSelectBMP("BAT.BMP",0xffffffff);
   
   while (1) {
     tftDrawLayer0();
+    
+    tftDrawBMP(100,100);  
 
     tftNextFrame();
     

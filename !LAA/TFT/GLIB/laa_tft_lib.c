@@ -12,8 +12,16 @@
 
 extern DMA2D_HandleTypeDef hdma2d;
 
+uint32_t tft_addr  = TFT_SCREEN;  // Address of memory region to draw primitives
+uint8_t  tft_wait_dma = 1;
+
+uint32_t  tft_fg = 0xffffff;
+uint32_t  tft_bg = 0x000000;
+uint16_t  tft_fg16 = 0xffff;
+uint16_t  tft_bg16 = 0x0000;
+
 typedef struct {
-  uint8_t   *d;    // pointer to pixels data
+  uint8_t   *img;  // pointer to pixels data
   uint16_t  bpc;   // bytes per char
   uint8_t   w;
   uint8_t   h;
@@ -25,13 +33,35 @@ typedef struct {
 
 TFTfont  tft_fnt;
 
-uint32_t tft_addr  = TFT_SCREEN;  // Address of memory region to draw primitives
+typedef struct {
+  uint8_t   *img;      // pointer to pixels data
+  uint16_t  w;
+  uint16_t  h;
+  uint32_t  trColor;   // transparent color (16 bit) 0xFFFFFFFF - not set
+  char      name[17];  // 12char name + "*" for system fonts + transparent_color_hash
+} TFTbmp;
 
-uint8_t   tft_wait_dma = 1;
-uint32_t  tft_fg = 0xffffff;
-uint32_t  tft_bg = 0x000000;
-uint16_t  tft_fg16 = 0xffff;
-uint16_t  tft_bg16 = 0x0000;
+TFTbmp  tft_bmp;
+
+//*********** COLORS + GENERAL ROUTINES **************
+
+/* Clear cache and assign current font and image to null
+ */
+void tftResetObjects() {
+  tftClearCache();
+  tft_fnt.img = 0;
+  tft_fnt.x = 0;
+  tft_fnt.y = 0;
+  tft_fnt.transparent = 1;
+}
+
+/* Fill all active layer with colour */
+void tftClearScreen(uint32_t color) {
+  uint32_t save_fg = tft_fg;
+  tft_fg = color;
+  tftRect(0, 0, TFT_WIDTH, TFT_HEIGHT);
+  tft_fg = save_fg;
+}  
 
 /* Color 24bit -> 16bit(565) */
 uint16_t tftShrinkColor(uint32_t color) {
@@ -55,24 +85,7 @@ void tftSetBackground(uint32_t color) {
   tft_bg16 = tftShrinkColor(color);
 }  
 
-/* text position setter */
-void tftSetTextPos(int16_t x, int16_t y) {
-  tft_fnt.x = x;
-  tft_fnt.y = y;
-}
-
-/* text transparency setter */
-void tftSetTextTransparency(int8_t tr) {
-  tft_fnt.transparent = tr;
-}  
-
-/* Fill all active layer with colour */
-void tftClearScreen(uint32_t color) {
-  uint32_t save_fg = tft_fg;
-  tft_fg = color;
-  tftRect(0, 0, TFT_WIDTH, TFT_HEIGHT);
-  tft_fg = save_fg;
-}  
+//*********** BASIC PRIMITIVES **************
 
 /* Rectangle at x,y of w,h size with fg color (withput outline) */
 void tftRect(int16_t x, int16_t y, uint16_t w, uint16_t h) {
@@ -88,12 +101,23 @@ void tftRect(int16_t x, int16_t y, uint16_t w, uint16_t h) {
   uint32_t addr = tft_addr + TFT_PIXEL * (y * TFT_WIDTH + x);
   hdma2d.Init.Mode = DMA2D_R2M;
   hdma2d.Init.OutputOffset = TFT_WIDTH - w;
-  if (HAL_DMA2D_Init(&hdma2d) == HAL_OK) {
-    if (HAL_DMA2D_Start(&hdma2d, tft_fg, addr, w, h) == HAL_OK) {
-      if (tft_wait_dma) HAL_DMA2D_PollForTransfer(&hdma2d, 200);
-    }  
-  }  
+  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) return;
+  if (HAL_DMA2D_Start(&hdma2d, tft_fg, addr, w, h) != HAL_OK) return;
+  if (tft_wait_dma) HAL_DMA2D_PollForTransfer(&hdma2d, 200);
 }
+
+//*********** FONT AND TEXT ROUTINES **************
+
+/* text position setter */
+void tftSetTextPos(int16_t x, int16_t y) {
+  tft_fnt.x = x;
+  tft_fnt.y = y;
+}
+
+/* text transparency setter */
+void tftSetTextTransparency(int8_t tr) {
+  tft_fnt.transparent = tr;
+}  
 
 /* Full char with background */
 void tftCharFullBG(uint16_t *scr, uint8_t *chr) {
@@ -151,13 +175,13 @@ void tftCharClipped(uint8_t *chr) {
 }  
 
 /* Draw one character and move carret pos */
-void tftChar(char ch) {
-  if (tft_fnt.d == 0) return;
+void tftDrawChar(char ch) {
+  if (tft_fnt.img == 0) return;
   if (tft_fnt.x >= TFT_WIDTH) return;
   if (tft_fnt.y >= TFT_HEIGHT) return;
   if ((tft_fnt.x + tft_fnt.w) < 1) return;
   if ((tft_fnt.y + tft_fnt.h) < 1) return;
-  uint8_t *chr = tft_fnt.d + ch * tft_fnt.bpc;
+  uint8_t *chr = tft_fnt.img + ch * tft_fnt.bpc;
   if ((tft_fnt.x < 0) || (tft_fnt.y < 0) ||
       ((tft_fnt.x + tft_fnt.w) > TFT_WIDTH) ||
       ((tft_fnt.y + tft_fnt.h) > TFT_HEIGHT)) {
@@ -177,7 +201,7 @@ void tftChar(char ch) {
 void tftPrint(char *text, uint8_t length) {
   for (uint8_t i = length; i; i--) {
     if (!*text) return;
-    tftChar(*(text++));
+    tftDrawChar(*(text++));
   }  
 }  
 
@@ -215,8 +239,8 @@ uint8_t *tftLoadFont(const char* name) {
  *  if not found reads font from SD and allocates it in the heap
  *  if not found on SD assigns default font
  */
-void tftSetFont(const char* name) {
-  if (!strncmp(tft_fnt.name, name, 13) && tft_fnt.d) return;
+void tftSelectFont(const char* name) {
+  if (!strncmp(tft_fnt.name, name, 13) && tft_fnt.img) return;
   uint8_t *found = tftFindObject(name);
   if (!found) {
     found = tftLoadFont(name);
@@ -229,18 +253,170 @@ void tftSetFont(const char* name) {
   }  
   tft_fnt.w = found[0];
   tft_fnt.h = found[1];
-  tft_fnt.bpc = *(uint16_t *)(&found[2]);
-  tft_fnt.d = found + 4;
+  tft_fnt.bpc = MEM16(found + 2);
+  tft_fnt.img = found + 4;
 }  
 
-/* Clear cache and assign current font and image to null
+//*********** BITMAPS **************
+  #define IMG_PIXEL 2
+
+/* Copy BPM image to screen buffer with transparent color
  */
-void tftResetObjects() {
-  tftClearCache();
-  tft_fnt.d = 0;
-  tft_fnt.x = 0;
-  tft_fnt.y = 0;
-  tft_fnt.transparent = 1;
+void tftCopyTransparentBMP(uint32_t dst, uint32_t src, int16_t w, int16_t h) {
+  int16_t dst_offset = TFT_WIDTH - w;
+  int16_t src_offset = tft_bmp.w - w;
+// output  
+  hdma2d.Init.Mode = DMA2D_M2M_BLEND;
+  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
+  hdma2d.Init.OutputOffset = dst_offset;
+// foreground layer  
+  hdma2d.LayerCfg[1].AlphaMode = DMA2D_COMBINE_ALPHA;
+  hdma2d.LayerCfg[1].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_ARGB1555;
+  hdma2d.LayerCfg[1].InputOffset = src_offset;
+// background layer  
+  hdma2d.LayerCfg[0].AlphaMode = DMA2D_REPLACE_ALPHA;
+  hdma2d.LayerCfg[0].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[0].InputColorMode = DMA2D_INPUT_RGB565;
+  hdma2d.LayerCfg[0].InputOffset = dst_offset;
+// Apply configuration
+  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) return;
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 0) != HAL_OK) return;
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) != HAL_OK) return;
+// start transfer  
+  if (HAL_DMA2D_BlendingStart(&hdma2d, src, dst, dst, w, h) != HAL_OK) return;
+}  
+
+/* Copy BPM image to screen buffer as is
+ */
+void tftCopyOpaqueBMP(uint32_t dst, uint32_t src, int16_t w, int16_t h) {
+  int16_t dst_offset = TFT_WIDTH - w;
+  int16_t src_offset = tft_bmp.w - w;
+// output  
+  hdma2d.Init.Mode = DMA2D_M2M;
+  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
+  hdma2d.Init.OutputOffset = dst_offset;
+// foreground layer  
+  hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+  hdma2d.LayerCfg[1].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB565;
+  hdma2d.LayerCfg[1].InputOffset = src_offset;
+// Apply configuration
+  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) return;
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) != HAL_OK) return;
+// start transfer  
+  if (HAL_DMA2D_Start(&hdma2d, src, dst, w, h) != HAL_OK) return;
+}  
+
+/* Copy BPM image to screen buffer as is
+ *  - clip to screen, prepare adresses, start trasparent or opaque mode
+ */
+void tftDrawBMP(int16_t x, int16_t y) {
+  if (tft_bmp.img == 0) return;
+  if (x >= TFT_WIDTH) return;
+  if (y >= TFT_HEIGHT) return;
+  int16_t w = tft_bmp.w;
+  int16_t h = tft_bmp.h;
+  if ((x + w) < 1) return;
+  if ((y + h) < 1) return;
+  if ((x + w) > TFT_WIDTH) w = TFT_WIDTH - x;
+  if ((y + h) > TFT_HEIGHT) h = TFT_HEIGHT - y;
+  int16_t bmp_x = 0;
+  int16_t bmp_y = 0;
+  if (x < 0) { w += x; bmp_x = -x; x = 0; }
+  if (y < 0) { h += y; bmp_y = -y; y = 0; }
+  uint32_t dst_addr = tft_addr + TFT_PIXEL * (y * TFT_WIDTH + x);
+  uint32_t src_addr = (uint32_t)tft_bmp.img + IMG_PIXEL * (bmp_y * tft_bmp.w + bmp_x);
+  if (tft_bmp.trColor == 0xFFFFFFFF) {
+    tftCopyOpaqueBMP(dst_addr, src_addr, w, h);
+  } else {
+    tftCopyTransparentBMP(dst_addr, src_addr, w, h);
+  } 
+  if (tft_wait_dma) HAL_DMA2D_PollForTransfer(&hdma2d, 200);
+}  
+
+// TODO transfer both name and name_extended (to write it in cache)
+
+uint8_t *tftLoadBMP(const char* name) {
+  hdma2d.Init.Mode = DMA2D_M2M_PFC;
+  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
+  hdma2d.Init.OutputOffset = 0;
+  hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+  hdma2d.LayerCfg[1].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB888;
+  hdma2d.LayerCfg[1].InputOffset = 0;
+  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) return 0;
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) != HAL_OK) return 0;
+  if (name[0] == '*') name++; // Try to read system bmp image from SD card
+//  uint8_t len = strlen(name);
+//  char cut_name[13];
+//  memcpy(cut_name, name, len - 4);
+//  cut_name[len] = 0;
+  if (!sdOpenForRead(name)) return 0;
+  uint8_t *bmp_obj = 0;
+  do {
+    uint8_t buf[26];
+    if (!sdRead(buf, 26)) break;
+    if (*(uint16_t *)buf != 0x4D42) break;
+    uint32_t offset = MEM32(buf + 10);
+    if (offset < 54) break;
+    if (!sdSeek(offset)) break;
+    uint32_t width = MEM32(buf + 18);
+    if (width == 0) break;
+    if (width > TFT_WIDTH) break;
+    uint32_t height = MEM32(buf + 22);
+    if (height == 0) break;
+    if (height > TFT_HEIGHT) break;
+    bmp_obj = tftLocateCache(width * height * IMG_PIXEL + 4, name);
+    SAVE_MEM16(bmp_obj, width)
+    SAVE_MEM16(bmp_obj + 2, height)
+    uint32_t src_line_size  = (width * 3 + 3) & 0xfffffffc;
+    uint32_t line_addr = (uint32_t)bmp_obj + 4 + width * (height - 1) * IMG_PIXEL;
+    for (;height; height--) {
+      HAL_DMA2D_PollForTransfer(&hdma2d, 200);
+      sdRead((void *)sd_buf, src_line_size);
+      HAL_DMA2D_Start(&hdma2d, (uint32_t)sd_buf, line_addr, width, 1);
+      line_addr -= width * IMG_PIXEL;
+    }
+    HAL_DMA2D_PollForTransfer(&hdma2d, 200);
+  } while (0);
+  sdClose();
+  return bmp_obj;
+}
+
+/*
+ *arr.bmp, 0x00 -> *
+ 
+
+
+
+*/
+
+void tftSelectBMP(const char* name, uint32_t trColor) {
+  char name_extended[18];
+  strncpy(name_extended, name, 13);
+  if (trColor == 0xffffffff) {
+    strcat(name_extended, "----");
+  } else {
+    char hash[5];
+    sprintf("%04X", hash, tftShrinkColor(trColor));
+    strcat(name_extended, hash);
+  }
+  if (!strncmp(tft_bmp.name, name_extended, 17) && tft_bmp.img) return;
+  uint8_t *found = tftFindObject(name_extended);
+  if (!found) {
+    found = tftLoadBMP(name);
+  } 
+  if (!found) {
+    tft_bmp.img = 0;
+    tft_bmp.name[0] = 0;
+  } else {
+    strncpy(tft_bmp.name, name_extended, 17);
+    tft_bmp.w = MEM16(found);
+    tft_bmp.h = MEM16(found + 2);
+    tft_bmp.trColor = trColor;
+    tft_bmp.img = found + 4;
+  }  
 }
 
 #if 0
