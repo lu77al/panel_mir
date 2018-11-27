@@ -37,7 +37,7 @@ typedef struct {
   uint8_t   *img;      // pointer to pixels data
   uint16_t  w;
   uint16_t  h;
-  uint32_t  trColor;   // transparent color (16 bit) 0xFFFFFFFF - not set
+  uint16_t  trColor;   // transparent color (16 bit) 0 - not set
   char      name[17];  // 12char name + "*" for system fonts + transparent_color_hash
 } TFTbmp;
 
@@ -64,8 +64,13 @@ void tftClearScreen(uint32_t color) {
 }  
 
 /* Color 24bit -> 16bit(565) */
-uint16_t tftShrinkColor(uint32_t color) {
+uint16_t tftShrinkColor565(uint32_t color) {
   return ((color & 0x0000F8) >> 3) | ((color & 0x00FC00) >> 5) | ((color & 0xF80000) >> 8);
+}  
+
+/* Color 24bit -> 16bit(555) */
+uint16_t tftShrinkColor555(uint32_t color) {
+  return (0x8000 | (color & 0x0000F8) >> 3) | ((color & 0x00F800) >> 6) | ((color & 0xF80000) >> 9);
 }  
 
 /* wait_dma setter*/
@@ -76,13 +81,13 @@ void tftSetWaitDMA(uint8_t mode) {
 /* fg setter*/
 void tftSetForeground(uint32_t color) {
   tft_fg = color;
-  tft_fg16 = tftShrinkColor(color);
+  tft_fg16 = tftShrinkColor565(color);
 }  
 
 /* bg setter*/
 void tftSetBackground(uint32_t color) {
   tft_bg = color;
-  tft_bg16 = tftShrinkColor(color);
+  tft_bg16 = tftShrinkColor565(color);
 }  
 
 //*********** BASIC PRIMITIVES **************
@@ -210,8 +215,8 @@ const uint8_t fnt_header[] = {0x5F, 0x46, 0x6E, 0x74, 0x0C, 0x00, 0x00, 0x00, 0x
 
 /* Load font from SD card to cache (locates space inside routine)*/
 uint8_t *tftLoadFont(const char* name) {
-  if (name[0] == '*') name++; // Try to read system font from SD card
   if (!sdOpenForRead(name)) return 0;
+  if (name[0] == '*') name++; // Try to read system font from SD card
   uint8_t *font_obj = 0;
   do {
     uint8_t buf[12];
@@ -244,12 +249,11 @@ void tftSelectFont(const char* name) {
   uint8_t *found = tftFindObject(name);
   if (!found) {
     found = tftLoadFont(name);
+    if (found) strncpy(tft_fnt.name, name, 13);
   } 
   if (!found) {
     found = (uint8_t *)TFT_ROM_CACHE;
     tft_fnt.name[0] = 0;
-  } else {
-    strncpy(tft_fnt.name, name, 13);
   }  
   tft_fnt.w = found[0];
   tft_fnt.h = found[1];
@@ -327,19 +331,20 @@ void tftDrawBMP(int16_t x, int16_t y) {
   if (y < 0) { h += y; bmp_y = -y; y = 0; }
   uint32_t dst_addr = tft_addr + TFT_PIXEL * (y * TFT_WIDTH + x);
   uint32_t src_addr = (uint32_t)tft_bmp.img + IMG_PIXEL * (bmp_y * tft_bmp.w + bmp_x);
-  if (tft_bmp.trColor == 0xFFFFFFFF) {
-    tftCopyOpaqueBMP(dst_addr, src_addr, w, h);
-  } else {
+  if (tft_bmp.trColor) {
     tftCopyTransparentBMP(dst_addr, src_addr, w, h);
+  } else {
+    tftCopyOpaqueBMP(dst_addr, src_addr, w, h);
   } 
   if (tft_wait_dma) HAL_DMA2D_PollForTransfer(&hdma2d, 200);
 }  
 
-// TODO transfer both name and name_extended (to write it in cache)
 
-uint8_t *tftLoadBMP(const char* name) {
+/* Prepare DM2D transfer for reading BMP from SD
+ */
+uint8_t tftPrepareDMA2D_LOAD_BMP(uint8_t transparent) {
   hdma2d.Init.Mode = DMA2D_M2M_PFC;
-  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
+  hdma2d.Init.ColorMode = transparent ? DMA2D_OUTPUT_ARGB1555 : DMA2D_OUTPUT_RGB565;
   hdma2d.Init.OutputOffset = 0;
   hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
   hdma2d.LayerCfg[1].InputAlpha = 0xFF;
@@ -347,71 +352,87 @@ uint8_t *tftLoadBMP(const char* name) {
   hdma2d.LayerCfg[1].InputOffset = 0;
   if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) return 0;
   if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) != HAL_OK) return 0;
-  if (name[0] == '*') name++; // Try to read system bmp image from SD card
-//  uint8_t len = strlen(name);
-//  char cut_name[13];
-//  memcpy(cut_name, name, len - 4);
-//  cut_name[len] = 0;
+  return 1;
+}  
+
+void tftAddTransparency(uint16_t *data, uint16_t length, uint16_t trColor) {
+  for (;length; length--) {
+    if (*data == trColor) *data = 0;
+    data++;
+  }  
+}  
+
+uint8_t *tftLoadBMP(const char* name, const char* extendedName, uint16_t trColor) {
   if (!sdOpenForRead(name)) return 0;
+  if (!tftPrepareDMA2D_LOAD_BMP(trColor)) return 0;
+  if (name[0] == '*') name++; // Try to read system bmp image from SD card
   uint8_t *bmp_obj = 0;
   do {
     uint8_t buf[26];
-    if (!sdRead(buf, 26)) break;
+    if (!sdRead(buf, 26)) break; // Read header
     if (*(uint16_t *)buf != 0x4D42) break;
-    uint32_t offset = MEM32(buf + 10);
+    uint32_t offset = MEM32(buf + 10); // image offset
     if (offset < 54) break;
     if (!sdSeek(offset)) break;
-    uint32_t width = MEM32(buf + 18);
+    uint32_t width = MEM32(buf + 18);  // width
     if (width == 0) break;
     if (width > TFT_WIDTH) break;
-    uint32_t height = MEM32(buf + 22);
+    uint32_t height = MEM32(buf + 22); // heigt
     if (height == 0) break;
     if (height > TFT_HEIGHT) break;
-    bmp_obj = tftLocateCache(width * height * IMG_PIXEL + 4, name);
+    bmp_obj = tftLocateCache(width * height * IMG_PIXEL + 4, extendedName); // locate cache memory
     SAVE_MEM16(bmp_obj, width)
     SAVE_MEM16(bmp_obj + 2, height)
     uint32_t src_line_size  = (width * 3 + 3) & 0xfffffffc;
-    uint32_t line_addr = (uint32_t)bmp_obj + 4 + width * (height - 1) * IMG_PIXEL;
-    for (;height; height--) {
-      HAL_DMA2D_PollForTransfer(&hdma2d, 200);
-      sdRead((void *)sd_buf, src_line_size);
-      HAL_DMA2D_Start(&hdma2d, (uint32_t)sd_buf, line_addr, width, 1);
-      line_addr -= width * IMG_PIXEL;
-    }
-    HAL_DMA2D_PollForTransfer(&hdma2d, 200);
+    uint16_t *load_addr = (uint16_t *)(bmp_obj + 4 + width * (height - 1) * IMG_PIXEL);
+    uint16_t *conv_addr = load_addr;
+    uint16_t load_cnt = height;
+    uint16_t conv_cnt = trColor ? height : 0;
+    uint8_t  load_handicap = 4;
+    HAL_DMA2D_PollForTransfer(&hdma2d, 100);
+    while (load_cnt | conv_cnt) {
+      if (load_cnt) {
+        sdRead((void *)sd_buf, src_line_size);
+        HAL_DMA2D_Start(&hdma2d, (uint32_t)sd_buf, (uint32_t)load_addr, width, 1);
+        load_addr -= width;
+        load_cnt--;
+      }
+      if (load_handicap) load_handicap--; else {
+        if (!load_cnt) HAL_DMA2D_PollForTransfer(&hdma2d, 100);
+        if (conv_cnt) {
+          tftAddTransparency(conv_addr, width, trColor);
+          conv_addr -= width;
+          conv_cnt--;
+        }  
+      } 
+      HAL_DMA2D_PollForTransfer(&hdma2d, 100);
+    }  
   } while (0);
   sdClose();
   return bmp_obj;
 }
 
-/*
- *arr.bmp, 0x00 -> *
- 
-
-
-
-*/
-
-void tftSelectBMP(const char* name, uint32_t trColor) {
-  char name_extended[18];
-  strncpy(name_extended, name, 13);
-  if (trColor == 0xffffffff) {
-    strcat(name_extended, "----");
-  } else {
-    char hash[5];
-    sprintf("%04X", hash, tftShrinkColor(trColor));
-    strcat(name_extended, hash);
-  }
-  if (!strncmp(tft_bmp.name, name_extended, 17) && tft_bmp.img) return;
-  uint8_t *found = tftFindObject(name_extended);
-  if (!found) {
-    found = tftLoadBMP(name);
-  } 
+/* Set BMP as active. Input paramemter: BMP name, transparemt color
+ *  routine searches for BMP in the heap and assigns it to active vars
+ *  if not found reads BMP from SD and allocates it in the heap
+ *  if not found on SD assigns nul
+ */
+void tftSelectBMP(const char* name, uint32_t trColor888) {
+  char extendedName[18]; // Prepare extended name
+  // (system prefix * up to 1 byte) + (name.ext up to 12 bytes) + (transparent color 4 bytes)
+  strncpy(extendedName, name, 13);
+  uint16_t trColor = (trColor888 != 0xffffffff) ? tftShrinkColor555(trColor888) : 0;
+  char hash[5];
+  sprintf(hash, "%04X", trColor);
+  strcat(extendedName, hash);
+  if (!strncmp(tft_bmp.name, extendedName, 17) && tft_bmp.img) return; // Exit if it's already selected
+  uint8_t *found = tftFindObject(extendedName);
+  if (!found) found = tftLoadBMP(name, extendedName, trColor);
   if (!found) {
     tft_bmp.img = 0;
     tft_bmp.name[0] = 0;
   } else {
-    strncpy(tft_bmp.name, name_extended, 17);
+    strncpy(tft_bmp.name, extendedName, 17);
     tft_bmp.w = MEM16(found);
     tft_bmp.h = MEM16(found + 2);
     tft_bmp.trColor = trColor;

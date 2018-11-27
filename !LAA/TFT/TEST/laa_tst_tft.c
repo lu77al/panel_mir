@@ -326,13 +326,21 @@ void tftSwitchLayerAdressTest() {
   
 //  tftSelectFont("F16X32.FNT");
 //  tftSetTextTransparency(0);
-  tftSelectBMP("BAT.BMP",0xffffffff);
+//  tftSelectBMP("BAT.BMP",0xffffffff);
+
+//  tftSelectBMP("BAT.BMP",0x00ff00);
+//    tftSelectBMP("BAT.BMP",0xffffffff);
   
   while (1) {
     tftDrawLayer0();
-    
-    tftDrawBMP(100,100);  
 
+    tftSelectBMP("BAT.BMP",0xffffffff);
+    tftDrawBMP(400,50);  
+    
+    tftSelectBMP("BAT.BMP",0x00ff00);
+    tftDrawBMP(300,100);  
+
+    
     tftNextFrame();
     
     tftWaitForReload();
