@@ -18,6 +18,7 @@ void tftResetObjects();
 
 //*********** BASIC PRIMITIVES **************
 void tftRect(int16_t x, int16_t y, uint16_t w, uint16_t h);
+void tftLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2);
 
 //*********** FONT AND TEXT ROUTINES **************
 void tftSelectFont(const char* name);

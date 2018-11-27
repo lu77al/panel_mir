@@ -330,6 +330,7 @@ void tftSwitchLayerAdressTest() {
 
 //  tftSelectBMP("BAT.BMP",0x00ff00);
 //    tftSelectBMP("BAT.BMP",0xffffffff);
+
   
   while (1) {
     tftDrawLayer0();
@@ -340,6 +341,8 @@ void tftSwitchLayerAdressTest() {
     tftSelectBMP("BAT.BMP",0x00ff00);
     tftDrawBMP(300,100);  
 
+    tftSetForeground(0xffffff);
+    tftLine(0, 0, 799, 479);
     
     tftNextFrame();
     

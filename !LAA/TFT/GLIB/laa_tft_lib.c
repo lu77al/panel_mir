@@ -43,6 +43,14 @@ typedef struct {
 
 TFTbmp  tft_bmp;
 
+typedef struct {
+  uint8_t   width;
+  uint32_t  pattern;     
+  uint32_t  patternPoint;
+} TFTpen;
+
+TFTpen  tft_pen;
+
 //*********** COLORS + GENERAL ROUTINES **************
 
 /* Clear cache and assign current font and image to null
@@ -53,6 +61,10 @@ void tftResetObjects() {
   tft_fnt.x = 0;
   tft_fnt.y = 0;
   tft_fnt.transparent = 1;
+//  tft_pen.pattern = 0xffffffff;
+  tft_pen.pattern = 0x0f0f0f0f;
+  tft_pen.patternPoint = 1;
+  tft_pen.width = 0;
 }
 
 /* Fill all active layer with colour */
@@ -110,6 +122,69 @@ void tftRect(int16_t x, int16_t y, uint16_t w, uint16_t h) {
   if (HAL_DMA2D_Start(&hdma2d, tft_fg, addr, w, h) != HAL_OK) return;
   if (tft_wait_dma) HAL_DMA2D_PollForTransfer(&hdma2d, 200);
 }
+
+void tftLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2) {
+// Validate parameters  
+  uint8_t hw = (tft_pen.width + 1) >> 1;
+  if (x1 < hw) return;
+  if (y1 < hw) return;
+  if (x2 < hw) return;
+  if (y2 < hw) return;
+  if (x1 >= TFT_WIDTH - hw) return;
+  if (y1 >= TFT_HEIGHT - hw) return;
+  if (x2 >= TFT_WIDTH - hw) return; 
+  if (y2 >= TFT_HEIGHT - hw) return;
+// Prepare additional data
+  int16_t    mainLen, slaveLen;
+  int32_t    mainStep, slaveStep;
+  if (x1 <= x2) {
+    mainLen = x2 - x1;
+    mainStep = 1;
+  } else {
+    mainLen = x1 - x2;
+    mainStep = -1;
+  }
+  if (y1 <= y2) {
+    slaveLen = y2 - y1;
+    slaveStep = TFT_WIDTH;
+  } else {
+    slaveLen = y1 - y2;
+    slaveStep = -TFT_WIDTH;
+  }
+  if (mainLen < slaveLen) {
+    SWAP16(mainLen,  slaveLen);
+    SWAP32(mainStep, slaveStep);
+  }
+  uint16_t counter = mainLen >> 1;
+  uint16_t *point = (uint16_t *)tft_addr + x1 + y1 * TFT_PIXEL;
+  uint32_t pattern = tft_pen.pattern;
+  uint32_t patternPoint = 0;
+  uint16_t color = tft_fg16;
+  uint8_t  path_fraction = 0;
+// Draw it
+  for (uint16_t i = mainLen + 1; i; i--) {
+    if (pattern & patternPoint) {
+      *point = color;
+    }  
+    point += mainStep;
+    if ((counter += slaveLen) >= mainLen) {
+      counter -= mainLen;
+      point += slaveStep;
+      path_fraction += 70;
+      if (path_fraction > 170) {
+        patternPoint <<= 1;
+        if (patternPoint == 0) patternPoint = 1;
+        path_fraction -= 170;
+      }  
+    }
+    patternPoint <<= 1;
+    if (patternPoint == 0) patternPoint = 1;
+  }  
+  tft_pen.patternPoint = patternPoint;
+}  
+
+
+
 
 //*********** FONT AND TEXT ROUTINES **************
 
