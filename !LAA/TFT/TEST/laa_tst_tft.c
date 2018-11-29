@@ -352,7 +352,7 @@ void tftSwitchLayerAdressTest() {
     tftSetPenWidth(4);
     tftLine(10, 100, 700, 450);
     tftSetPenWidth(5);
-    tftSetPenPattern(0xAAAAAAAA);
+    tftSetPenPattern(0x33333333);
     
     tftLine(10, 450, 750, 20);
 
