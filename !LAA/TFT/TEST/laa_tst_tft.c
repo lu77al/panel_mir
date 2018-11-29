@@ -282,7 +282,7 @@ extern LTDC_HandleTypeDef hltdc;
 void tftDrawLayer0() {
   for (uint16_t i = 0; i < 48; i++) {
     uint32_t color = 0xFF0020 - (i << 16) * 5 + (i << 8) * 5;
-    tftSetForeground(color);
+    tftSetBackground(color);
     tftRect(0, i * 10, 800, 10);
   }  
   
@@ -342,8 +342,20 @@ void tftSwitchLayerAdressTest() {
     tftDrawBMP(300,100);  
 
     tftSetForeground(0xffffff);
+    tftSetPenWidth(1);
+    tftSetPenPattern(0xF0F0F0F0);
     tftLine(0, 0, 799, 479);
+    tftSetPenWidth(2);
+    tftLine(0, 478, 798, 0);
+    tftSetPenWidth(3);
+    tftLine(10, 50, 700, 400);
+    tftSetPenWidth(4);
+    tftLine(10, 100, 700, 450);
+    tftSetPenWidth(5);
+    tftSetPenPattern(0xAAAAAAAA);
     
+    tftLine(10, 450, 750, 20);
+
     tftNextFrame();
     
     tftWaitForReload();

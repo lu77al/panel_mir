@@ -14,10 +14,15 @@ void tftSetWaitDMA(uint8_t mode);
 void tftSetForeground(uint32_t color);
 void tftSetBackground(uint32_t color);
 void tftClearScreen(uint32_t color);
+void tftSetPenWidth(uint8_t w);
+void tftSetPenPattern(uint32_t pattern);
 void tftResetObjects();
 
 //*********** BASIC PRIMITIVES **************
 void tftRect(int16_t x, int16_t y, uint16_t w, uint16_t h);
+void tftMoveTo(int16_t x, int16_t y);
+void tftLineTo(int16_t x, int16_t y);
+void tftLineRel(int16_t x, int16_t y);
 void tftLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2);
 
 //*********** FONT AND TEXT ROUTINES **************

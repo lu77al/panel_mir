@@ -44,12 +44,17 @@ typedef struct {
 TFTbmp  tft_bmp;
 
 typedef struct {
+  int16_t   x;
+  int16_t   y;
   uint8_t   width;
   uint32_t  pattern;     
   uint32_t  patternPoint;
+  uint16_t  pathCounter;
 } TFTpen;
 
 TFTpen  tft_pen;
+
+void tftDrawLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2);
 
 //*********** COLORS + GENERAL ROUTINES **************
 
@@ -62,17 +67,17 @@ void tftResetObjects() {
   tft_fnt.y = 0;
   tft_fnt.transparent = 1;
 //  tft_pen.pattern = 0xffffffff;
-  tft_pen.pattern = 0x0f0f0f0f;
+  tftSetPenWidth(1);
+  tftSetPenPattern(0x0f0f0f0f);
   tft_pen.patternPoint = 1;
-  tft_pen.width = 0;
 }
 
 /* Fill all active layer with colour */
 void tftClearScreen(uint32_t color) {
-  uint32_t save_fg = tft_fg;
-  tft_fg = color;
+  uint32_t save_bg = tft_bg;
+  tft_bg = color;
   tftRect(0, 0, TFT_WIDTH, TFT_HEIGHT);
-  tft_fg = save_fg;
+  tft_bg = save_bg;
 }  
 
 /* Color 24bit -> 16bit(565) */
@@ -102,9 +107,17 @@ void tftSetBackground(uint32_t color) {
   tft_bg16 = tftShrinkColor565(color);
 }  
 
+void tftSetPenWidth(uint8_t w) {
+  tft_pen.width = w;
+}  
+
+void tftSetPenPattern(uint32_t pattern) {
+  tft_pen.pattern = pattern;
+}  
+
 //*********** BASIC PRIMITIVES **************
 
-/* Rectangle at x,y of w,h size with fg color (withput outline) */
+/* Rectangle at x,y of w,h size with bg color (withput outline) */
 void tftRect(int16_t x, int16_t y, uint16_t w, uint16_t h) {
   if ((w | h) == 0) return;
   if (x >= TFT_WIDTH) return;
@@ -119,21 +132,47 @@ void tftRect(int16_t x, int16_t y, uint16_t w, uint16_t h) {
   hdma2d.Init.Mode = DMA2D_R2M;
   hdma2d.Init.OutputOffset = TFT_WIDTH - w;
   if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) return;
-  if (HAL_DMA2D_Start(&hdma2d, tft_fg, addr, w, h) != HAL_OK) return;
+  if (HAL_DMA2D_Start(&hdma2d, tft_bg, addr, w, h) != HAL_OK) return;
   if (tft_wait_dma) HAL_DMA2D_PollForTransfer(&hdma2d, 200);
 }
 
+void tftMoveTo(int16_t x, int16_t y) {
+  tft_pen.patternPoint = 1;
+  tft_pen.pathCounter = 0;
+  tft_pen.x = x;
+  tft_pen.y = y;
+}  
+
+void tftLineTo(int16_t x, int16_t y) {
+  tftDrawLine(tft_pen.x, tft_pen.y, tft_pen.x + x, tft_pen.y + y);
+}  
+
+void tftLineRel(int16_t x, int16_t y) {
+  tftDrawLine(tft_pen.x, tft_pen.y, x, y);
+}  
+
 void tftLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2) {
-// Validate parameters  
-  uint8_t hw = (tft_pen.width + 1) >> 1;
-  if (x1 < hw) return;
-  if (y1 < hw) return;
-  if (x2 < hw) return;
-  if (y2 < hw) return;
-  if (x1 >= TFT_WIDTH - hw) return;
-  if (y1 >= TFT_HEIGHT - hw) return;
-  if (x2 >= TFT_WIDTH - hw) return; 
-  if (y2 >= TFT_HEIGHT - hw) return;
+  tft_pen.patternPoint = 1;
+  tft_pen.pathCounter = 0;
+  tftDrawLine(x1, y1, x2, y2);
+}  
+
+void tftDrawLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2) {
+// Update pen position, check pathQuantum
+  tft_pen.x = x2;
+  tft_pen.y = y2;
+// Validate parameters  **
+  if (!tft_pen.width) return;
+  uint8_t right_margin = (tft_pen.width - 1) >> 1;
+  uint8_t left_margin = tft_pen.width - right_margin;
+  if (x1 < right_margin) return;
+  if (y1 < right_margin) return;
+  if (x2 < right_margin) return;
+  if (y2 < right_margin) return;
+  if (x1 > TFT_WIDTH - left_margin) return;
+  if (y1 > TFT_HEIGHT - left_margin) return;
+  if (x2 > TFT_WIDTH - left_margin) return; 
+  if (y2 > TFT_HEIGHT - left_margin) return;
 // Prepare additional data
   int16_t    mainLen, slaveLen;
   int32_t    mainStep, slaveStep;
@@ -156,35 +195,69 @@ void tftLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2) {
     SWAP32(mainStep, slaveStep);
   }
   uint16_t counter = mainLen >> 1;
-  uint16_t *point = (uint16_t *)tft_addr + x1 + y1 * TFT_PIXEL;
+  uint16_t *point = (uint16_t *)tft_addr + x1 + y1 * TFT_WIDTH;
   uint32_t pattern = tft_pen.pattern;
-  uint32_t patternPoint = 0;
+  uint32_t patternPoint = tft_pen.patternPoint;
+  uint16_t pathCounter = tft_pen.pathCounter;
+  uint16_t pathQuantum = 176 * tft_pen.width;
   uint16_t color = tft_fg16;
-  uint8_t  path_fraction = 0;
+  uint8_t  width = tft_pen.width;
 // Draw it
   for (uint16_t i = mainLen + 1; i; i--) {
     if (pattern & patternPoint) {
-      *point = color;
+      if (width == 1) { // Width = 1
+        *point = color;
+      } else {
+        uint16_t *p;
+        uint16_t c = color;        
+        if (width == 2) { // Width = 2
+          p = point;
+          *(p++)=c; *p=c;          //  0*
+          p += TFT_WIDTH - 1;      //  **
+          *(p++)=c; *p=c;
+        } else if (width == 3) { // Width = 3
+          p = point - TFT_WIDTH;
+          *p=c; p += TFT_WIDTH - 1;  //  *
+          *(p++)=c; *(p++)=c; *p=c;  // *0*
+          p += TFT_WIDTH - 1; *p=c;  //  *
+        } else if (width == 4) { // Width = 4
+          p = point - TFT_WIDTH;
+          *(p++)=c; *p=c; p += TFT_WIDTH - 2;  //  **
+          *(p++)=c; *(p++)=c; *(p++)=c; *p=c;  // *0**
+          p += TFT_WIDTH - 3;                  // **** 
+          *(p++)=c; *(p++)=c; *(p++)=c; *p=c;  //  **
+          p += TFT_WIDTH - 2;
+          *(p++)=c; *p=c;
+        } else if (width == 5) { // Width = 5
+          p = point - TFT_WIDTH * 2 - 1;
+          *(p++)=c; *(p++)=c; *p=c;
+          p += TFT_WIDTH - 3;
+          *(p++)=c; *(p++)=c; *(p++)=c; *(p++)=c; *p=c;      //  ***
+          p += TFT_WIDTH - 4;                                // *****
+          *(p++)=c; *(p++)=c; *(p++)=c; *(p++)=c; *p=c;      // **0**
+          p += TFT_WIDTH - 4;                                // *****
+          *(p++)=c; *(p++)=c; *(p++)=c; *(p++)=c; *p=c;      //  ***
+          p += TFT_WIDTH - 3;
+          *(p++)=c; *(p++)=c; *p=c;
+        }  
+      }  
     }  
     point += mainStep;
     if ((counter += slaveLen) >= mainLen) {
       counter -= mainLen;
       point += slaveStep;
-      path_fraction += 70;
-      if (path_fraction > 170) {
-        patternPoint <<= 1;
-        if (patternPoint == 0) patternPoint = 1;
-        path_fraction -= 170;
-      }  
+      pathCounter += 73;
     }
-    patternPoint <<= 1;
-    if (patternPoint == 0) patternPoint = 1;
+    pathCounter += 176;
+    while (pathCounter >= pathQuantum) {
+      pathCounter -= pathQuantum;
+      patternPoint <<= 1;
+      if (patternPoint == 0) patternPoint = 1;
+    }  
   }  
   tft_pen.patternPoint = patternPoint;
+  tft_pen.pathCounter = pathCounter;
 }  
-
-
-
 
 //*********** FONT AND TEXT ROUTINES **************
 
