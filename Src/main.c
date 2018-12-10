@@ -325,7 +325,6 @@ static void MX_LTDC_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* RNG init function */

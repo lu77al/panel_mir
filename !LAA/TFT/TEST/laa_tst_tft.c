@@ -465,7 +465,7 @@ void tftSwitchLayerAdressTest() {
     tftLine(200, 210, 290, 260);
     tftSetPenWidth(16);
     tftSetForeground(0xff0000);
-    tftLine(290, 260, 380, 310);
+    tftLine(290, 260, 200, 210);
     
     tftTestDMA2D_A4();
 
