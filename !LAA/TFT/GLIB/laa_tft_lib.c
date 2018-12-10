@@ -50,6 +50,8 @@ typedef struct {
   uint32_t  pattern;     
   uint32_t  patternPoint;
   uint16_t  pathCounter;
+  uint8_t   bigWidth;
+  uint8_t   img[5000]; // Max 100x100
 } TFTpen;
 
 TFTpen  tft_pen;
@@ -68,6 +70,7 @@ void tftResetObjects() {
   tft_fnt.transparent = 1;
 //  tft_pen.pattern = 0xffffffff;
   tftSetPenWidth(1);
+  tft_pen.bigWidth = 0;
   tftSetPenPattern(0x0f0f0f0f);
   tft_pen.patternPoint = 1;
 }
@@ -107,8 +110,50 @@ void tftSetBackground(uint32_t color) {
   tft_bg16 = tftShrinkColor565(color);
 }  
 
+void tftFillA4Line(uint16_t start, uint8_t len) {
+  if (!len) return;
+  if (start & 1) {
+    tft_pen.img[start >> 1] = 0xF0;
+    if (len == 1) return;
+    len--;
+    start++;
+  }
+  if (len > 1) {
+    memset(&tft_pen.img[start >> 1], 0xFF, len >> 1);
+    start += len;
+    len &= 1;
+  }
+  if (len) tft_pen.img[start >> 1] = 0x0F;
+}  
+
 void tftSetPenWidth(uint8_t w) {
+  if (w > 100) w = 100;
   tft_pen.width = w;
+  if (w > 6) {
+    if (tft_pen.bigWidth == w) return;
+    tft_pen.bigWidth = w;
+    uint8_t wdth = (w + 1) & 0xfffe;
+    asm("nop");
+    memset(tft_pen.img, 0, (w * wdth) >> 1);
+    uint16_t full_sq = w * w;
+    uint8_t  inner_hord = (w & 1) + 1;
+    uint8_t  inner_diam = w - 1;
+    uint8_t  radius = (w + 1) >> 1;
+    uint16_t top = 0;
+    uint16_t bot = wdth * (w - 1);
+    for (uint8_t i = 0; i < radius; i++) {
+      uint16_t val = full_sq -  inner_diam * inner_diam;
+      while (inner_hord * inner_hord <= val) inner_hord +=2;
+      uint8_t hord = inner_hord - 1;
+      if (hord > w) hord = w;
+      uint8_t start = (w - hord) >> 1;
+      tftFillA4Line(top + start, hord);
+      tftFillA4Line(bot + start, hord);
+      top += wdth;
+      bot -= wdth;
+      inner_diam -= 2;
+    }  
+  }  
 }  
 
 void tftSetPenPattern(uint32_t pattern) {
@@ -239,6 +284,46 @@ void tftDrawLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2) {
           *(p++)=c; *(p++)=c; *(p++)=c; *(p++)=c; *p=c;      //  ***
           p += TFT_WIDTH - 3;
           *(p++)=c; *(p++)=c; *p=c;
+        } else if (width == 6) { // Width = 6
+          p = point - TFT_WIDTH * 2;
+          *(p++)=c; *p=c;
+          p += TFT_WIDTH - 2;
+          *(p++)=c; *(p++)=c; *(p++)=c; *p=c;                      //   **
+          p += TFT_WIDTH - 4;                                      //  ****
+          *(p++)=c; *(p++)=c; *(p++)=c; *(p++)=c; *(p++)=c; *p=c;  // **0***
+          p += TFT_WIDTH - 5;                                      // ******
+          *(p++)=c; *(p++)=c; *(p++)=c; *(p++)=c; *(p++)=c; *p=c;  //  ****      
+          p += TFT_WIDTH - 4;                                      //   **
+          *(p++)=c; *(p++)=c; *(p++)=c; *p=c;
+          p += TFT_WIDTH - 2;
+          *(p++)=c; *p=c;
+        } else {
+          p = point - (TFT_WIDTH + 1) * ((width - 1) >> 1);
+          uint8_t hwdth =  (width + 1) & 0xfffe;
+          uint32_t offset = TFT_WIDTH - hwdth;
+        // output  
+          hdma2d.Init.Mode = DMA2D_M2M_BLEND;
+          hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
+          hdma2d.Init.OutputOffset = offset;
+        // foreground layer  
+          hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_A4;
+          hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+          hdma2d.LayerCfg[1].InputAlpha = tft_fg | 0xff000000;
+          hdma2d.LayerCfg[1].InputOffset = 0;
+        // background layer  
+          hdma2d.LayerCfg[0].InputColorMode = DMA2D_INPUT_RGB565;
+          hdma2d.LayerCfg[0].AlphaMode = DMA2D_REPLACE_ALPHA;
+          hdma2d.LayerCfg[0].InputAlpha = 0xFF;
+          hdma2d.LayerCfg[0].InputOffset = offset;
+        // Apply configuration
+          HAL_DMA2D_Init(&hdma2d);
+          HAL_DMA2D_ConfigLayer(&hdma2d, 1);
+          HAL_DMA2D_ConfigLayer(&hdma2d, 0);
+        // start transfer  
+          uint32_t fg_addr = (uint32_t)tft_pen.img;
+          uint32_t bg_addr = (uint32_t)p;
+          HAL_DMA2D_BlendingStart(&hdma2d, fg_addr, bg_addr, bg_addr, hwdth, width);
+          HAL_DMA2D_PollForTransfer(&hdma2d, 200);
         }  
       }  
     }  

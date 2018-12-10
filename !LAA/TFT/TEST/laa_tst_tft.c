@@ -316,6 +316,104 @@ Layer.Alpha / BlendingFactor1? - active window blending
 Layer.Alpha0 / BlendingFactor2? - background blending   
 *****************************/  
 
+extern uint8_t tft_pen_img[5000];
+
+void tftTestDMA2D_A4() {
+  asm("nop");
+  asm("nop");
+  asm("nop");
+  
+  uint8_t img[5000]; // 100x100
+  memset(img, 0, 5000); // Clear
+  for (uint8_t i = 0; i<100; i++) {
+    memset(&img[i*50], 0xff, (100 - i) / 2);
+    if (i % 2) img[i*50 + (100 - i) / 2] = 0x0f;
+  }
+  // --- Prepare DMA2D
+  uint32_t offset = TFT_WIDTH - 100;
+// output  
+  hdma2d.Init.Mode = DMA2D_M2M_BLEND;
+  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
+  hdma2d.Init.OutputOffset = offset;
+// foreground layer  
+  hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_A4;
+  hdma2d.LayerCfg[1].AlphaMode = DMA2D_COMBINE_ALPHA;
+  hdma2d.LayerCfg[1].InputAlpha = 0x8000ffff;
+  hdma2d.LayerCfg[1].InputOffset = 0;
+// background layer  
+  hdma2d.LayerCfg[0].InputColorMode = DMA2D_INPUT_RGB565;
+  hdma2d.LayerCfg[0].AlphaMode = DMA2D_REPLACE_ALPHA;
+  hdma2d.LayerCfg[0].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[0].InputOffset = offset;
+// Apply configuration
+  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) {
+    asm("nop");
+    return;
+  }
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) != HAL_OK) {
+    asm("nop");
+    return;
+  }  
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 0) != HAL_OK) {
+    asm("nop");
+    return;
+  }  
+// start transfer  
+  uint32_t fg_addr = (uint32_t)img;
+  uint32_t bg_addr = tft_addr + 2 * (50 * TFT_WIDTH + 50);
+// uint32_t dst_addr = tft_addr + 2 * 500;
+   
+  if (HAL_DMA2D_BlendingStart(&hdma2d, fg_addr, bg_addr, bg_addr, 100, 100) != HAL_OK) {
+    asm("nop");
+    return;
+  }  
+  HAL_DMA2D_PollForTransfer(&hdma2d, 200);
+
+/*  
+
+  // --- Prepare DMA2D
+  uint32_t offset = TFT_WIDTH - 20;
+// output  
+  hdma2d.Init.Mode = DMA2D_M2M_BLEND;
+  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
+  hdma2d.Init.OutputOffset = offset;
+// foreground layer  
+  hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_A4;
+  hdma2d.LayerCfg[1].AlphaMode = DMA2D_COMBINE_ALPHA;
+  hdma2d.LayerCfg[1].InputAlpha = 0x8000ffff;
+  hdma2d.LayerCfg[1].InputOffset = 0;
+// background layer  
+  hdma2d.LayerCfg[0].InputColorMode = DMA2D_INPUT_RGB565;
+  hdma2d.LayerCfg[0].AlphaMode = DMA2D_REPLACE_ALPHA;
+  hdma2d.LayerCfg[0].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[0].InputOffset = offset;
+// Apply configuration
+  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) {
+    asm("nop");
+    return;
+  }
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) != HAL_OK) {
+    asm("nop");
+    return;
+  }  
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 0) != HAL_OK) {
+    asm("nop");
+    return;
+  }  
+// start transfer  
+  uint32_t fg_addr = (uint32_t)tft_pen_img;
+  uint32_t bg_addr = tft_addr + 2 * (50 * TFT_WIDTH + 50);
+// uint32_t dst_addr = tft_addr + 2 * 500;
+   
+  if (HAL_DMA2D_BlendingStart(&hdma2d, fg_addr, bg_addr, bg_addr, 100, 100) != HAL_OK) {
+    asm("nop");
+    return;
+  }  
+  HAL_DMA2D_PollForTransfer(&hdma2d, 200);
+*/
+  
+}  
+
 void tftSwitchLayerAdressTest() {
   
   tstPrepareImg();
@@ -351,10 +449,25 @@ void tftSwitchLayerAdressTest() {
     tftLine(10, 50, 700, 400);
     tftSetPenWidth(4);
     tftLine(10, 100, 700, 450);
-    tftSetPenWidth(5);
+    tftSetPenWidth(6);
     tftSetPenPattern(0x33333333);
-    
     tftLine(10, 450, 750, 20);
+
+    tftSetPenWidth(21);
+    tftSetPenPattern(0xFFFFFFFF);
+    tftSetForeground(0x0000ff);
+    tftLine(40, 200, 120, 240);
+    tftSetPenWidth(31);
+    tftSetForeground(0x00ff00);
+    tftLine(120, 240, 200, 210);
+    tftSetPenWidth(24);
+    tftSetForeground(0x0000ff);
+    tftLine(200, 210, 290, 260);
+    tftSetPenWidth(16);
+    tftSetForeground(0xff0000);
+    tftLine(290, 260, 380, 310);
+    
+    tftTestDMA2D_A4();
 
     tftNextFrame();
     
