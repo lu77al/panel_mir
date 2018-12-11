@@ -478,7 +478,8 @@ void tftSwitchLayerAdressTest() {
     tftPolyAddVertex(200,120);
     tftPolyAddVertex(155,150);
     tftPolyAddVertex(145,150);
-    while (tftPloyProcess());
+    
+    tftDoTheRest();
 
     tftNextFrame();
     

@@ -9,6 +9,11 @@
 #define TFT_HEIGHT 480
 #define TFT_BUFFER_SIZE (TFT_WIDTH * TFT_HEIGHT * TFT_PIXEL)
 
+//*********** TASK MANAGEMENT **************
+uint8_t tftIsTaskToDo();
+uint8_t tftDoTheNext();
+void tftDoTheRest();
+
 //*********** COLORS + GENERAL ROUTINES **************
 void tftSetWaitDMA(uint8_t mode);
 void tftSetForeground(uint32_t color);

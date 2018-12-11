@@ -61,7 +61,40 @@ typedef struct {
 
 TFTpen  tft_pen;
 
+typedef struct {
+  int16_t x,y;
+} TPoint;
+
+typedef struct { // Task oriented strucure for drawing polygon
+  int16_t  top;        // top..bot - work range
+  int16_t  bot;
+  int16_t  scan;       // current scan line
+  TPoint   vtx[254];   // vertexes
+  uint8_t  size;       // vertexes count
+  uint8_t  stage;      // stage of draw (prepare, fill, outline) 
+} TPolyTask;
+
+TPolyTask  tft_poly;
+
 void tftDrawLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2);
+
+//*********** TASK MANAGEMENT **************
+uint8_t tftIsTaskToDo() {
+  if (tft_poly.size >= 3) return 1;
+  return 0;
+}
+
+uint8_t tftDoTheNext() {
+  if (tft_poly.size >= 3) {
+    tftPloyProcess();
+  } else {
+  }  
+  return tftIsTaskToDo();
+};
+
+void tftDoTheRest() {
+  while (tftDoTheNext());
+};
 
 //*********** COLORS + GENERAL ROUTINES **************
 
@@ -354,21 +387,6 @@ void tftDrawLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2) {
   tft_pen.patternPoint = patternPoint;
   tft_pen.pathCounter = pathCounter;
 }  
-
-typedef struct {
-  int16_t x,y;
-} TPoint;
-
-typedef struct { // Task oriented strucure for drawing polygon
-  int16_t  top;        // top..bot - work range
-  int16_t  bot;
-  int16_t  scan;       // current scan line
-  TPoint   vtx[254];   // vertexes
-  uint8_t  size;       // vertexes count
-  uint8_t  stage;      // stage of draw (prepare, fill, outline) 
-} TPolyTask;
-
-TPolyTask  tft_poly;
 
 void tftPolyInit(uint8_t filled) {
   tft_poly.stage = filled ? 0 : 2;
