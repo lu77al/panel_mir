@@ -363,7 +363,7 @@ typedef struct { // Task oriented strucure for drawing polygon
   int16_t  top;        // top..bot - work range
   int16_t  bot;
   int16_t  scan;       // current scan line
-  TPoint   vtx[255];   // vertexes
+  TPoint   vtx[254];   // vertexes
   uint8_t  size;       // vertexes count
   uint8_t  stage;      // stage of draw (prepare, fill, outline) 
 } TPolyTask;
@@ -375,9 +375,9 @@ void tftPolyInit(uint8_t filled) {
   tft_poly.size = 0;
 }
 
-void tftPolyAddVertex(int8_t x, int8_t y) {
+void tftPolyAddVertex(int16_t x, int16_t y) {
   TPolyTask *p = &tft_poly;
-  if (p->size == 254) return;
+  if (p->size == 255) return;
   p->vtx[p->size].x = x;
   p->vtx[p->size].y = y;
   p->size++;
@@ -395,26 +395,68 @@ void tftPolyScanSection(int16_t y, int16_t x1, int16_t x2) {
   HAL_DMA2D_PollForTransfer(&hdma2d, 50);
 }  
 
+void tftPolyDrawScanLine() {
+  int16_t x[255];
+  uint8_t xCnt = 0;
+  int16_t y = tft_poly.scan;
+  TPoint *pLast = tft_poly.vtx + tft_poly.size - 1;
+  TPoint *p1;
+  TPoint *p2 = tft_poly.vtx;
+  while (p2->y == y) p2++;
+  uint8_t up = p2->y < y;
+  for (uint8_t i=tft_poly.size; i; i--) {
+    p1 = p2;
+    p2 = p1 != pLast ? p1 + 1 : tft_poly.vtx;
+    if (p2->y != y) {
+      uint8_t newUp = p2->y < y;
+      if (up != newUp) {
+        up = newUp;
+        int32_t tmp  = (p2->x - p1->x) * (y - p1->y);
+        int16_t xNew = p1->x + tmp / (p2->y - p1->y);
+        uint8_t ins = 0;
+        while ((xNew > x[ins]) && (ins < xCnt)) ins++;
+        memmove(&x[ins+1], &x[ins], (xCnt - ins)*2);
+        x[ins] = xNew;
+        xCnt++;
+      }  
+    }
+  }
+  for (uint8_t i=0; i < xCnt>>1; i++) tftPolyScanSection(y, x[i*2], x[i*2+1]);
+}  
+
 void tftPloyProcess() {
   TPolyTask *p = &tft_poly;
-  TPoint *v = p->vtx;
-  if (p->stage == 0) { // Init params (top/bot, draw horizontals, DMA2D init)
-    v[p->size].x = v[0].x; // Dummy vertex[0] to siplify logic
-    v[p->size].y = v[0].y;
+  if (p->stage == 0) { // Init params (top/bot, draw horizontals, vertexes, DMA2D init)
     p->bot = 0;
     p->top = TFT_HEIGHT - 1;
     hdma2d.Init.Mode = DMA2D_R2M;
     HAL_DMA2D_Init(&hdma2d);
-    for (int8_t i=0; i<p->size; i++) {
-      if (v[i].y < 0) continue;
-      if (v[i].y >= TFT_HEIGHT) continue;
-      if (p->top > v[i].y) p->top = v[i].y;
-      if (p->bot < v[i].y) p->bot = v[i].y;
-      if (v[i].y == v[i+1].y) tftPolyScanSection(v[i].y, v[i].x, v[i+1].x);
+    TPoint *p1;
+    TPoint *p2 = p->vtx;
+    for (int8_t i=p->size; i; i--) {
+      p1 = p2;
+      p2 = i > 1 ? p1 + 1 : p->vtx;
+      if (p->top > p1->y) p->top = p1->y;
+      if (p->bot < p1->y) p->bot = p1->y;
+      if (p1->y < 0) continue;
+      if (p1->y >= TFT_HEIGHT) continue;
+      if (p1->y == p2->y) {
+        tftPolyScanSection(p1->y, p1->x, p2->x);
+      } else {
+        if (p1->x < 0) continue;
+        if (p1->x >= TFT_WIDTH) continue;
+        *((uint16_t *)tft_addr + p1->x + p1->y * TFT_WIDTH) = tft_bg16;
+      }  
     }
-    p->scan = p->top;
+    p->scan = p->top + 1;
+    if (p->top < 0) p->top = 0;
+    if (p->bot >= TFT_HEIGHT) p->bot = TFT_HEIGHT - 1;
+    p->stage++;
   } else if (p->stage == 1) {
-    
+    while (p->scan < p->bot) {
+      tftPolyDrawScanLine();
+      p->scan++;
+    }  
   }  
 }
 

@@ -25,6 +25,10 @@ void tftLineTo(int16_t x, int16_t y);
 void tftLineRel(int16_t x, int16_t y);
 void tftLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2);
 
+void tftPloyProcess();
+void tftPolyInit(uint8_t filled);
+void tftPolyAddVertex(int16_t x, int16_t y);
+
 //*********** FONT AND TEXT ROUTINES **************
 void tftSelectFont(const char* name);
 void tftDrawChar(char ch);
