@@ -179,11 +179,11 @@ void tftMoveTo(int16_t x, int16_t y) {
 }  
 
 void tftLineTo(int16_t x, int16_t y) {
-  tftDrawLine(tft_pen.x, tft_pen.y, tft_pen.x + x, tft_pen.y + y);
+  tftDrawLine(tft_pen.x, tft_pen.y, x, y);
 }  
 
 void tftLineRel(int16_t x, int16_t y) {
-  tftDrawLine(tft_pen.x, tft_pen.y, x, y);
+  tftDrawLine(tft_pen.x, tft_pen.y, tft_pen.x + x, tft_pen.y + y);
 }  
 
 void tftLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2) {
@@ -424,8 +424,9 @@ void tftPolyDrawScanLine() {
   for (uint8_t i=0; i < xCnt>>1; i++) tftPolyScanSection(y, x[i*2], x[i*2+1]);
 }  
 
-void tftPloyProcess() {
+uint8_t tftPloyProcess() {
   TPolyTask *p = &tft_poly;
+  if (p->size < 3) return 0;
   if (p->stage == 0) { // Init params (top/bot, draw horizontals, vertexes, DMA2D init)
     p->bot = 0;
     p->top = TFT_HEIGHT - 1;
@@ -448,166 +449,33 @@ void tftPloyProcess() {
         *((uint16_t *)tft_addr + p1->x + p1->y * TFT_WIDTH) = tft_bg16;
       }  
     }
-    p->scan = p->top + 1;
+    p->scan = p->top;
     if (p->top < 0) p->top = 0;
     if (p->bot >= TFT_HEIGHT) p->bot = TFT_HEIGHT - 1;
     p->stage++;
   } else if (p->stage == 1) {
-    while (p->scan < p->bot) {
-      tftPolyDrawScanLine();
+    for (uint8_t i=32; i; i--) {
       p->scan++;
-    }  
-  }  
-}
-
-/*
-typedef struct { // Task oriented strucure for drawing polygon
-  int16_t  top;        // top..bot - work range
-  int16_t  bot;
-  int16_t  y;          // current scan line
-  int16_t  *ver;       // vertexes array
-  int16_t  vcnt;       // vertexes cnt
-  int8_t   stage;
-  int8_t   filled;
-} TPolyTask;
-
-TPolyTask  poly_task;
-
-
-void scr_rut_poly() {
-  TPolyTask *p = &poly_task;
-  p->vcnt = get_uint16();
-  p->filled = get_uint8();
-  if (scr_pnt & 1) scr_pnt++;
-  p->ver = (int16_t *)&scr_task[scr_pnt];
-  if (p->filled) { // If filled -> prepare top..bottom, DMA, vertexes, horizontal sides, ...
-    uint16_t bg_color = ((tft_bg & 0x0000F8) >> 3) | ((tft_bg & 0x00FC00) >> 5) | ((tft_bg & 0xF80000) >> 8);
-    p->top = p->bot = p->ver[1];
-    int16_t *v = p->ver;
-    int16_t *next;
-    hdma2d.Init.Mode = DMA2D_R2M;
-    HAL_DMA2D_Init(&hdma2d);
-    for (uint16_t i = 1; i <= p->vcnt; i++, v+=2) {
-      if (p->top > v[1]) p->top = v[1];
-      if (p->bot < v[1]) p->bot = v[1];
-      if (v[1] <  0) continue;
-      if (v[1] >= TFT_H) continue;
-      uint32_t start_addr = tft_addr + TFT_PS * TFT_W * v[1];
-      if ((v[0]>=0) && (v[0]<TFT_W)) {
-        *((uint16_t *)start_addr + v[0]) = bg_color;
-      }   
-      if (i == p->vcnt) next = p->ver; else next = v + 2;
-      if (v[1] == next[1]) {
-        int16_t x1, x2;
-        if (v[0] <= next[0]) {
-          x1 = v[0];
-          x2 = next[0];
-        } else {
-          x1 = next[0];
-          x2 = v[0];
-        }  
-        if (x2 < 0) continue;
-        if (x1 >= TFT_W) continue;
-        if (x2 >= TFT_W) x2 = TFT_W - 1;
-        if (x1 < 0) x1 = 0;
-        if (HAL_DMA2D_Start(&hdma2d, tft_bg, start_addr + TFT_PS * x1, x2 - x1 + 1, 1) == HAL_OK) {
-          HAL_DMA2D_PollForTransfer(&hdma2d, 50);
-        }  
-      }
-    }  
-    p->top++;
-    p->bot--;
-    if (p->top < 0) p->top = 0;
-    if (p->bot >= TFT_H) p->bot = TFT_H;
-    p->y = p->top;
-    p->stage = 1;
-  } else {
-    p->stage = 2;
-  }
-  scr_interrupt = 1;
-}  
-
-void scr_draw_poly() {
-  TPolyTask *p = &poly_task;
-  if (p->stage == 1) {
-    for (uint8_t linecnt = 0; linecnt<25; linecnt++) {
-      int16_t y = p->y++;
-      if (y > p->bot) {
-        p->stage = 2; 
+      if (p->scan >= p->bot) {
+        p->stage++;
         break;
       }  
-      int16_t x[30];
-      uint8_t cnt = 0;
-      int16_t *v = p->ver;
-      int16_t *next;    
-      for (uint16_t i = 1; i<=p->vcnt; i++, v += 2) { // Find intersections with current line [vcnt iterations]
-        if (i == p->vcnt) next = p->ver; else next = v + 2;
-        if (v[1] < next[1]) {   // Skip not intersected lines (exclude end point)
-          if (v[1] > y) continue; // for descending side
-          if (next[1] <= y) continue;
-        } else {
-          if (v[1] < y) continue; // for ascending side
-          if (next[1] >= y) continue;
-        }
-        if (v[1] == next[1]) continue; // Skip horizontal side
-        int16_t newx;
-        if (v[1] == y) { // if vertex lies in current line
-          int16_t *prev = v;
-          for (uint16_t j = 1; j < p->vcnt; j++) { // Find not horizontal previous side [ up to vcnt-1 iterations ]
-            prev = (prev > p->ver) ? prev - 2 : p->ver + p->vcnt * 2 - 2;
-            if (prev[1] != v[1]) break;
-          }
-          if ((v[1] < next[1]) ^ (v[1] > prev[1])) continue; // Skip extremums and draw point
-          newx = v[0];
-        } else { // else calculate intersection
-          int32_t tmp  = (next[0] - v[0]) * (y - v[1]);
-          newx = v[0] + tmp / (next[1] - v[1]);
-        }
-        uint8_t ins = 0; // Insert new point in sorted list
-        for (; ins < cnt; ins++) {
-          if (newx < x[ins]) {
-            memmove(&x[ins+1], &x[ins], (cnt - ins)*2);
-            break;
-          }        
-        }  
-        x[ins] = newx;
-        cnt++;
-        if (cnt >= 30) break;
-      }
-      if (cnt > 1) {
-        uint32_t start_addr = tft_addr + TFT_PS * TFT_W * y;
-        int16_t *_x = x;
-        while (cnt > 1) {
-          int16_t x1 = _x[0];
-          int16_t x2 = _x[1];
-          _x += 2;
-          cnt -= 2;
-          if (x2 < 0) continue;
-          if (x1 >= TFT_W) continue;
-          if (x2 >= TFT_W) x2 = TFT_W - 1;
-          if (x1 < 0) x1 = 0;
-          if (HAL_DMA2D_Start(&hdma2d, tft_bg, start_addr + TFT_PS * x1, x2 - x1 + 1, 1) == HAL_OK) {
-            HAL_DMA2D_PollForTransfer(&hdma2d, 50);
-          }
-        }
-      }  
+      tftPolyDrawScanLine();
     }  
-  } else {
-    if (tft_pen_w) {
-      int16_t *v = p->ver;
-      int16_t *next;    
-      for (uint16_t i = 1; i<=p->vcnt; i++, v += 2) {
-        if (i == p->vcnt) next = p->ver; else next = v + 2;
-        tft_bold_line(v[0], v[1], next[0], next[1]);
+  } else if (p->stage == 2) {
+    if (tft_pen.width) {
+      TPoint *pnt = &p->vtx[p->size-1];
+      tftMoveTo(pnt->x, pnt->y);
+      pnt = p->vtx;
+      for (uint8_t i=p->size; i; i--) {
+        tftLineTo(pnt->x, pnt->y);
+        pnt++;
       }  
-    }  
-    p->stage = 0;
-    scr_pnt += 4*p->vcnt;
-  }  
-  scr_interrupt = 1;
-}  
-*/
-
+    }
+    p->size = 0;
+  }
+  return p->size >= 3;
+}
 
 //*********** FONT AND TEXT ROUTINES **************
 

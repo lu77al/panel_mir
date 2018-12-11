@@ -469,15 +469,16 @@ void tftSwitchLayerAdressTest() {
     
 //    tftTestDMA2D_A4();
 
-    tftSetBackground(0x000000);
+    tftSetPenWidth(3);
+    tftSetForeground(0xffffff);
+    tftSetBackground(0xaaaaaa);
     tftPolyInit(1);
     tftPolyAddVertex(100,100);
     tftPolyAddVertex(150,350);
     tftPolyAddVertex(200,120);
     tftPolyAddVertex(155,150);
     tftPolyAddVertex(145,150);
-    tftPloyProcess();
-    tftPloyProcess();
+    while (tftPloyProcess());
 
     tftNextFrame();
     
