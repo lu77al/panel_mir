@@ -51,7 +51,12 @@ typedef struct {
   uint32_t  patternPoint;
   uint16_t  pathCounter;
   uint8_t   bigWidth;
-  uint8_t   img[5000]; // Max 100x100
+  int32_t   ptrUL[130];
+  int32_t   ptrUR[130];
+  int32_t   ptrDL[130];
+  int32_t   ptrDR[130];
+  uint8_t   sLen[130];
+  uint8_t   sCnt;
 } TFTpen;
 
 TFTpen  tft_pen;
@@ -110,49 +115,34 @@ void tftSetBackground(uint32_t color) {
   tft_bg16 = tftShrinkColor565(color);
 }  
 
-void tftFillA4Line(uint16_t start, uint8_t len) {
-  if (!len) return;
-  if (start & 1) {
-    tft_pen.img[start >> 1] = 0xF0;
-    if (len == 1) return;
-    len--;
-    start++;
-  }
-  if (len > 1) {
-    memset(&tft_pen.img[start >> 1], 0xFF, len >> 1);
-    start += len;
-    len &= 1;
-  }
-  if (len) tft_pen.img[start >> 1] = 0x0F;
-}  
-
 void tftSetPenWidth(uint8_t w) {
-  if (w > 100) w = 100;
   tft_pen.width = w;
   if (w > 6) {
     if (tft_pen.bigWidth == w) return;
     tft_pen.bigWidth = w;
-    uint8_t wdth = (w + 1) & 0xfffe;
-    asm("nop");
-    memset(tft_pen.img, 0, (w * wdth) >> 1);
     uint16_t full_sq = w * w;
     uint8_t  inner_hord = (w & 1) + 1;
     uint8_t  inner_diam = w - 1;
     uint8_t  radius = (w + 1) >> 1;
-    uint16_t top = 0;
-    uint16_t bot = wdth * (w - 1);
+    uint8_t  bakHord = 0;
+    int32_t  top = - (w >> 1) * (TFT_WIDTH + 1);
+    int32_t  bot = top + TFT_WIDTH * (w - 1);
     for (uint8_t i = 0; i < radius; i++) {
       uint16_t val = full_sq -  inner_diam * inner_diam;
       while (inner_hord * inner_hord <= val) inner_hord +=2;
       uint8_t hord = inner_hord - 1;
       if (hord > w) hord = w;
-      uint8_t start = (w - hord) >> 1;
-      tftFillA4Line(top + start, hord);
-      tftFillA4Line(bot + start, hord);
-      top += wdth;
-      bot -= wdth;
+      tft_pen.sLen[i] = ((hord - bakHord) >> 1) + 1;
+      tft_pen.ptrUL[i] = top + ((w - hord) >> 1);
+      tft_pen.ptrDL[i] = bot + ((w - hord) >> 1);
+      tft_pen.ptrUR[i] = tft_pen.ptrUL[i] + hord - tft_pen.sLen[i];
+      tft_pen.ptrDR[i] = tft_pen.ptrDL[i] + hord - tft_pen.sLen[i];
+      bakHord = hord;
+      top += TFT_WIDTH;
+      bot -= TFT_WIDTH;
       inner_diam -= 2;
-    }  
+    }
+    tft_pen.sCnt = radius;
   }  
 }  
 
@@ -202,6 +192,38 @@ void tftLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2) {
   tftDrawLine(x1, y1, x2, y2);
 }  
 
+void tftDrawLinePointSeg(uint16_t *center, int32_t *ptr) {
+  uint8_t *len = tft_pen.sLen;
+  uint16_t c = tft_fg16;
+  for (uint8_t i = tft_pen.sCnt; i; i--) {
+    uint16_t *p = center + *ptr;
+    for (uint8_t j = *len; j; j--)*(p++) = c;
+    ptr++;
+    len++;
+  }  
+}  
+
+void tftDrawLinePoint(uint16_t *center) {
+  uint8_t *len = tft_pen.sLen;
+  int32_t *UL = tft_pen.ptrUL;
+  int32_t *UR = tft_pen.ptrUR;
+  int32_t *DL = tft_pen.ptrDL;
+  uint16_t c = tft_fg16;
+  uint16_t *p;
+  uint8_t hord; 
+  for (uint8_t i = tft_pen.sCnt; i; i--) {
+    hord = *UR - *UL + *len;
+    p = center + *UL;
+    for (uint8_t j = hord; j; j--)*(p++) = c;
+    p = center + *DL;
+    for (uint8_t j = hord; j; j--)*(p++) = c;
+    len++;
+    UL++;
+    UR++;
+    DL++;
+  }  
+}  
+
 void tftDrawLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2) {
 // Update pen position, check pathQuantum
   tft_pen.x = x2;
@@ -241,6 +263,7 @@ void tftDrawLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2) {
   }
   uint16_t counter = mainLen >> 1;
   uint16_t *point = (uint16_t *)tft_addr + x1 + y1 * TFT_WIDTH;
+  uint16_t *bakPoint = point;
   uint32_t pattern = tft_pen.pattern;
   uint32_t patternPoint = tft_pen.patternPoint;
   uint16_t pathCounter = tft_pen.pathCounter;
@@ -298,32 +321,20 @@ void tftDrawLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2) {
           p += TFT_WIDTH - 2;
           *(p++)=c; *p=c;
         } else {
-          p = point - (TFT_WIDTH + 1) * ((width - 1) >> 1);
-          uint8_t hwdth =  (width + 1) & 0xfffe;
-          uint32_t offset = TFT_WIDTH - hwdth;
-        // output  
-          hdma2d.Init.Mode = DMA2D_M2M_BLEND;
-          hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
-          hdma2d.Init.OutputOffset = offset;
-        // foreground layer  
-          hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_A4;
-          hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
-          hdma2d.LayerCfg[1].InputAlpha = tft_fg | 0xff000000;
-          hdma2d.LayerCfg[1].InputOffset = 0;
-        // background layer  
-          hdma2d.LayerCfg[0].InputColorMode = DMA2D_INPUT_RGB565;
-          hdma2d.LayerCfg[0].AlphaMode = DMA2D_REPLACE_ALPHA;
-          hdma2d.LayerCfg[0].InputAlpha = 0xFF;
-          hdma2d.LayerCfg[0].InputOffset = offset;
-        // Apply configuration
-          HAL_DMA2D_Init(&hdma2d);
-          HAL_DMA2D_ConfigLayer(&hdma2d, 1);
-          HAL_DMA2D_ConfigLayer(&hdma2d, 0);
-        // start transfer  
-          uint32_t fg_addr = (uint32_t)tft_pen.img;
-          uint32_t bg_addr = (uint32_t)p;
-          HAL_DMA2D_BlendingStart(&hdma2d, fg_addr, bg_addr, bg_addr, hwdth, width);
-          HAL_DMA2D_PollForTransfer(&hdma2d, 200);
+          int32_t step = point - bakPoint;
+          if (step == 0) tftDrawLinePoint(point); else {
+            uint8_t up = (step < -2);
+            uint8_t down = (step > 2);
+            if (down) step -= TFT_WIDTH;
+            if (up) step += TFT_WIDTH;
+            uint8_t right = (step == 1);
+            uint8_t left = (step == -1);
+            if (up || right)   tftDrawLinePointSeg(point, tft_pen.ptrUR);
+            if (up || left)    tftDrawLinePointSeg(point, tft_pen.ptrUL);
+            if (down || right) tftDrawLinePointSeg(point, tft_pen.ptrDR);
+            if (down || left)  tftDrawLinePointSeg(point, tft_pen.ptrDL);
+          }  
+          bakPoint = point;
         }  
       }  
     }  
@@ -353,20 +364,58 @@ typedef struct { // Task oriented strucure for drawing polygon
   int16_t  bot;
   int16_t  scan;       // current scan line
   TPoint   vtx[255];   // vertexes
-  int8_t   size;       // vertexes count
-  int8_t   stage;      // stage of draw (prepare, fill, outline) 
+  uint8_t  size;       // vertexes count
+  uint8_t  stage;      // stage of draw (prepare, fill, outline) 
 } TPolyTask;
 
 TPolyTask  tft_poly;
 
 void tftPolyInit(uint8_t filled) {
+  tft_poly.stage = filled ? 0 : 2;
+  tft_poly.size = 0;
 }
 
 void tftPolyAddVertex(int8_t x, int8_t y) {
+  TPolyTask *p = &tft_poly;
+  if (p->size == 254) return;
+  p->vtx[p->size].x = x;
+  p->vtx[p->size].y = y;
+  p->size++;
 }
 
+void tftPolyScanSection(int16_t y, int16_t x1, int16_t x2) {
+  if (x1 > x2) SWAP16(x1, x2);
+  if (x2 < 0) return;
+  if (x1 >= TFT_WIDTH) return;
+  if (x1 < 0) x1 = 0;
+  if (x2 >= TFT_WIDTH) x2 = TFT_WIDTH - 1;
+  HAL_DMA2D_Start(&hdma2d, tft_bg,
+                  tft_addr + TFT_PIXEL * (x1 + y * TFT_WIDTH),
+                  x2 - x1 + 1, 1);
+  HAL_DMA2D_PollForTransfer(&hdma2d, 50);
+}  
+
 void tftPloyProcess() {
-  
+  TPolyTask *p = &tft_poly;
+  TPoint *v = p->vtx;
+  if (p->stage == 0) { // Init params (top/bot, draw horizontals, DMA2D init)
+    v[p->size].x = v[0].x; // Dummy vertex[0] to siplify logic
+    v[p->size].y = v[0].y;
+    p->bot = 0;
+    p->top = TFT_HEIGHT - 1;
+    hdma2d.Init.Mode = DMA2D_R2M;
+    HAL_DMA2D_Init(&hdma2d);
+    for (int8_t i=0; i<p->size; i++) {
+      if (v[i].y < 0) continue;
+      if (v[i].y >= TFT_HEIGHT) continue;
+      if (p->top > v[i].y) p->top = v[i].y;
+      if (p->bot < v[i].y) p->bot = v[i].y;
+      if (v[i].y == v[i+1].y) tftPolyScanSection(v[i].y, v[i].x, v[i+1].x);
+    }
+    p->scan = p->top;
+  } else if (p->stage == 1) {
+    
+  }  
 }
 
 /*
