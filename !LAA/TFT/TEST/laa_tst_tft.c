@@ -422,8 +422,8 @@ void tftSwitchLayerAdressTest() {
 
   tftLEDsetInst(200);
   
-//  tftSelectFont("F16X32.FNT");
-//  tftSetTextTransparency(0);
+  tftSelectFont("F16X32.FNT");
+  tftSetTextTransparency(1);
 //  tftSelectBMP("BAT.BMP",0xffffffff);
 
 //  tftSelectBMP("BAT.BMP",0x00ff00);
@@ -478,8 +478,15 @@ void tftSwitchLayerAdressTest() {
     tftPolyAddVertex(200,120);
     tftPolyAddVertex(155,150);
     tftPolyAddVertex(145,150);
-    
     tftDoTheRest();
+    
+    tftSetForeground(0x0000ff);
+    tftSetTextPos(20,440);
+    tftTextOut("SIMPLE TEXT", 255);
+    tftDoTheRest();
+    
+
+    
 
     tftNextFrame();
     

@@ -1004,6 +1004,12 @@
       <group>
         <name>GLIB</name>
         <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_scr_tasks.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_scr_tasks.h</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\..\!LAA\TFT\GLIB\laa_tft_buffers.c</name>
         </file>
         <file>

@@ -10,6 +10,7 @@
 #define TFT_BUFFER_SIZE (TFT_WIDTH * TFT_HEIGHT * TFT_PIXEL)
 
 //*********** TASK MANAGEMENT **************
+uint8_t tftIsBusy();
 uint8_t tftIsTaskToDo();
 uint8_t tftDoTheNext();
 void tftDoTheRest();
@@ -35,6 +36,7 @@ void tftPolyInit(uint8_t filled);
 void tftPolyAddVertex(int16_t x, int16_t y);
 
 //*********** FONT AND TEXT ROUTINES **************
+void tftTextOut(void *text, uint8_t maxLen);
 void tftSelectFont(const char* name);
 void tftDrawChar(char ch);
 void tftPrint(char *text, uint8_t length);

@@ -14,6 +14,7 @@ extern DMA2D_HandleTypeDef hdma2d;
 
 uint32_t tft_addr  = TFT_SCREEN;  // Address of memory region to draw primitives
 uint8_t  tft_wait_dma = 1;
+uint8_t  tft_waiting_dma = 0;
 
 uint32_t  tft_fg = 0xffffff;
 uint32_t  tft_bg = 0x000000;
@@ -29,6 +30,9 @@ typedef struct {
   int16_t   y;
   uint8_t   transparent;
   char      name[13];  // 12char name + "*" for system fonts
+  char      out[256];
+  uint8_t   outCnt;
+  char      *nextChar;
 } TFTfont;
 
 TFTfont  tft_fnt;
@@ -79,15 +83,24 @@ TPolyTask  tft_poly;
 void tftDrawLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2);
 
 //*********** TASK MANAGEMENT **************
+uint8_t tftIsBusy() {
+  if (!tft_waiting_dma) return 0;
+  if (HAL_DMA2D_PollForTransfer(&hdma2d, 0) != HAL_OK) return 1; 
+  tft_waiting_dma = 0;
+  return 0;
+}  
+
 uint8_t tftIsTaskToDo() {
   if (tft_poly.size >= 3) return 1;
-  return 0;
+  return tft_fnt.outCnt;
 }
 
 uint8_t tftDoTheNext() {
   if (tft_poly.size >= 3) {
     tftPloyProcess();
-  } else {
+  } else if (tft_fnt.outCnt) {
+    tftDrawChar(*(tft_fnt.nextChar++));
+    tft_fnt.outCnt--;
   }  
   return tftIsTaskToDo();
 };
@@ -106,11 +119,14 @@ void tftResetObjects() {
   tft_fnt.x = 0;
   tft_fnt.y = 0;
   tft_fnt.transparent = 1;
+  tft_fnt.outCnt = 0;
 //  tft_pen.pattern = 0xffffffff;
   tftSetPenWidth(1);
   tft_pen.bigWidth = 0;
   tftSetPenPattern(0x0f0f0f0f);
   tft_pen.patternPoint = 1;
+  
+  tft_poly.size = 0;
 }
 
 /* Fill all active layer with colour */
@@ -201,7 +217,10 @@ void tftRect(int16_t x, int16_t y, uint16_t w, uint16_t h) {
   hdma2d.Init.OutputOffset = TFT_WIDTH - w;
   if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) return;
   if (HAL_DMA2D_Start(&hdma2d, tft_bg, addr, w, h) != HAL_OK) return;
-  if (tft_wait_dma) HAL_DMA2D_PollForTransfer(&hdma2d, 200);
+  if (tft_wait_dma)
+    HAL_DMA2D_PollForTransfer(&hdma2d, 200); 
+  else
+    tft_waiting_dma = 1;
 }
 
 void tftMoveTo(int16_t x, int16_t y) {
@@ -497,6 +516,18 @@ uint8_t tftPloyProcess() {
 
 //*********** FONT AND TEXT ROUTINES **************
 
+void tftTextOut(void *text, uint8_t maxLen) {
+  char *dst = tft_fnt.out;
+  char *src = text;
+  tft_fnt.nextChar = dst;
+  tft_fnt.outCnt = 0;
+  for (uint8_t i = maxLen; i; i--) {
+    if (!*src) break;
+    *(dst++) = *(src++);
+    tft_fnt.outCnt++;
+  }  
+}  
+
 /* text position setter */
 void tftSetTextPos(int16_t x, int16_t y) {
   tft_fnt.x = x;
@@ -720,7 +751,10 @@ void tftDrawBMP(int16_t x, int16_t y) {
   } else {
     tftCopyOpaqueBMP(dst_addr, src_addr, w, h);
   } 
-  if (tft_wait_dma) HAL_DMA2D_PollForTransfer(&hdma2d, 200);
+  if (tft_wait_dma)
+    HAL_DMA2D_PollForTransfer(&hdma2d, 200);
+  else
+    tft_waiting_dma = 1;
 }  
 
 
@@ -823,88 +857,3 @@ void tftSelectBMP(const char* name, uint32_t trColor888) {
     tft_bmp.img = found + 4;
   }  
 }
-
-#if 0
-
-void tft_line(uint16_t px1, uint16_t py1, uint16_t px2, uint16_t py2) {
-  uint16_t x1,y1,x2,y2;
-  if ((x1 = px1) > TFT_W) return;
-  if ((x2 = px2) > TFT_W) return;
-  if ((y1 = py1) > TFT_H) return;
-  if ((y2 = py2) > TFT_H) return;
-  uint16_t mlen, slen;
-  uint32_t mstp, sstp;
-  if (x1 <= x2) {
-    mlen = x2 - x1;
-    mstp = 1;
-  } else {
-    mlen = x1 - x2;
-    mstp = (uint32_t)(-1);
-  }    
-  if (y1 <= y2) {
-    slen = y2 - y1;
-    sstp = TFT_W;
-  } else {
-    slen = y1 - y2;
-    sstp = (uint32_t)(-TFT_W);
-  }
-  uint16_t *pix = (uint16_t *)tft_addr + x1 + y1 * TFT_W;
-  if (mlen < slen) {
-    swap_u16(mlen, slen);
-    swap_u32(mstp, sstp);
-  }
-  uint16_t cnt = mlen >> 1;
-  uint16_t color = ((tft_fg & 0x0000F8) >> 3) | ((tft_fg & 0x00FC00) >> 5) | ((tft_fg & 0xF80000) >> 8);
-  uint8_t pos = 0;
-  for (uint16_t i=mlen+1; i; i--) {
-    if (tft_line_msk & tft_line_msk_point) *pix = color;
-    pix += mstp;
-    if ((cnt += slen) >= mlen) {
-      cnt -= mlen;
-      pix += sstp;
-      pos += 38;
-      if (pos & 0x80) {
-        tft_line_msk_point <<= 1;
-        if (tft_line_msk_point == 0) tft_line_msk_point = 1;
-        pos &= 0x7f;
-      }  
-    }
-    tft_line_msk_point <<= 1;
-    if (tft_line_msk_point == 0) tft_line_msk_point = 1;
-    pos &= 0x7f;
-  }  
-}
-
-//https://electronix.ru/forum/lofiversion/index.php/t143598-50.html
-
-void tft_draw_bmp(int16_t x, int16_t y) {
-  uint16_t w = bmp_w;
-  uint16_t h = bmp_h;
-  uint16_t bmp_x = 0;
-  uint16_t bmp_y = 0;
-  if (bmp_addr == 0) return;
-  if (x >= TFT_WIDTH) return;
-  if (y >= TFT_HEIGHT) return;
-  if ((x + w) < 1) return;
-  if ((y + h) < 1) return;
-  if ((x + w) > TFT_WIDTH) w = TFT_WIDTH - x;
-  if ((y + h) > TFT_HEIGHT) h = TFT_HEIGHT - y;
-  if (x < 0) { w += x; bmp_x = -x; x = 0; }
-  if (y < 0) { h += y; bmp_y = -y; y = 0; }
-  uint32_t s_addr = tft_addr + TFT_PIXEL * (y * TFT_WIDTH + x);
-  uint32_t i_addr = (uint32_t)bmp_addr + TFT_PIXEL * (bmp_y * bmp_w + bmp_x);
-  hdma2d.Init.Mode = DMA2D_M2M;
-  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
-  hdma2d.Init.OutputOffset = TFT_WIDTH - w;
-  hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
-  hdma2d.LayerCfg[1].InputAlpha = 0xFF;
-  hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB565;
-  hdma2d.LayerCfg[1].InputOffset = bmp_w - w;
-  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) return;
-  if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) != HAL_OK) return;
-  if (HAL_DMA2D_Start(&hdma2d, i_addr, s_addr, w, h) == HAL_OK) {
-    if (tft_wait_dma) HAL_DMA2D_PollForTransfer(&hdma2d, 50);
-  }  
-}  
-
-#endif

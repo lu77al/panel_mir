@@ -24,7 +24,7 @@ void tftInit() {
   HAL_Delay(50);
   HAL_LTDC_SetAlpha(&hltdc, 0xFF, 0);
   HAL_Delay(50);
-  tftLEDinit(0, 192);
+  tftLEDinit(0, 200);
 }  
   
 /* Calculate and set [tft_addr] for tft_lib routines
