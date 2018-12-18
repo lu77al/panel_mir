@@ -37,36 +37,14 @@ void userMain() {
 //  tftTest_blending_copy();
 
   tftSetWaitDMA(0);
-  tftGoDoubleBuffered();
-  scrSetNewDataFlag();
-/*  
-uint8_t scrNeedNewContent();
-void scrResetPnt(uint8_t mark);
-void scrSaveMark(uint8_t mark);
-void scrSetNewDataFlag();
-
-void scrSetBG(uint32_t color);
-void scrSetFG(uint32_t color);
-void scrBar(int16_t x, int16_t y, int16_t w, int16_t h);
-*/
+  tstPrepareBackground();
   
-  uint16_t theSize = 0;
+//  uint16_t theSize = 0;
   
   while (1) {
     scrPerformNextTask();
     if (scrNeedNewContent()) {
-      scrResetPnt(0);
-      scrSetBG(0x0000ff);
-      scrBar(0, 0, 800, 480);
-      scrSetBG(0x0000ff);
-      scrBar(0, 0, 800, 480);
-      scrSetBG(0xff0000);
-      uint8_t k = theSize < 250 ? 5 + theSize : 505 - theSize;
-      uint16_t w = 800 * k / 255;
-      uint16_t h = 480 * k / 255;
-      scrBar((800 - w) / 2, (480 - h) / 2, w, h);
-      theSize = (theSize + 1) % 500;
-      scrSetNewDataFlag();
+      tstDrawFrame();
     }  
     
     

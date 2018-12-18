@@ -32,8 +32,9 @@ void tftLineRel(int16_t x, int16_t y);
 void tftLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2);
 
 uint8_t tftPloyProcess();
-void tftPolyInit(uint8_t filled);
+void tftPolyInit(uint8_t filled, uint8_t closed);
 void tftPolyAddVertex(int16_t x, int16_t y);
+void tftEllipse(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t s, uint16_t e, uint8_t filled, uint8_t closed);
 
 //*********** FONT AND TEXT ROUTINES **************
 void tftTextOut(void *text, uint8_t maxLen);
@@ -44,7 +45,7 @@ void tftSetTextPos(int16_t x, int16_t y);
 void tftSetTextTransparency(int8_t tr);
 //*********** BITMAPS **************
 void tftSelectBMP(const char* name, uint32_t trColor);
-void tftDrawBMP(int16_t x, int16_t y);
+void tftDrawBMP(int16_t x, int16_t y, uint8_t alpha);
 
 #endif // __AL_TFT_LIB_H__
 

@@ -5,6 +5,7 @@
 #include "laa_tst_tft.h"
 #include "laa_sdram.h"
 #include "laa_tft_led.h"
+#include "laa_scr_tasks.h"
 #include "string.h"
 #include "math.h"
 #include "stdlib.h"
@@ -434,10 +435,10 @@ void tftSwitchLayerAdressTest() {
     tftDrawLayer0();
 
     tftSelectBMP("BAT.BMP",0xffffffff);
-    tftDrawBMP(400,50);  
+    tftDrawBMP(400,50,255);  
     
     tftSelectBMP("BAT.BMP",0x00ff00);
-    tftDrawBMP(300,100);  
+    tftDrawBMP(300,100,255);  
 
     tftSetForeground(0xffffff);
     tftSetPenWidth(1);
@@ -472,7 +473,7 @@ void tftSwitchLayerAdressTest() {
     tftSetPenWidth(3);
     tftSetForeground(0xffffff);
     tftSetBackground(0xaaaaaa);
-    tftPolyInit(1);
+    tftPolyInit(1,1);
     tftPolyAddVertex(100,100);
     tftPolyAddVertex(150,350);
     tftPolyAddVertex(200,120);
@@ -484,15 +485,90 @@ void tftSwitchLayerAdressTest() {
     tftSetTextPos(20,440);
     tftTextOut("SIMPLE TEXT", 255);
     tftDoTheRest();
-    
-
-    
 
     tftNextFrame();
     
     tftWaitForReload();
   }
-  
 }  
 
+
+void tstPrepareBackground() {
+  scrGoDouble();
+  for (uint16_t i = 0; i < 48; i++) {
+    uint32_t color = 0xFF0020 - (i << 16) * 5 + (i << 8) * 5;
+    scrSetBG(color);
+    scrBar(0, i * 10, 800, 10);
+  }
+  scrSetFontDynamic("F16X32.FNT");
+  tstInitBalls();
+  
+  scrSetFG(0xffffff);
+  scrSetPenWidth(1);
+  scrSetPenPattern(0xF0F0F0F0);
+  scrLine(0, 0, 799, 479);
+  scrSetPenWidth(2);
+  scrLine(0, 478, 798, 0);
+  scrSetPenWidth(3);
+  scrLine(10, 50, 700, 400);
+  scrSetPenWidth(4);
+  scrLine(10, 100, 700, 450);
+  scrSetPenWidth(6);
+  scrSetPenPattern(0x33333333);
+  scrLine(10, 450, 750, 20);
+
+  scrSetPenWidth(21);
+  scrSetPenPattern(0xFFFFFFFF);
+  scrSetFG(0x0000ff);
+  scrLine(40, 200, 120, 240);
+  scrSetPenWidth(31);
+  scrSetFG(0x00ff00);
+  scrLine(120, 240, 200, 210);
+  scrSetPenWidth(24);
+  scrSetFG(0x0000ff);
+  scrLine(200, 210, 700, 360);
+  scrSetPenWidth(16);
+  scrSetFG(0xff0000);
+  scrLine(700, 360, 200, 210);
+    
+//    tftTestDMA2D_A4();
+
+  scrSetPenWidth(3);
+  scrSetFG(0xffffff);
+  scrSetBG(0xaaaaaa);
+  scrInitPoly(1,1);
+  scrPolyVertex(100,100);
+  scrPolyVertex(150,350);
+  scrPolyVertex(200,120);
+  scrPolyVertex(155,150);
+  scrPolyVertex(145,150);
+    
+  scrSetFG(0x0000ff);
+  scrSetTextPos(20,440);
+  scrTextOutDynamic("SIMPLE TEXT", 255);
+
+  scrSetFG(0x00ff00);
+  scrSetBG(0x447744);
+  scrSetPenWidth(5);
+  scrEllipse(300, 200, 200, 100, 1200, 300, 1, 1);  
+
+  scrSaveMark(1);
+  
+  scrSetNewDataFlag();
+}  
+
+void tstDrawFrame() {
+  scrResetPnt(1);
+  scrGoDouble();
+  scrSetBMPdynamic("UFO.BMP",0xff0000);
+  for (uint8_t i = 0; i < BALL_CNT; i++) {
+    scrDrawBMP(ballX[i], ballY[i], 0x70);
+    tftMoveAxis(&ballX[i], &ballDX[i], TFT_WIDTH - IMG_SIZE);
+    tftMoveAxis(&ballY[i], &ballDY[i], TFT_HEIGHT - IMG_SIZE);
+  }  
+ 
+  
+  scrSetNewDataFlag();
+  
+}
 

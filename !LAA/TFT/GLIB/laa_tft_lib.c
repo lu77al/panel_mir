@@ -9,6 +9,7 @@
 #include "laa_tft_cache.h"
 #include "laa_tft_led.h"
 #include "laa_sdram.h"
+#include "laa_math.h"
 
 extern DMA2D_HandleTypeDef hdma2d;
 
@@ -76,6 +77,7 @@ typedef struct { // Task oriented strucure for drawing polygon
   TPoint   vtx[254];   // vertexes
   uint8_t  size;       // vertexes count
   uint8_t  stage;      // stage of draw (prepare, fill, outline) 
+  uint8_t  closed;
 } TPolyTask;
 
 TPolyTask  tft_poly;
@@ -407,8 +409,34 @@ void tftDrawLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2) {
   tft_pen.pathCounter = pathCounter;
 }  
 
-void tftPolyInit(uint8_t filled) {
+void tftEllipse(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t s, uint16_t e, uint8_t filled, uint8_t closed) {
+  tftPolyInit(filled, closed);
+  uint16_t hr = w >> 1;
+  uint16_t vr = h >> 1;
+  int16_t  x0 = x + hr;
+  int16_t  y0 = y + vr;
+  int16_t  start = s / 5;
+  int16_t  end   = e / 5;
+  uint8_t  full = start == end;
+  while (end <= start) end += 360*2;
+  uint16_t max_r = hr > vr ? hr : vr;
+  uint16_t step, alpha = start;
+  if (max_r>115) step = 5*2; else
+   if (max_r>75) step = 10*2; else
+    if (max_r>37) step = 15*2; else  step = 30*2;
+  while (1) {
+    if (alpha >= end) {
+      if (!full) tftPolyAddVertex(x0 + cos_koef(hr, end), y0 - sin_koef(vr, end));
+      break;
+    }
+    tftPolyAddVertex(x0 + cos_koef(hr, alpha), y0 - sin_koef(vr, alpha));
+    alpha += step;
+  }
+}  
+
+void tftPolyInit(uint8_t filled, uint8_t closed) {
   tft_poly.stage = filled ? 0 : 2;
+  tft_poly.closed = closed;
   tft_poly.size = 0;
 }
 
@@ -501,10 +529,20 @@ uint8_t tftPloyProcess() {
     }  
   } else if (p->stage == 2) {
     if (tft_pen.width) {
-      TPoint *pnt = &p->vtx[p->size-1];
-      tftMoveTo(pnt->x, pnt->y);
-      pnt = p->vtx;
-      for (uint8_t i=p->size; i; i--) {
+      TPoint *pnt;
+      uint8_t cnt;
+      if (p->closed) {
+        pnt = &p->vtx[p->size-1];
+        tftMoveTo(pnt->x, pnt->y);
+        pnt = p->vtx;
+        cnt = p->size;
+      } else {
+        pnt = p->vtx;
+        tftMoveTo(pnt->x, pnt->y);
+        pnt++;
+        cnt = p->size - 1;
+      }  
+      for (; cnt; cnt--) {
         tftLineTo(pnt->x, pnt->y);
         pnt++;
       }  
@@ -681,7 +719,7 @@ void tftSelectFont(const char* name) {
 
 /* Copy BPM image to screen buffer with transparent color
  */
-void tftCopyTransparentBMP(uint32_t dst, uint32_t src, int16_t w, int16_t h) {
+void tftCopyTransparentBMP(uint32_t dst, uint32_t src, int16_t w, int16_t h, uint8_t alpha) {
   int16_t dst_offset = TFT_WIDTH - w;
   int16_t src_offset = tft_bmp.w - w;
 // output  
@@ -690,7 +728,7 @@ void tftCopyTransparentBMP(uint32_t dst, uint32_t src, int16_t w, int16_t h) {
   hdma2d.Init.OutputOffset = dst_offset;
 // foreground layer  
   hdma2d.LayerCfg[1].AlphaMode = DMA2D_COMBINE_ALPHA;
-  hdma2d.LayerCfg[1].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[1].InputAlpha = alpha;
   hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_ARGB1555;
   hdma2d.LayerCfg[1].InputOffset = src_offset;
 // background layer  
@@ -708,7 +746,7 @@ void tftCopyTransparentBMP(uint32_t dst, uint32_t src, int16_t w, int16_t h) {
 
 /* Copy BPM image to screen buffer as is
  */
-void tftCopyOpaqueBMP(uint32_t dst, uint32_t src, int16_t w, int16_t h) {
+void tftCopyOpaqueBMP(uint32_t dst, uint32_t src, int16_t w, int16_t h, uint8_t alpha) {
   int16_t dst_offset = TFT_WIDTH - w;
   int16_t src_offset = tft_bmp.w - w;
 // output  
@@ -716,8 +754,8 @@ void tftCopyOpaqueBMP(uint32_t dst, uint32_t src, int16_t w, int16_t h) {
   hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
   hdma2d.Init.OutputOffset = dst_offset;
 // foreground layer  
-  hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
-  hdma2d.LayerCfg[1].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[1].AlphaMode = DMA2D_COMBINE_ALPHA;
+  hdma2d.LayerCfg[1].InputAlpha = alpha;
   hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB565;
   hdma2d.LayerCfg[1].InputOffset = src_offset;
 // Apply configuration
@@ -730,7 +768,7 @@ void tftCopyOpaqueBMP(uint32_t dst, uint32_t src, int16_t w, int16_t h) {
 /* Copy BPM image to screen buffer as is
  *  - clip to screen, prepare adresses, start trasparent or opaque mode
  */
-void tftDrawBMP(int16_t x, int16_t y) {
+void tftDrawBMP(int16_t x, int16_t y, uint8_t alpha) {
   if (tft_bmp.img == 0) return;
   if (x >= TFT_WIDTH) return;
   if (y >= TFT_HEIGHT) return;
@@ -747,9 +785,9 @@ void tftDrawBMP(int16_t x, int16_t y) {
   uint32_t dst_addr = tft_addr + TFT_PIXEL * (y * TFT_WIDTH + x);
   uint32_t src_addr = (uint32_t)tft_bmp.img + IMG_PIXEL * (bmp_y * tft_bmp.w + bmp_x);
   if (tft_bmp.trColor) {
-    tftCopyTransparentBMP(dst_addr, src_addr, w, h);
+    tftCopyTransparentBMP(dst_addr, src_addr, w, h, alpha);
   } else {
-    tftCopyOpaqueBMP(dst_addr, src_addr, w, h);
+    tftCopyOpaqueBMP(dst_addr, src_addr, w, h, alpha);
   } 
   if (tft_wait_dma)
     HAL_DMA2D_PollForTransfer(&hdma2d, 200);
@@ -764,7 +802,7 @@ uint8_t tftPrepareDMA2D_LOAD_BMP(uint8_t transparent) {
   hdma2d.Init.Mode = DMA2D_M2M_PFC;
   hdma2d.Init.ColorMode = transparent ? DMA2D_OUTPUT_ARGB1555 : DMA2D_OUTPUT_RGB565;
   hdma2d.Init.OutputOffset = 0;
-  hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+  hdma2d.LayerCfg[1].AlphaMode = DMA2D_REPLACE_ALPHA;
   hdma2d.LayerCfg[1].InputAlpha = 0xFF;
   hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB888;
   hdma2d.LayerCfg[1].InputOffset = 0;
@@ -782,7 +820,7 @@ void tftAddTransparency(uint16_t *data, uint16_t length, uint16_t trColor) {
 
 uint8_t *tftLoadBMP(const char* name, const char* extendedName, uint16_t trColor) {
   if (!sdOpenForRead(name)) return 0;
-  if (!tftPrepareDMA2D_LOAD_BMP(trColor)) return 0;
+  if (!tftPrepareDMA2D_LOAD_BMP(trColor != 0)) return 0;
   if (name[0] == '*') name++; // Try to read system bmp image from SD card
   uint8_t *bmp_obj = 0;
   do {

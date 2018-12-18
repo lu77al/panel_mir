@@ -1231,6 +1231,12 @@
       <file>
         <name>$PROJ_DIR$\..\!LAA\UTILS\laa_global_utils.h</name>
       </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\UTILS\laa_math.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\UTILS\laa_math.h</name>
+      </file>
     </group>
     <file>
       <name>$PROJ_DIR$\..\!LAA\laa_user_code.c</name>

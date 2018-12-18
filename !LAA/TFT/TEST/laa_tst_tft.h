@@ -7,6 +7,8 @@ void tftTestFonts();
 void tftTest_simple_copy();
 void tftTest_blending_copy();
 void tftSwitchLayerAdressTest();
+void tstPrepareBackground();
+void tstDrawFrame();
 
 #endif // __AL_TST_TFT_H__
 

@@ -11,6 +11,8 @@
 uint8_t  scr_task[SCR_BUF_SIZE];
 uint16_t scr_end = 0;
 uint16_t scr_pnt = 1;
+uint16_t scr_poly_vcnt_pnt = 0;
+uint16_t scr_poly_pnt = 0;
 uint16_t scr_new_data_to_show = 0;
 uint16_t scr_mark[16];
 
@@ -33,6 +35,7 @@ void impSetTextPos();
 void impTextStatic();
 void impTextDynamic();
 void impPoly();
+void impEllipse();
 void impSetBMPstatic();
 void impSetBMPdynamic();
 void impDrawBMP();
@@ -58,6 +61,7 @@ void (*imp_routine[])() = {
   impTextStatic,
   impTextDynamic,
   impPoly,
+  impEllipse,
   impSetBMPstatic,
   impSetBMPdynamic,
   impDrawBMP
@@ -135,9 +139,10 @@ uint32_t get_uint32() {
 #define  SCM_TEXT_STATIC        16
 #define  SCM_TEXT_DYNAMIC       17
 #define  SCM_POLY               18
-#define  SCM_BMP_STATIC         19
-#define  SCM_BMP_DYNAMIC        20
-#define  SCM_BMP                21
+#define  SCM_ELLIPSE            19
+#define  SCM_BMP_STATIC         20
+#define  SCM_BMP_DYNAMIC        21
+#define  SCM_BMP                22
 
 //---- Task manager ----
 void scrResetPnt(uint8_t mark) {
@@ -151,9 +156,9 @@ void scrResetPnt(uint8_t mark) {
 }  
 
 void scrSaveMark(uint8_t mark) {
-  if (mark == 15) return;
+  if (mark == 0) return;
     if (mark > 16) return;
-  scr_mark[mark-1] = scr_pnt;
+  scr_mark[mark-1] = scr_end;
 }  
 
 void scrSetNewDataFlag() {
@@ -187,11 +192,11 @@ void scrPerformNextTask() {
 }  
 
 //----- Task setup rutines ---
-void scrGoDouble(uint32_t color) {
+void scrGoDouble() {
   push_uint8(SCM_GO_DOUBLE);
 }
 
-void scrGoSingle(uint32_t color) {
+void scrGoSingle() {
   push_uint8(SCM_GO_SINGLE);
 }
 
@@ -291,8 +296,62 @@ void scrTextOutDynamic(void *text, uint8_t maxLen) {
   uint8_t len = strlen(text);
   if (maxLen > len) maxLen = len;
   push_uint8(maxLen);
-  memcpy(&scr_task[scr_pnt], text, maxLen);
-  scr_pnt += maxLen;
+  memcpy(&scr_task[scr_end], text, maxLen);
+  scr_end += maxLen;
+}
+
+void scrInitPoly(uint8_t filled, uint8_t closed) {
+  push_uint8(SCM_POLY);
+  scr_poly_vcnt_pnt = scr_end;
+  push_uint8(0);
+  uint8_t flags = filled ? 1 : 0;
+  if (closed) flags |= 2;
+  push_uint8(flags);
+  scr_poly_pnt = scr_end;
+}  
+
+void scrPolyVertex(int16_t x, int16_t y) {
+  if (scr_poly_pnt != scr_end) return;
+  push_uint16(x);
+  push_uint16(y);
+  scr_task[scr_poly_vcnt_pnt]++;
+  scr_poly_pnt = scr_end;
+}  
+
+void scrEllipse(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t s, uint16_t e, uint8_t filled, uint8_t closed) {
+  push_uint8(SCM_ELLIPSE);
+  push_uint16(x);
+  push_uint16(y);
+  push_uint16(w);
+  push_uint16(h);
+  push_uint16(s);
+  push_uint16(e);
+  push_uint8(filled);
+  push_uint8(closed);
+}  
+
+void scrSetBMPstatic(char *name, uint32_t trColor888) {
+  push_uint8(SCM_BMP_STATIC);
+  push_uint32(trColor888);
+  push_uint32((uint32_t)name);
+}
+
+void scrSetBMPdynamic(char *name, uint32_t trColor888) {
+  push_uint8(SCM_BMP_DYNAMIC);
+  push_uint32(trColor888);
+  char *src = name;
+  for (uint8_t i=13; i; i--) {
+    if (!*src) break;
+    push_uint8(*(src++));
+  }  
+  push_uint8(0);
+}
+
+void scrDrawBMP(int16_t x, int16_t y, uint8_t alpha) {
+  push_uint8(SCM_BMP);
+  push_uint16(x);
+  push_uint16(y);
+  push_uint8(alpha);
 }
 
 //----- Task implementation rutines ---
@@ -318,7 +377,11 @@ void impClearScreem() {
 }  
 
 void impBar() {
-  tftRect(get_uint16(), get_uint16(), get_uint16(), get_uint16());
+  int16_t  x = get_uint16();
+  int16_t  y = get_uint16();
+  uint16_t w = get_uint16();
+  uint16_t h = get_uint16();
+  tftRect(x, y, w, h);
 }  
 
 void impSetPenWidth() {
@@ -330,19 +393,29 @@ void impSetPenPattern() {
 }  
 
 void impMoveTo() {
-  tftMoveTo(get_uint16(), get_uint16());  
+  int16_t  x = get_uint16();
+  int16_t  y = get_uint16();
+  tftMoveTo(x, y);  
 }  
 
 void impLineTo() {
-  tftLineTo(get_uint16(), get_uint16());  
+  int16_t  x = get_uint16();
+  int16_t  y = get_uint16();
+  tftLineTo(x, y);  
 }  
 
 void impLineRel() {
-  tftLineRel(get_uint16(), get_uint16());  
+  int16_t  x = get_uint16();
+  int16_t  y = get_uint16();
+  tftLineRel(x, y);  
 }  
 
 void impLine() {
-  tftLine(get_uint16(), get_uint16(), get_uint16(), get_uint16());
+  int16_t  x1 = get_uint16();
+  int16_t  y1 = get_uint16();
+  int16_t  x2 = get_uint16();
+  int16_t  y2 = get_uint16();
+  tftLine(x1, y1, x2, y2);
 }  
 
 void impSetFontStatic() {
@@ -360,7 +433,9 @@ void impSetTextTransparancy() {
 }  
 
 void impSetTextPos() {
-   tftSetTextPos(get_uint16(), get_uint16());
+  int16_t  x = get_uint16();
+  int16_t  y = get_uint16();
+  tftSetTextPos(x, y);
 }  
 
 void impTextStatic() {
@@ -376,11 +451,28 @@ void impTextDynamic() {
 
 void impPoly() {
   uint8_t vCnt = get_uint8();
-  tftPolyInit(get_uint8());
+  uint8_t flags = get_uint8();
+  tftPolyInit(flags & 1, flags & 2);
+  int16_t x;
+  int16_t y;
   for (;vCnt; vCnt--) {
-    tftPolyAddVertex(get_uint16(), get_uint16());
+    x = get_uint16();
+    y = get_uint16();
+    tftPolyAddVertex(x, y);
   }  
 }
+
+void impEllipse() {
+  int16_t   x = get_uint16();
+  int16_t   y = get_uint16();
+  uint16_t  w = get_uint16();
+  uint16_t  h = get_uint16();
+  uint16_t  s = get_uint16();
+  uint16_t  e = get_uint16();
+  uint8_t   f = get_uint8();
+  uint8_t   c = get_uint8();
+  tftEllipse(x, y, w, h, s, e, f, c);
+}  
 
 void impSetBMPstatic() {
   uint32_t TrColor = get_uint32();
@@ -396,8 +488,8 @@ void impSetBMPdynamic() {
 }  
 
 void impDrawBMP() {
-  tftDrawBMP(get_uint16(), get_uint16());  
+  int16_t  x = get_uint16();
+  int16_t  y = get_uint16();
+  uint8_t  alpha = get_uint8();
+  tftDrawBMP(x, y, alpha);  
 }  
-
-
-
