@@ -5,8 +5,8 @@
 #include "laa_tft_buffers.h"
 
 #define TFT_PIXEL  2
-#define TFT_WIDTH  800
-#define TFT_HEIGHT 480
+#define TFT_WIDTH  480
+#define TFT_HEIGHT 272
 #define TFT_BUFFER_SIZE (TFT_WIDTH * TFT_HEIGHT * TFT_PIXEL)
 
 //*********** TASK MANAGEMENT **************

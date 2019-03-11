@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2018 STMicroelectronics International N.V. 
+  * Copyright (c) 2019 STMicroelectronics International N.V. 
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without 
@@ -61,20 +61,22 @@
 #define UC_LEDLIGHT_PERIOD 50000
 #define UC_MAINTIC_PERIOD 50000
 
-#define KBD_OUT0_Pin GPIO_PIN_8
-#define KBD_OUT0_GPIO_Port GPIOB
+#define KBD_LINE0_Pin GPIO_PIN_8
+#define KBD_LINE0_GPIO_Port GPIOB
 #define BLU_PWM_Pin GPIO_PIN_4
 #define BLU_PWM_GPIO_Port GPIOB
 #define KBD_LED_FR_Pin GPIO_PIN_15
 #define KBD_LED_FR_GPIO_Port GPIOA
-#define KBD_OUT1_Pin GPIO_PIN_9
-#define KBD_OUT1_GPIO_Port GPIOB
+#define KBD_LINE1_Pin GPIO_PIN_9
+#define KBD_LINE1_GPIO_Port GPIOB
 #define KBD_LED_RESET_Pin GPIO_PIN_2
 #define KBD_LED_RESET_GPIO_Port GPIOI
-#define KBD_LED_SHIFT_Pin GPIO_PIN_8
-#define KBD_LED_SHIFT_GPIO_Port GPIOA
-#define LCD_BL_DSBL_Pin GPIO_PIN_7
-#define LCD_BL_DSBL_GPIO_Port GPIOG
+#define LCD_LED_Pin GPIO_PIN_3
+#define LCD_LED_GPIO_Port GPIOK
+#define LCD_DISP_Pin GPIO_PIN_12
+#define LCD_DISP_GPIO_Port GPIOI
+#define KBD_LINE4_Pin GPIO_PIN_8
+#define KBD_LINE4_GPIO_Port GPIOA
 #define USART6_DE_Pin GPIO_PIN_6
 #define USART6_DE_GPIO_Port GPIOG
 #define KBD_IN1_Pin GPIO_PIN_7
@@ -89,8 +91,10 @@
 #define KBD_IN2_GPIO_Port GPIOF
 #define BUZZER_Pin GPIO_PIN_6
 #define BUZZER_GPIO_Port GPIOH
-#define KBD_OUT2_Pin GPIO_PIN_14
-#define KBD_OUT2_GPIO_Port GPIOB
+#define KBD_LINE2_Pin GPIO_PIN_14
+#define KBD_LINE2_GPIO_Port GPIOB
+#define KBD_LINE3_Pin GPIO_PIN_15
+#define KBD_LINE3_GPIO_Port GPIOB
 
 /* ########################## Assert Selection ############################## */
 /**

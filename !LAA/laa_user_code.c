@@ -4,7 +4,7 @@
 #include "laa_user_code.h"
 #include "laa_sdram.h"
 #include "laa_sdcard.h"
-#include "laa_tft_led.h"
+//#include "laa_tft_led.h"
 #include "laa_tft_lib.h"
 #include "laa_tft_buffers.h"
 #include "laa_tst_tft.h"
@@ -21,6 +21,7 @@ extern TIM_HandleTypeDef htim10;
 volatile uint16_t main_tic_cnt = 0;
 
 void userInit() {
+  HAL_GPIO_WritePin(LCD_DISP_GPIO_Port, LCD_DISP_Pin, GPIO_PIN_SET);
   sdramInit();                  // Activate SDRAM 
   HAL_TIM_Base_Start(&htim10);  // Time source for task dispatcher (flags only)
   sdMount();                    // Mount SD card
@@ -40,12 +41,15 @@ void userMain() {
   tstPrepareBackground();
   
 //  uint16_t theSize = 0;
+
+  HAL_GPIO_WritePin(LCD_LED_GPIO_Port, LCD_LED_Pin, GPIO_PIN_SET);
   
   while (1) {
     scrPerformNextTask();
-    if (scrNeedNewContent()) {
-      tstDrawFrame();
-    }  
+    
+//    if (scrNeedNewContent()) {
+//      tstDrawFrame();
+//    }  
     
     
     
@@ -61,7 +65,7 @@ void userMain() {
 //        tftLTDCdismissWaitRetrace();
       } else if ((main_tic_cnt &= 0x3f) == 0x30) {    // 7.8125  Hz #2
       } else if ((main_tic_cnt &= 0x07) == 0x02) {    // 62.5    Hz
-        tftLightAdjust();
+//        tftLightAdjust();
       }  
       
     }

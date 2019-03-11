@@ -3,7 +3,7 @@
  ******************************************************************************/
 #include "laa_tft_buffers.h"
 #include "laa_tft_lib.h"
-#include "laa_tft_led.h"
+//#include "laa_tft_led.h"
 #include "laa_sdram.h"
 
 extern uint32_t tft_addr;  // Address of memory region to draw primitives
@@ -24,7 +24,7 @@ void tftInit() {
   HAL_Delay(50);
   HAL_LTDC_SetAlpha(&hltdc, 0xFF, 0);
   HAL_Delay(50);
-  tftLEDinit(0, 200);
+//  tftLEDinit(0, 200);
 }  
   
 /* Calculate and set [tft_addr] for tft_lib routines

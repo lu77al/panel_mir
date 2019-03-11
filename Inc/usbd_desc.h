@@ -1,8 +1,8 @@
 /**
- ******************************************************************************
-  * @file    bsp_driver_sd.h (based on stm32756g_eval_sd.h)
-  * @brief   This file contains the common defines and functions prototypes for 
-  *          the bsp_driver_sd.c driver.
+  ******************************************************************************
+  * @file           : usbd_desc.h
+  * @version        : v1.0_Cube
+  * @brief          : Header for usbd_desc.c file.
   ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -48,68 +48,109 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32F7_SD_H
-#define __STM32F7_SD_H
+#ifndef __USBD_DESC__H__
+#define __USBD_DESC__H__
 
 #ifdef __cplusplus
  extern "C" {
-#endif 
+#endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f7xx_hal.h"
+#include "usbd_def.h"
 
-/* Exported types --------------------------------------------------------*/ 
-/** 
-  * @brief SD Card information structure 
+/* USER CODE BEGIN INCLUDE */
+
+/* USER CODE END INCLUDE */
+
+/** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
+  * @{
   */
-#define BSP_SD_CardInfo HAL_SD_CardInfoTypeDef
 
-/* Exported constants --------------------------------------------------------*/ 
+/** @defgroup USBD_DESC USBD_DESC
+  * @brief Usb device descriptors module.
+  * @{
+  */
+
+/** @defgroup USBD_DESC_Exported_Defines USBD_DESC_Exported_Defines
+  * @brief Defines.
+  * @{
+  */
+
+/* USER CODE BEGIN EXPORTED_DEFINES */
+
+/* USER CODE END EXPORTED_DEFINES */
+
 /**
-  * @brief  SD status structure definition  
-  */     
-#define   MSD_OK                        ((uint8_t)0x00)
-#define   MSD_ERROR                     ((uint8_t)0x01)
-#define   MSD_ERROR_SD_NOT_PRESENT      ((uint8_t)0x02)
+  * @}
+  */
 
-/** 
-  * @brief  SD transfer state definition  
-  */     
-#define   SD_TRANSFER_OK                ((uint8_t)0x00)
-#define   SD_TRANSFER_BUSY              ((uint8_t)0x01)
+/** @defgroup USBD_DESC_Exported_TypesDefinitions USBD_DESC_Exported_TypesDefinitions
+  * @brief Types.
+  * @{
+  */
 
-#define SD_PRESENT               ((uint8_t)0x01)
-#define SD_NOT_PRESENT           ((uint8_t)0x00)
-#define SD_DATATIMEOUT           ((uint32_t)100000000)
+/* USER CODE BEGIN EXPORTED_TYPES */
 
-#ifdef OLD_API
-/* kept to avoid issue when migrating old projects. */
-/* USER CODE BEGIN 0 */
+/* USER CODE END EXPORTED_TYPES */
 
-/* USER CODE END 0 */ 
-#else
-/* USER CODE BEGIN BSP_H_CODE */
+/**
+  * @}
+  */
 
-/* Exported functions --------------------------------------------------------*/   
-uint8_t BSP_SD_Init(void);
-uint8_t BSP_SD_ITConfig(void);
-void    BSP_SD_DetectIT(void);
-void    BSP_SD_DetectCallback(void);
-uint8_t BSP_SD_ReadBlocks(uint32_t *pData, uint32_t ReadAddr, uint32_t NumOfBlocks, uint32_t Timeout);
-uint8_t BSP_SD_WriteBlocks(uint32_t *pData, uint32_t WriteAddr, uint32_t NumOfBlocks, uint32_t Timeout);
-uint8_t BSP_SD_ReadBlocks_DMA(uint32_t *pData, uint32_t ReadAddr, uint32_t NumOfBlocks);
-uint8_t BSP_SD_WriteBlocks_DMA(uint32_t *pData, uint32_t WriteAddr, uint32_t NumOfBlocks);
-uint8_t BSP_SD_Erase(uint32_t StartAddr, uint32_t EndAddr);
-uint8_t BSP_SD_GetCardState(void);
-void    BSP_SD_GetCardInfo(BSP_SD_CardInfo *CardInfo);
-uint8_t BSP_SD_IsDetected(void);
-/* USER CODE END BSP_H_CODE */
-#endif
-   
+/** @defgroup USBD_DESC_Exported_Macros USBD_DESC_Exported_Macros
+  * @brief Aliases.
+  * @{
+  */
+
+/* USER CODE BEGIN EXPORTED_MACRO */
+
+/* USER CODE END EXPORTED_MACRO */
+
+/**
+  * @}
+  */
+
+/** @defgroup USBD_DESC_Exported_Variables USBD_DESC_Exported_Variables
+  * @brief Public variables.
+  * @{
+  */
+
+/** Descriptor for the Usb device. */
+extern USBD_DescriptorsTypeDef FS_Desc;
+
+/* USER CODE BEGIN EXPORTED_VARIABLES */
+
+/* USER CODE END EXPORTED_VARIABLES */
+
+/**
+  * @}
+  */
+
+/** @defgroup USBD_DESC_Exported_FunctionsPrototype USBD_DESC_Exported_FunctionsPrototype
+  * @brief Public functions declaration.
+  * @{
+  */
+
+/* USER CODE BEGIN EXPORTED_FUNCTIONS */
+
+/* USER CODE END EXPORTED_FUNCTIONS */
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __STM32F7_SD_H */
+#endif /* __USBD_DESC__H__ */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
