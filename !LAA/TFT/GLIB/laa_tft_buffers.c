@@ -3,8 +3,8 @@
  ******************************************************************************/
 #include "laa_tft_buffers.h"
 #include "laa_tft_lib.h"
-//#include "laa_tft_led.h"
 #include "laa_sdram.h"
+#include "string.h"
 
 extern uint32_t tft_addr;  // Address of memory region to draw primitives
 uint8_t  tft_draw_buffer = 0;
@@ -17,14 +17,16 @@ extern LTDC_HandleTypeDef hltdc;
 /* Clear visible buffer, show it, go doublebuffered mode, init LED backlight
  */
 void tftInit() {
-  tftClearScreen(0);
+  HAL_GPIO_WritePin(LCD_DISP_GPIO_Port, LCD_DISP_Pin, GPIO_PIN_SET); // Enable tft
   HAL_LTDC_SetAddress(&hltdc, TFT_SCREEN, 0);  
   tftGoDoubleBuffered();
+  tftClearScreen(0);
   tftResetObjects();            // Clear cache ...
   HAL_Delay(50);
   HAL_LTDC_SetAlpha(&hltdc, 0xFF, 0);
   HAL_Delay(50);
-//  tftLEDinit(0, 200);
+  HAL_GPIO_WritePin(LCD_LED_GPIO_Port, LCD_LED_Pin, GPIO_PIN_SET); // Led ON
+  tftSetWaitDMA(0);
 }  
   
 /* Calculate and set [tft_addr] for tft_lib routines

@@ -503,6 +503,7 @@ void tstPrepareBackground() {
   scrBar(320, 0, 160, 272);
   return;
   
+  /*
   for (uint16_t i = 0; i < 48; i++) {
     uint32_t color = 0xFF0020 - (i << 16) * 5 + (i << 8) * 5;
     scrSetBG(color);
@@ -563,6 +564,7 @@ void tstPrepareBackground() {
   scrSaveMark(1);
   
   scrSetNewDataFlag();
+  */
 }  
 
 void tstDrawFrame() {

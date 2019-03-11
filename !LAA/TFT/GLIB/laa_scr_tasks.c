@@ -8,14 +8,15 @@
 #include "laa_global_utils.h"
 
 #define  SCR_BUF_SIZE 16384
+
 uint8_t  scr_task[SCR_BUF_SIZE];
 uint16_t scr_end = 0;
-uint16_t scr_pnt = 1;
+uint16_t scr_pnt = 0xffff;
 uint16_t scr_poly_vcnt_pnt = 0;
 uint16_t scr_poly_pnt = 0;
-uint16_t scr_new_data_to_show = 0;
 uint16_t scr_mark[16];
 
+//****** Implementation routines prototypes *******
 void impGoDoubleBuffered();
 void impGoSingleBuffered();
 void impSetBG();
@@ -40,6 +41,7 @@ void impSetBMPstatic();
 void impSetBMPdynamic();
 void impDrawBMP();
 
+//******* Implementation routine ppointers ******** 
 #define  SCM_COUNT  (sizeof(imp_routine)/sizeof(imp_routine[0]))
 void (*imp_routine[])() = {
   impGoDoubleBuffered,
@@ -67,7 +69,7 @@ void (*imp_routine[])() = {
   impDrawBMP
 };
 
-//----- Task stack management ------
+//**************** TASK QUEUE MANAGEMENT ***************
 void push_uint8(uint8_t data) {
   if (scr_end >= SCR_BUF_SIZE) return;
   scr_task[scr_end++] = data;
@@ -120,6 +122,7 @@ uint32_t get_uint32() {
   return res;
 }  
 
+//******** Screen routines indexes ********
 #define  SCM_GO_DOUBLE          0
 #define  SCM_GO_SINGLE          1
 #define  SCM_SET_BG             2
@@ -134,7 +137,7 @@ uint32_t get_uint32() {
 #define  SCM_LINE               11
 #define  SCM_FONT_STATIC        12
 #define  SCM_FONT_DYNAMIC       13
-#define  SCM_TRANSPARENVY       14
+#define  SCM_TRANSPARENCY       14
 #define  SCM_TEXT_POS           15
 #define  SCM_TEXT_STATIC        16
 #define  SCM_TEXT_DYNAMIC       17
@@ -144,127 +147,118 @@ uint32_t get_uint32() {
 #define  SCM_BMP_DYNAMIC        21
 #define  SCM_BMP                22
 
-//---- Task manager ----
-void scrResetPnt(uint8_t mark) {
-  if ((mark == 0) || (mark > 16)) {
+//******************* USER INTERFACE ROUTINES *********************
+
+//--- Rendering tasks management ---
+/* Screen render process. Executes tasks form scr_task
+ * Cuts texts and polygos to subtasks. Switches video buffers
+ */
+void scrPerformNextTask() {
+  if (tftIsDMA2DBusy()) return; // Exit if DMA2D is working
+  if (tftIsTaskToDo()) {   // If text or polygon is in process
+    tftDoTheNext();        //   do it and exit
+    return;
+  }
+  if (scr_pnt < scr_end) { // Regular tasks
+    if (tftIsWaitingForReload()) return;
+    uint8_t cmd = get_uint8(); 
+    if (cmd >= SCM_COUNT) {
+      scr_pnt = scr_end;
+      return;
+    }  
+    imp_routine[cmd]();
+    return;
+  }
+  if (scr_pnt == scr_end) { // Switch video buffer
+    scr_pnt = 0xFFFF;
+    tftNextFrame();
+  }
+}  
+
+/*  Save scr_task pointer for further redraw from this point
+ *  @par: level - index of saved point (1..15)
+ */
+void scrSavePoint(uint8_t level) {
+  if (level == 0) return;
+  if (level > 16) return;
+  scr_mark[level - 1] = scr_end;
+}  
+
+/*  Reset saved scr_task pointer to start drawing there
+ *  @par: level - index of saved point (0..15). 0 - from buffer start
+ */
+void scrResetPoint(uint8_t level) {
+  if ((level == 0) || (level > 16)) {
     scr_end = 0;
   } else {
-    scr_end = scr_mark[mark-1];
+    scr_end = scr_mark[level - 1];
   }  
-  scr_new_data_to_show = 0;
+}  
+
+/*  Start rendering process
+ */
+void scrStartRender() {
   scr_pnt = 0;
 }  
 
-void scrSaveMark(uint8_t mark) {
-  if (mark == 0) return;
-    if (mark > 16) return;
-  scr_mark[mark-1] = scr_end;
-}  
-
-void scrSetNewDataFlag() {
-  scr_new_data_to_show = 1;
-}  
-
-uint8_t scrNeedNewContent() {
-  return (scr_new_data_to_show && (scr_pnt > scr_end));
+/* Check if scr is ready to get new tasks
+ */
+uint8_t scrIsBufferFree() {
+  return (scr_pnt >= scr_end);
 }
 
-void scrPerformNextTask() {
-  if (tftIsBusy()) return;
-  if (tftIsTaskToDo()) {
-    tftDoTheNext();
-    return;
-  }
-  if (scr_pnt >= scr_end) {
-    if (scr_pnt == scr_end) {
-      scr_pnt++;
-      tftNextFrame();
-    }  
-    return;
-  }  
-  if (tftIsWaitingForReload()) return;
-  uint8_t cmd = get_uint8(); 
-  if (cmd >= SCM_COUNT) {
-    scr_pnt = scr_end + 1;
-    return;
-  }  
-  imp_routine[cmd]();
-}  
+//******************* MODES, COLORS, SETTINGS *********************
 
-//----- Task setup rutines ---
+/* Switch to double buffered mode
+ */
 void scrGoDouble() {
   push_uint8(SCM_GO_DOUBLE);
 }
 
+/* Switch to single buffered mode
+ */
 void scrGoSingle() {
   push_uint8(SCM_GO_SINGLE);
 }
 
+/* Set background color
+ */
 void scrSetBG(uint32_t color) {
   push_uint8(SCM_SET_BG);
   push_uint24(color);
 }
 
+/* Set foreground color
+ */
 void scrSetFG(uint32_t color) {
   push_uint8(SCM_SET_FG);
   push_uint24(color);
 }
 
-void scrCLS(int32_t color) {
-  push_uint8(SCM_CLS);
-  push_uint24(color);
-}  
-
-void scrBar(int16_t x, int16_t y, int16_t w, int16_t h) {
-  push_uint8(SCM_BAR);
-  push_uint16(x);
-  push_uint16(y);
-  push_uint16(w);
-  push_uint16(h);
-}  
-
+/* Set line width
+ */
 void scrSetPenWidth(int8_t width) {
   push_uint8(SCM_PEN_WIDTH);
   push_uint8(width);
 }  
 
+/* Set line pattern
+ */
 void scrSetPenPattern(int32_t pattern) {
   push_uint8(SCM_PEN_STYLE);
   push_uint32(pattern);
 }  
 
-void scrMoveTo(int16_t x, int16_t y) {
-  push_uint8(SCM_MOVE_TO);
-  push_uint16(x);
-  push_uint16(y);
-}  
-
-void scrLineTo(int16_t x, int16_t y) {
-  push_uint8(SCM_LINE_TO);
-  push_uint16(x);
-  push_uint16(y);
-}  
-
-void scrLineRel(int16_t x, int16_t y) {
-  push_uint8(SCM_LINE_REL);
-  push_uint16(x);
-  push_uint16(y);
-}  
-
-void scrLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
-  push_uint8(SCM_LINE);
-  push_uint16(x1);
-  push_uint16(y1);
-  push_uint16(x2);
-  push_uint16(y2);
-}  
-
-void scrSetFontStatic(char *name) {
-  push_uint8(SCM_FONT_STATIC);
-  push_uint32((uint32_t)name);
+/* Set font transparency
+ */
+void scrSetTextTransparency(int8_t transparent) {
+  push_uint8(SCM_TRANSPARENCY);
+  push_uint8(transparent);
 }
 
-void scrSetFontDynamic(char *name) {
+/* Set font (save name in scr_task)
+ */
+void scrSetFont(char *name) {
   push_uint8(SCM_FONT_DYNAMIC);
   char *src = name;
   for (uint8_t i=13; i; i--) {
@@ -274,24 +268,108 @@ void scrSetFontDynamic(char *name) {
   push_uint8(0);
 }
 
-void scrSetTextTransparency(int8_t transparent) {
-  push_uint8(SCM_TRANSPARENVY);
-  push_uint8(transparent);
+/* Set font with static name (save pointer to name in scr_task)
+ */
+void scrSetFontStatic(char *name) {
+  push_uint8(SCM_FONT_STATIC);
+  push_uint32((uint32_t)name);
 }
 
+/* Set bmp (save name in scr_task)
+ */
+void scrSetBMP(char *name, uint32_t trColor888) {
+  push_uint8(SCM_BMP_DYNAMIC);
+  push_uint32(trColor888);
+  char *src = name;
+  for (uint8_t i=13; i; i--) {
+    if (!*src) break;
+    push_uint8(*(src++));
+  }  
+  push_uint8(0);
+}
+
+/* Set bmp with static name (save pointer to name in scr_task)
+ */
+void scrSetBMPstatic(char *name, uint32_t trColor888) {
+  push_uint8(SCM_BMP_STATIC);
+  push_uint32(trColor888);
+  push_uint32((uint32_t)name);
+}
+
+//**************** DRAW PRIMITIVES ***************
+/* Fill all screen with color 
+ * @par: color 24bit
+ */
+void scrCLS(int32_t color) {
+  push_uint8(SCM_CLS);
+  push_uint24(color);
+}  
+
+/* Filled bar (using BGColor)
+ * @par: x, y - left top corner
+ * @par: w, h - size
+ */
+void scrBar(int16_t x, int16_t y, int16_t w, int16_t h) {
+  push_uint8(SCM_BAR);
+  push_uint16(x);
+  push_uint16(y);
+  push_uint16(w);
+  push_uint16(h);
+}  
+
+/* Draw line (using FGColor)
+ * @par: x1, y1 - start point
+ * @par: x2, y2 - end point (line pointer is set to end point)
+ */
+void scrLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
+  push_uint8(SCM_LINE);
+  push_uint16(x1);
+  push_uint16(y1);
+  push_uint16(x2);
+  push_uint16(y2);
+}  
+
+/* Move line pointer
+ * @par: x, y - position 
+ */
+void scrMoveTo(int16_t x, int16_t y) {
+  push_uint8(SCM_MOVE_TO);
+  push_uint16(x);
+  push_uint16(y);
+}  
+
+/* Draw line from current pointer to absolute position
+ * @par: x, y - absolute position (pointer is set to end point)
+ */
+void scrLineTo(int16_t x, int16_t y) {
+  push_uint8(SCM_LINE_TO);
+  push_uint16(x);
+  push_uint16(y);
+}  
+
+/* Draw line from current pointer to relative position
+ * @par: x, y - relative position (pointer is set to end point)
+ */
+void scrLineRel(int16_t x, int16_t y) {
+  push_uint8(SCM_LINE_REL);
+  push_uint16(x);
+  push_uint16(y);
+}  
+
+/* Set text cursor position
+ * @par: x, y - position
+ */
 void scrSetTextPos(int16_t x, int16_t y) {
   push_uint8(SCM_TEXT_POS);
   push_uint16(x);
   push_uint16(y);
 }
 
-void scrTextOutStatic(void *text, uint8_t maxLen) {
-  push_uint8(SCM_TEXT_STATIC);
-  push_uint8(maxLen);
-  push_uint32((uint32_t)text);
-}
-
-void scrTextOutDynamic(void *text, uint8_t maxLen) {
+/* Print text dynamic (save text in scr_task)
+ * @par: (void *)text - pointer to text. Can be null-terminated
+ * @par: maxLen - Maximum length of the text (if not null-terminated)
+ */
+void scrTextOut(void *text, uint8_t maxLen) {
   push_uint8(SCM_TEXT_DYNAMIC);
   uint8_t len = strlen(text);
   if (maxLen > len) maxLen = len;
@@ -300,6 +378,19 @@ void scrTextOutDynamic(void *text, uint8_t maxLen) {
   scr_end += maxLen;
 }
 
+/* Print text dynamic (save pointer to test in scr_task)
+ * @par: (void *)text - pointer to text. Can be null-terminated
+ * @par: maxLen - Maximum length of the text (if not null-terminated)
+ */
+void scrTextOutStatic(void *text, uint8_t maxLen) {
+  push_uint8(SCM_TEXT_STATIC);
+  push_uint8(maxLen);
+  push_uint32((uint32_t)text);
+}
+
+/* Start drawing polygon
+ * @par: filled / closed - drawing settings
+ */
 void scrInitPoly(uint8_t filled, uint8_t closed) {
   push_uint8(SCM_POLY);
   scr_poly_vcnt_pnt = scr_end;
@@ -310,6 +401,9 @@ void scrInitPoly(uint8_t filled, uint8_t closed) {
   scr_poly_pnt = scr_end;
 }  
 
+/* Add polygon vertex
+ * @par: x, y - vertex position
+ */
 void scrPolyVertex(int16_t x, int16_t y) {
   if (scr_poly_pnt != scr_end) return;
   push_uint16(x);
@@ -317,6 +411,11 @@ void scrPolyVertex(int16_t x, int16_t y) {
   scr_task[scr_poly_vcnt_pnt]++;
   scr_poly_pnt = scr_end;
 }  
+
+/*
+void scrEllipse(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t s, uint16_t e, uint8_t filled, uint8_t closed); // Ellipse
+void scrDrawBMP(int16_t x, int16_t y, uint8_t alpha); // Draw selected bmp with alpha
+*/
 
 void scrEllipse(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t s, uint16_t e, uint8_t filled, uint8_t closed) {
   push_uint8(SCM_ELLIPSE);
@@ -330,22 +429,6 @@ void scrEllipse(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t s, uint16
   push_uint8(closed);
 }  
 
-void scrSetBMPstatic(char *name, uint32_t trColor888) {
-  push_uint8(SCM_BMP_STATIC);
-  push_uint32(trColor888);
-  push_uint32((uint32_t)name);
-}
-
-void scrSetBMPdynamic(char *name, uint32_t trColor888) {
-  push_uint8(SCM_BMP_DYNAMIC);
-  push_uint32(trColor888);
-  char *src = name;
-  for (uint8_t i=13; i; i--) {
-    if (!*src) break;
-    push_uint8(*(src++));
-  }  
-  push_uint8(0);
-}
 
 void scrDrawBMP(int16_t x, int16_t y, uint8_t alpha) {
   push_uint8(SCM_BMP);

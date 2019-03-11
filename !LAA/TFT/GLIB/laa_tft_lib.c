@@ -85,7 +85,7 @@ TPolyTask  tft_poly;
 void tftDrawLine(int16_t x1, int16_t y1, uint16_t x2, uint16_t y2);
 
 //*********** TASK MANAGEMENT **************
-uint8_t tftIsBusy() {
+uint8_t tftIsDMA2DBusy() {
   if (!tft_waiting_dma) return 0;
   if (HAL_DMA2D_PollForTransfer(&hdma2d, 0) != HAL_OK) return 1; 
   tft_waiting_dma = 0;

@@ -10,7 +10,7 @@
 #define TFT_BUFFER_SIZE (TFT_WIDTH * TFT_HEIGHT * TFT_PIXEL)
 
 //*********** TASK MANAGEMENT **************
-uint8_t tftIsBusy();
+uint8_t tftIsDMA2DBusy();
 uint8_t tftIsTaskToDo();
 uint8_t tftDoTheNext();
 void tftDoTheRest();
