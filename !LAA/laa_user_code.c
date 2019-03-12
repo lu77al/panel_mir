@@ -35,9 +35,9 @@ void userMain() {
   while (1) {
     scrPerformNextTask();
     
-//    if (scrNeedNewContent()) {
-//      tstDrawFrame();
-//    }  
+    if (scrIsRenderComplete()) {
+      tstDrawFrame();
+    }  
     
     
     

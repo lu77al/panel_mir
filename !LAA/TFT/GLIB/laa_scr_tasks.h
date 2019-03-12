@@ -5,7 +5,7 @@
 
 //--- Rendering tasks management ---
 void scrPerformNextTask(); // Render scr_task -> TFT
-uint8_t scrIsBufferFree(); // Ready to get new tasks
+uint8_t scrIsRenderComplete(); // Ready to get new tasks
 void scrSavePoint(uint8_t level);  // Save scr_task pointer for further redraw from this point (level = 1..15)
 void scrResetPoint(uint8_t level); // Reset saved scr_task pointer to start drawing there (level = 0..15) 0 - from start
 void scrStartRender(); // Start rendering process

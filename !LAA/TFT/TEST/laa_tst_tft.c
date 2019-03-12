@@ -494,6 +494,7 @@ void tftSwitchLayerAdressTest() {
 
 
 void tstPrepareBackground() {
+  tstInitBalls();
   scrGoDouble();
   scrSetBG(0xFF0000);
   scrBar(0, 0, 160, 272);
@@ -501,6 +502,8 @@ void tstPrepareBackground() {
   scrBar(160, 0, 160, 272);
   scrSetBG(0x0000FF);
   scrBar(320, 0, 160, 272);
+  scrSavePoint(1);
+  scrStartRender();
   return;
   
   /*
@@ -568,17 +571,16 @@ void tstPrepareBackground() {
 }  
 
 void tstDrawFrame() {
-  scrResetPnt(1);
+  scrResetPoint(1);
   scrGoDouble();
-  scrSetBMPdynamic("UFO.BMP",0xff0000);
+//  scrSetBMP("UFO.BMP",0xff0000);
+  scrSetBG(0x444444);
   for (uint8_t i = 0; i < BALL_CNT; i++) {
-    scrDrawBMP(ballX[i], ballY[i], 0x70);
-    tftMoveAxis(&ballX[i], &ballDX[i], TFT_WIDTH - IMG_SIZE);
-    tftMoveAxis(&ballY[i], &ballDY[i], TFT_HEIGHT - IMG_SIZE);
+//    scrDrawBMP(ballX[i], ballY[i], 0x70);
+    scrBar(ballX[i], ballY[i], 20, 20);
+    tftMoveAxis(&ballX[i], &ballDX[i], TFT_WIDTH - 20);
+    tftMoveAxis(&ballY[i], &ballDY[i], TFT_HEIGHT - 20);
   }  
- 
-  
-  scrSetNewDataFlag();
-  
+  scrStartRender();
 }
 

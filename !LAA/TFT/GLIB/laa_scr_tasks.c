@@ -169,9 +169,10 @@ void scrPerformNextTask() {
     imp_routine[cmd]();
     return;
   }
-  if (scr_pnt == scr_end) { // Switch video buffer
+  if (scr_pnt >= scr_end) { // Switch video buffer
+    if (scr_pnt == scr_end) tftNextFrame();
     scr_pnt = 0xFFFF;
-    tftNextFrame();
+    scr_end = 0;
   }
 }  
 
@@ -203,8 +204,8 @@ void scrStartRender() {
 
 /* Check if scr is ready to get new tasks
  */
-uint8_t scrIsBufferFree() {
-  return (scr_pnt >= scr_end);
+uint8_t scrIsRenderComplete() {
+  return (scr_pnt == 0xFFFF);
 }
 
 //******************* MODES, COLORS, SETTINGS *********************
@@ -257,6 +258,7 @@ void scrSetTextTransparency(int8_t transparent) {
 }
 
 /* Set font (save name in scr_task)
+ * @par: name - file name  (prefix <*> - search in system ROM first)
  */
 void scrSetFont(char *name) {
   push_uint8(SCM_FONT_DYNAMIC);
@@ -269,6 +271,7 @@ void scrSetFont(char *name) {
 }
 
 /* Set font with static name (save pointer to name in scr_task)
+ * @par: name - file name  (prefix <*> - search in system ROM first)
  */
 void scrSetFontStatic(char *name) {
   push_uint8(SCM_FONT_STATIC);
@@ -276,6 +279,8 @@ void scrSetFontStatic(char *name) {
 }
 
 /* Set bmp (save name in scr_task)
+ * @par: name - file name  (prefix <*> - search in system ROM first)
+ * @par: trColor888 - transparent color (0xffffffff - no transparency)
  */
 void scrSetBMP(char *name, uint32_t trColor888) {
   push_uint8(SCM_BMP_DYNAMIC);
@@ -289,6 +294,8 @@ void scrSetBMP(char *name, uint32_t trColor888) {
 }
 
 /* Set bmp with static name (save pointer to name in scr_task)
+ * @par: name - file name  (prefix <*> - search in system ROM first)
+ * @par: trColor888 - transparent color (0xffffffff - no transparency)
  */
 void scrSetBMPstatic(char *name, uint32_t trColor888) {
   push_uint8(SCM_BMP_STATIC);
@@ -412,11 +419,12 @@ void scrPolyVertex(int16_t x, int16_t y) {
   scr_poly_pnt = scr_end;
 }  
 
-/*
-void scrEllipse(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t s, uint16_t e, uint8_t filled, uint8_t closed); // Ellipse
-void scrDrawBMP(int16_t x, int16_t y, uint8_t alpha); // Draw selected bmp with alpha
-*/
-
+/* Draw ellipse
+ * @par: x, y - left top corner of containing rectangle
+ * @par: w, h - size
+ * @par: s, e - start/end angles (0.1 degree)
+ * @par: filled / closed - drawing settings
+ */
 void scrEllipse(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t s, uint16_t e, uint8_t filled, uint8_t closed) {
   push_uint8(SCM_ELLIPSE);
   push_uint16(x);
@@ -429,7 +437,10 @@ void scrEllipse(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t s, uint16
   push_uint8(closed);
 }  
 
-
+/* Draw bmp
+ * @par: x, y - left top corner
+ * @par: alpha - inverted transparency
+ */
 void scrDrawBMP(int16_t x, int16_t y, uint8_t alpha) {
   push_uint8(SCM_BMP);
   push_uint16(x);
@@ -437,8 +448,7 @@ void scrDrawBMP(int16_t x, int16_t y, uint8_t alpha) {
   push_uint8(alpha);
 }
 
-//----- Task implementation rutines ---
-
+//**************** RENDER TASKS IMPLEMENTATION PRIMITIVES ***************
 void impGoDoubleBuffered() {
   tftGoDoubleBuffered();
 }
