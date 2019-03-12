@@ -1161,6 +1161,15 @@
   <group>
     <name>!LAA</name>
     <group>
+      <name>KEYBOARD</name>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\KEYBOARD\laa_keyboard.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\KEYBOARD\laa_keyboard.h</name>
+      </file>
+    </group>
+    <group>
       <name>SDCard</name>
       <file>
         <name>$PROJ_DIR$\..\!LAA\SDCARD\laa_sdcard.c</name>
@@ -1176,6 +1185,21 @@
       </file>
       <file>
         <name>$PROJ_DIR$\..\!LAA\SDRAM\laa_sdram.h</name>
+      </file>
+    </group>
+    <group>
+      <name>SETUP</name>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_components.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_components.h</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_setup.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_setup.h</name>
       </file>
     </group>
     <group>

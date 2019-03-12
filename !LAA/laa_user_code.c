@@ -25,7 +25,6 @@ void userInit() {
   sdMount();                    // Mount SD card
   tftInit();
 }  
-  
 
 void userMain() {
   userInit();

@@ -324,6 +324,8 @@
           <state>$PROJ_DIR$/../!LAA/SDRAM</state>
           <state>$PROJ_DIR$/../!LAA/SDCARD</state>
           <state>$PROJ_DIR$/../!LAA/UTILS</state>
+          <state>$PROJ_DIR$/../!LAA/SETUP</state>
+          <state>$PROJ_DIR$/../!LAA/KEYBOARD</state>
           <state>D:/LIUSHNIA/Soft/CubeMX/F7/STM32Cube_FW_F7_V1.9.0/Drivers/STM32F7xx_HAL_Driver/Inc</state>
           <state>D:/LIUSHNIA/Soft/CubeMX/F7/STM32Cube_FW_F7_V1.9.0/Drivers/STM32F7xx_HAL_Driver/Inc/Legacy</state>
           <state>D:/LIUSHNIA/Soft/CubeMX/F7/STM32Cube_FW_F7_V1.9.0/Drivers/CMSIS/Device/ST/STM32F7xx/Include</state>
@@ -984,6 +986,15 @@
   <group>
     <name>!LAA</name>
     <group>
+      <name>KEYBOARD</name>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\KEYBOARD\laa_keyboard.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\KEYBOARD\laa_keyboard.h</name>
+      </file>
+    </group>
+    <group>
       <name>SDCard</name>
       <file>
         <name>$PROJ_DIR$\..\!LAA\SDCARD\laa_sdcard.c</name>
@@ -999,6 +1010,21 @@
       </file>
       <file>
         <name>$PROJ_DIR$\..\!LAA\SDRAM\laa_sdram.h</name>
+      </file>
+    </group>
+    <group>
+      <name>SETUP</name>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_components.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_components.h</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_setup.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_setup.h</name>
       </file>
     </group>
     <group>

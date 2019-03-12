@@ -1,5 +1,5 @@
 /******************************************************************************
- *  Sceduler for TFT output tasks
+ *  Scheduler for TFT output tasks
  ******************************************************************************/
 #include "laa_scr_tasks.h"
 #include "string.h"
