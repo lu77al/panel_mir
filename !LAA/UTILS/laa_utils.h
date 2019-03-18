@@ -1,3 +1,7 @@
+#ifndef __AL_UTILS_H__
+#define __AL_UTILS_H__
+#include "stm32f7xx_hal.h"
+
 #define OFF    0
 #define ON     1
 
@@ -8,3 +12,13 @@
 
 #define SWAP16(a,b) {int16_t t=a; a=b; b=t;}
 #define SWAP32(a,b) {int32_t t=a; a=b; b=t;}
+
+typedef struct { // GPIO_Pin
+  GPIO_TypeDef*  Port;
+  uint16_t       Pin;
+} LAA_GPIO;
+
+void    laaWritePin(LAA_GPIO pin, uint8_t state);
+uint8_t laaReadPin(LAA_GPIO pin);
+
+#endif // __AL_UTILS_H__

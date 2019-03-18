@@ -5,7 +5,6 @@
 #include "string.h"
 #include "laa_tft_lib.h"
 #include "laa_tft_buffers.h"
-#include "laa_global_utils.h"
 
 #define  SCR_BUF_SIZE 16384
 
@@ -238,14 +237,14 @@ void scrSetFG(uint32_t color) {
 
 /* Set line width
  */
-void scrSetPenWidth(int8_t width) {
+void scrSetLineWidth(int8_t width) {
   push_uint8(SCM_PEN_WIDTH);
   push_uint8(width);
 }  
 
 /* Set line pattern
  */
-void scrSetPenPattern(int32_t pattern) {
+void scrSetLinePattern(int32_t pattern) {
   push_uint8(SCM_PEN_STYLE);
   push_uint32(pattern);
 }  

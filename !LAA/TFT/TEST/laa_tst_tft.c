@@ -516,36 +516,36 @@ void tstPrepareBackground() {
   tstInitBalls();
   
   scrSetFG(0xffffff);
-  scrSetPenWidth(1);
-  scrSetPenPattern(0xF0F0F0F0);
+  scrSetLineWidth(1);
+  scrSetLinePattern(0xF0F0F0F0);
   scrLine(0, 0, 799, 479);
-  scrSetPenWidth(2);
+  scrSetLineWidth(2);
   scrLine(0, 478, 798, 0);
-  scrSetPenWidth(3);
+  scrSetLineWidth(3);
   scrLine(10, 50, 700, 400);
-  scrSetPenWidth(4);
+  scrSetLineWidth(4);
   scrLine(10, 100, 700, 450);
-  scrSetPenWidth(6);
-  scrSetPenPattern(0x33333333);
+  scrSetLineWidth(6);
+  scrSetLinePattern(0x33333333);
   scrLine(10, 450, 750, 20);
 
-  scrSetPenWidth(21);
-  scrSetPenPattern(0xFFFFFFFF);
+  scrSetLineWidth(21);
+  scrSetLinePattern(0xFFFFFFFF);
   scrSetFG(0x0000ff);
   scrLine(40, 200, 120, 240);
-  scrSetPenWidth(31);
+  scrSetLineWidth(31);
   scrSetFG(0x00ff00);
   scrLine(120, 240, 200, 210);
-  scrSetPenWidth(24);
+  scrSetLineWidth(24);
   scrSetFG(0x0000ff);
   scrLine(200, 210, 700, 360);
-  scrSetPenWidth(16);
+  scrSetLineWidth(16);
   scrSetFG(0xff0000);
   scrLine(700, 360, 200, 210);
     
 //    tftTestDMA2D_A4();
 
-  scrSetPenWidth(3);
+  scrSetLineWidth(3);
   scrSetFG(0xffffff);
   scrSetBG(0xaaaaaa);
   scrInitPoly(1,1);
@@ -561,7 +561,7 @@ void tstPrepareBackground() {
 
   scrSetFG(0x00ff00);
   scrSetBG(0x447744);
-  scrSetPenWidth(5);
+  scrSetLineWidth(5);
   scrEllipse(300, 200, 200, 100, 1200, 300, 1, 1);  
 
   scrSaveMark(1);

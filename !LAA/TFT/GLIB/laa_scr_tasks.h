@@ -1,6 +1,5 @@
 #ifndef __AL_SCR_TASKS_H__
 #define __AL_SCR_TASKS_H__
-
 #include "stm32f7xx_hal.h"
 
 //--- Rendering tasks management ---
@@ -15,8 +14,8 @@ void scrGoDouble();  // Double buffered mode
 void scrGoSingle();  // Single buffered mode
 void scrSetBG(uint32_t color); // Set background color
 void scrSetFG(uint32_t color); // Set foreground color
-void scrSetPenWidth(int8_t width);  // Set line width
-void scrSetPenPattern(int32_t pattern); // Set line pattern
+void scrSetLineWidth(int8_t width);  // Set line width
+void scrSetLinePattern(int32_t pattern); // Set line pattern
 void scrSetTextTransparency(int8_t transparent); // Set font transparency
 void scrSetFont(char *name); // Set font (save name in scr_task)
 void scrSetFontStatic(char *name); // Set font with static name (save pointer to name in scr_task)

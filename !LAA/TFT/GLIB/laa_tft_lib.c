@@ -4,7 +4,7 @@
  ******************************************************************************/
 #include "laa_tft_lib.h"
 #include "string.h"
-#include "laa_global_utils.h"
+#include "laa_utils.h"
 #include "laa_sdcard.h"
 #include "laa_tft_cache.h"
 #include "laa_tft_led.h"
