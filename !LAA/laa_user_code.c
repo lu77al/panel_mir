@@ -8,6 +8,7 @@
 #include "laa_tft_buffers.h"
 #include "laa_tst_tft.h"
 #include "laa_scr_tasks.h"
+#include "laa_keyboard.h"
 
 //extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim10;
@@ -24,6 +25,7 @@ void userInit() {
   HAL_TIM_Base_Start(&htim10);  // Time source for task dispatcher (flags only)
   sdMount();                    // Mount SD card
   tftInit();
+  kbdInit();
 }  
 
 void userMain() {
@@ -46,6 +48,7 @@ void userMain() {
       __HAL_TIM_CLEAR_IT(&htim10, TIM_IT_UPDATE);
 
       main_tic_cnt++;
+      kbdScan();      
       
       if ((main_tic_cnt &= 0x7f) == 0x20) {           // 3.90625 Hz
       } else if ((main_tic_cnt &= 0x3f) == 0x10) {    // 7.8125  Hz #1

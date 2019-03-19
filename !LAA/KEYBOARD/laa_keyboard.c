@@ -16,8 +16,8 @@
 
 #define KBD_PRESS_THH   3
 #define KBD_HYST        3
-#define KBD_REPEAT_THH  50
-#define KBD_RESTART     25
+#define KBD_REPEAT_THH  80
+#define KBD_RESTART     50
 
 uint8_t  kbd_key[KBD_SIZE + 1]; // Keys state counters
 uint8_t  kbd_input[KBD_LEN];   // key input queue buffer
@@ -65,8 +65,31 @@ const uint8_t kbd_scancode[KBD_HEIGHT][KBD_WIDTH] = {
 };
 
 uint8_t kbd_line = 0;
+uint8_t kbd_sound_time = 0;
+
+extern TIM_HandleTypeDef htim12;
+
+/* Start / correct stop of buzzer PWM
+ */
+void kbd_buzzer() {
+  if (kbd_sound_time != 0) {
+    if (!(htim12.Instance->CR1 & TIM_CR1_CEN)) {
+      htim12.Instance->CCR1 = 2500;
+      HAL_TIM_Base_Start(&htim12);      
+      HAL_TIM_PWM_Start(&htim12, TIM_CHANNEL_1);
+    }  
+    kbd_sound_time--;
+  } else if (htim12.Instance->CCR1 == 2500) {
+    htim12.Instance->CCR1 = 6000;
+  } else if (htim12.Instance->CR1 & TIM_CR1_CEN) {
+    HAL_TIM_Base_Stop(&htim12);      
+    HAL_TIM_PWM_Stop(&htim12, TIM_CHANNEL_1);
+  }  
+}
 
 /* Scanning keyboard line by line (schematic specific procedure)
+ *  one line per call
+ *  also drive buzzer
  */
 void kbdScan() {
   uint8_t input = ~(GPIOF->IDR >> 6); // PF10 .. PF6
@@ -74,72 +97,36 @@ void kbdScan() {
     uint8_t scn = kbd_scancode[kbd_line][col];
     if (scn >= KBD_SIZE) continue;
     uint8_t* key = &kbd_key[scn];
-    if (input & 1) {
-      *key++;
-      if (*key == KBD_PRESS_THH) {
+    if (input & 1) { // Contact detected
+      (*key)++;
+      if (*key == KBD_PRESS_THH) { // First press
         *key += KBD_HYST;
+ //if (ui_state == UIS_TEST_KEYBOARD) kbd_sound_time = 12; // 2
+        kbd_sound_time = 8;
         kbdAddKey(kbd_code[scn]);
         kbdAddEvent((int16_t)kbd_code[scn]);
-      } else if (*key == KBD_REPEAT_THH) {
+      } else if (*key == KBD_REPEAT_THH) { // Repeat pressed key
         *key = KBD_RESTART;
         kbdAddKey(kbd_code[scn]);
       }  
-    } else {
-      
+    } else { // No contact
+      if (*key == 0) continue;
+      if (*key > KBD_PRESS_THH + KBD_HYST) {
+        *key = KBD_PRESS_THH + KBD_HYST;
+      }
+      (*key)--;
+      if (*key == KBD_PRESS_THH) { // Key released
+        *key = 0;
+        kbdAddEvent(-(int16_t)kbd_code[scn]);
+      }
     }
   }  
   laaWritePin(kbd_line_pin[kbd_line], 1);
   kbd_line++;
   kbd_line %= KBD_HEIGHT;
   laaWritePin(kbd_line_pin[kbd_line], 0);
+  kbd_buzzer();
 }  
-
-/*
-    uint8_t keycode = kbd_keycode[scancode];
-    KbrdType *but = &kbd_but[keycode];
-    but->released = 0;
-    but->pressed = 0;
-    if (in_pins & 1) but->rel_time = 0; else {
-      if (but->rel_time < 5) but->rel_time++;
-    }
-    if (but->rel_time < 5) {
-      but->state++;
-      if (but->state == 1) {
-//        if (!but->pressed) kbd_new_event = 1;
-        kbd_new_event = 1;
-        but->repeated = 1;
-        but->pressed  = 1;
-        kbd_pushkey(keycode);
-        if (prf_sound) kbd_sound_time = 7; // 2
-        if (ui_state == UIS_TEST_KEYBOARD) kbd_sound_time = 12; // 2
-//        kbd_kbd_kbd = 2;
-//        just_var = 15;
-        kbd_last_scanned = scancode;  
-      }  
-      if (but->state > KBD_FIRST_DELAY) {
-        but->repeated = 1;
-        if (keycode != KEYCODE_SHIFT) kbd_pushkey(keycode); //  | 0x80
-        but->state = KBD_FIRST_DELAY - KBD_NEXT_DELAY + 1;
-        if (but->repcnt != 0xFF) but->repcnt++;
-      }
-    } else {
-      if (but->state) {
-//        if (!but->released) kbd_new_event = 1
-        kbd_new_event = 1;
-        but->released = 1;
-      }  
-      but->state = but->repcnt = 0;
-    }  
-    in_pins >>= 1;
-    scancode++;
-  }
-  kbd_scan_group = (kbd_scan_group + 1) % 5;
-  for (uint8_t i=0; i<5; i++) {
-    HAL_GPIO_WritePin(kbd_line[i].Port, kbd_line[i].Pin, (GPIO_PinState)(i != kbd_scan_group));
-  }  
-  
-}
-*/
 
 /* Init data structures
  */
@@ -216,17 +203,3 @@ void kbdAddEvent(int16_t event) {
   kbd_event[(kbd_event_front + kbd_event_cnt) % KBD_LEN] = event;
   kbd_event_cnt++;
 }  
-
-/*
-void kbdClear(); // Clear queues
-uint8_t kbdIsKeyPressed(uint8_t key); // Check key state
-void kbdScan(); // Force next keyboard scan
-// Keycodes (press and repeat)
-uint8_t kbdPollKey();    // Get next keycode
-uint8_t kbdPeekKey();    // Get next keycode (but leave it in the queue)
-void kbdAddKey(uint8_t key); // Add keycode to queue
-// Events (presed(+) / released(-))
-int16_t kbdPollEvent();  // Get next event
-int16_t kbdPeekEvent();  // Get next event (but leave it in the queue)
-void kbdAddEvent(int16_t event); // Add event to queue
-*/
