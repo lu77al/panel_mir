@@ -66,24 +66,24 @@ const uint8_t kbd_scancode[KBD_HEIGHT][KBD_WIDTH] = {
 
 uint8_t kbd_line = 0;
 uint8_t kbd_sound_time = 0;
+uint8_t kbd_sound_on = 0;
 
 extern TIM_HandleTypeDef htim12;
 
 /* Start / correct stop of buzzer PWM
  */
 void kbd_buzzer() {
-  if (kbd_sound_time != 0) {
-    if (!(htim12.Instance->CR1 & TIM_CR1_CEN)) {
-      htim12.Instance->CCR1 = 2500;
-      HAL_TIM_Base_Start(&htim12);      
+  if (kbd_sound_time) {
+    if (!kbd_sound_on) {
       HAL_TIM_PWM_Start(&htim12, TIM_CHANNEL_1);
+      kbd_sound_on = 1;
     }  
-    kbd_sound_time--;
-  } else if (htim12.Instance->CCR1 == 2500) {
-    htim12.Instance->CCR1 = 6000;
-  } else if (htim12.Instance->CR1 & TIM_CR1_CEN) {
-    HAL_TIM_Base_Stop(&htim12);      
-    HAL_TIM_PWM_Stop(&htim12, TIM_CHANNEL_1);
+    kbd_sound_time--; 
+  } else {
+    if (kbd_sound_on) {
+      HAL_TIM_PWM_Stop(&htim12, TIM_CHANNEL_1);
+      kbd_sound_on = 0;
+    } 
   }  
 }
 
