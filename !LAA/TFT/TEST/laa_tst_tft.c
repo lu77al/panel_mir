@@ -9,6 +9,8 @@
 #include "string.h"
 #include "math.h"
 #include "stdlib.h"
+#include "laa_setup.h"
+
 
 /*   
 void tftTestFonts() {
@@ -586,8 +588,9 @@ void tstDrawFrame() {
   scrSetFG(0xFFFFFF);
   scrSetFont("KC8x12.FNT");
   scrSetTextTransparency(1);
-  scrSetTextPos(10, 10);
+  scrSetTextPos(255, 10);
   scrTextOut("HELLO System Font :)", 100);
+  stpRootMenuShow();
   scrStartRender();
 }
 

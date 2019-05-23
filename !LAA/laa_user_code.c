@@ -9,6 +9,7 @@
 #include "laa_tst_tft.h"
 #include "laa_scr_tasks.h"
 #include "laa_keyboard.h"
+#include "laa_setup.h"
 
 //extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim10;
@@ -26,6 +27,8 @@ void userInit() {
   sdMount();                    // Mount SD card
   tftInit();
   kbdInit();
+  
+  stpInitSetup();
 }  
 
 void userMain() {

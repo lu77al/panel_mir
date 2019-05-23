@@ -2,6 +2,12 @@
 #define __AL_SCR_TASKS_H__
 #include "stm32f7xx_hal.h"
 
+extern const char SF_08x12[];
+extern const char SF_08x16[];
+extern const char SF_12x24[];
+extern const char SF_16x32[];
+extern const char SF_24x48[];
+
 //--- Rendering tasks management ---
 void scrPerformNextTask(); // Render scr_task -> TFT
 uint8_t scrIsRenderComplete(); // Ready to get new tasks
@@ -17,7 +23,7 @@ void scrSetFG(uint32_t color); // Set foreground color
 void scrSetLineWidth(int8_t width);  // Set line width
 void scrSetLinePattern(int32_t pattern); // Set line pattern
 void scrSetTextTransparency(int8_t transparent); // Set font transparency
-void scrSetFont(char *name); // Set font (save name in scr_task)
+void scrSetFont(const char *name); // Set font (save name in scr_task)
 void scrSetFontStatic(const char *name); // Set font with static name (save pointer to name in scr_task)
 void scrSetBMP(char *name, uint32_t trColor888);  // Set bmp (save name in scr_task)
 void scrSetBMPstatic(char *name, uint32_t trColor888); // Set bmp with static name (save pointer to name in scr_task)

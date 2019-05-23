@@ -7,7 +7,6 @@
 #include "laa_tft_buffers.h"
 
 #define  SCR_BUF_SIZE 16384
-
 uint8_t  scr_task[SCR_BUF_SIZE];
 uint16_t scr_end = 0;
 uint16_t scr_pnt = 0xffff;
@@ -16,6 +15,10 @@ uint16_t scr_poly_pnt = 0;
 uint16_t scr_mark[16];
 
 const char SF_08x12[] = "KC8x12.FNT";
+const char SF_08x16[] = "FNT0.FNT";
+const char SF_12x24[] = "f12x24.fnt";
+const char SF_16x32[] = "f16x32.fnt";
+const char SF_24x48[] = "KN24x48.fnt";
 
 //****** Implementation routines prototypes *******
 void impGoDoubleBuffered();
@@ -261,9 +264,9 @@ void scrSetTextTransparency(int8_t transparent) {
 /* Set font (save name in scr_task)
  * @par: name - file name  (prefix <*> - search in system ROM first)
  */
-void scrSetFont(char *name) {
+void scrSetFont(const char *name) {
   push_uint8(SCM_FONT_DYNAMIC);
-  char *src = name;
+  const char *src = name;
   for (uint8_t i=13; i; i--) {
     if (!*src) break;
     push_uint8(*(src++));
