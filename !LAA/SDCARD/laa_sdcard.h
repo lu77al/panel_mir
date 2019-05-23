@@ -9,8 +9,8 @@ void    sdSetCurDir(char *dir);
 uint8_t sdOpenForRead(const char *name);
 uint8_t sdOpenForWrite(const char *name);
 uint8_t sdRead(uint8_t *buffer, uint32_t size);
-uint8_t sdSeek(uint32_t pos);
-void    sdClose();
+//uint8_t sdSeek(uint32_t pos);
+uint8_t sdClose();
 
 #endif // __AL_SDCARD_H__
 

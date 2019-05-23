@@ -15,6 +15,8 @@ uint16_t scr_poly_vcnt_pnt = 0;
 uint16_t scr_poly_pnt = 0;
 uint16_t scr_mark[16];
 
+const char SF_08x12[] = "KC8x12.FNT";
+
 //****** Implementation routines prototypes *******
 void impGoDoubleBuffered();
 void impGoSingleBuffered();
@@ -272,7 +274,7 @@ void scrSetFont(char *name) {
 /* Set font with static name (save pointer to name in scr_task)
  * @par: name - file name  (prefix <*> - search in system ROM first)
  */
-void scrSetFontStatic(char *name) {
+void scrSetFontStatic(const char *name) {
   push_uint8(SCM_FONT_STATIC);
   push_uint32((uint32_t)name);
 }

@@ -4,6 +4,7 @@
  ******************************************************************************/
 #include "laa_tft_lib.h"
 #include "string.h"
+#include "ctype.h"
 #include "laa_utils.h"
 #include "laa_sdcard.h"
 #include "laa_tft_cache.h"
@@ -671,6 +672,7 @@ uint8_t *tftLoadFont(const char* name) {
   if (!sdOpenForRead(name)) return 0;
   if (name[0] == '*') name++; // Try to read system font from SD card
   uint8_t *font_obj = 0;
+  uint8_t ok = 0;
   do {
     uint8_t buf[12];
     if (!sdRead(buf, 12)) break;
@@ -686,10 +688,11 @@ uint8_t *tftLoadFont(const char* name) {
     font_obj[0] = w;
     font_obj[1] = h;
     *(uint16_t *)(&font_obj[2]) = bpc;
-    sdRead(font_obj + 4, bpc << 8);
+    ok = sdRead(font_obj + 4, bpc << 8);
   } while (0);
-  sdClose();
-  return font_obj;
+  if (sdClose() && ok) return font_obj;
+  if (font_obj) tftDeleteLast();
+  return 0;
 }  
 
 /* Set font as active. Input paramemter: font name
@@ -697,15 +700,18 @@ uint8_t *tftLoadFont(const char* name) {
  *  if not found reads font from SD and allocates it in the heap
  *  if not found on SD assigns default font
  */
-void tftSelectFont(const char* name) {
-  if (!strncmp(tft_fnt.name, name, 13) && tft_fnt.img) return;
+void tftSelectFont(const char* font_name) {
+  char name[14];
+  strncpy(name, font_name, 13);
+  laaStrToUpper(name);
+  if (!strncasecmp(tft_fnt.name, name, 13) && tft_fnt.img) return;
   uint8_t *found = tftFindObject(name);
   if (!found) {
     found = tftLoadFont(name);
     if (found) strncpy(tft_fnt.name, name, 13);
   } 
   if (!found) {
-    found = (uint8_t *)TFT_ROM_CACHE;
+    found = (uint8_t *)(TFT_ROM_CACHE + 20);
     tft_fnt.name[0] = 0;
   }  
   tft_fnt.w = found[0];
@@ -823,13 +829,14 @@ uint8_t *tftLoadBMP(const char* name, const char* extendedName, uint16_t trColor
   if (!tftPrepareDMA2D_LOAD_BMP(trColor != 0)) return 0;
   if (name[0] == '*') name++; // Try to read system bmp image from SD card
   uint8_t *bmp_obj = 0;
+  uint8_t ok = 0;
   do {
     uint8_t buf[26];
     if (!sdRead(buf, 26)) break; // Read header
     if (*(uint16_t *)buf != 0x4D42) break;
     uint32_t offset = MEM32(buf + 10); // image offset
     if (offset < 54) break;
-    if (!sdSeek(offset)) break;
+    if (!sdRead(0, offset - 26)) break;
     uint32_t width = MEM32(buf + 18);  // width
     if (width == 0) break;
     if (width > TFT_WIDTH) break;
@@ -846,9 +853,13 @@ uint8_t *tftLoadBMP(const char* name, const char* extendedName, uint16_t trColor
     uint16_t conv_cnt = trColor ? height : 0;
     uint8_t  load_handicap = 4;
     HAL_DMA2D_PollForTransfer(&hdma2d, 100);
-    while (load_cnt | conv_cnt) {
+    ok = 1;
+    while (load_cnt || conv_cnt) {
       if (load_cnt) {
-        sdRead((void *)sd_buf, src_line_size);
+        if (!sdRead((void *)sd_buf, src_line_size)) {
+          ok = 0;
+          break;
+        }
         HAL_DMA2D_Start(&hdma2d, (uint32_t)sd_buf, (uint32_t)load_addr, width, 1);
         load_addr -= width;
         load_cnt--;
@@ -862,10 +873,12 @@ uint8_t *tftLoadBMP(const char* name, const char* extendedName, uint16_t trColor
         }  
       } 
       HAL_DMA2D_PollForTransfer(&hdma2d, 100);
-    }  
+    }
   } while (0);
-  sdClose();
-  return bmp_obj;
+  HAL_DMA2D_PollForTransfer(&hdma2d, 100);
+  if (sdClose() && ok) return bmp_obj;
+  if (bmp_obj) tftDeleteLast();
+  return 0;
 }
 
 /* Set BMP as active. Input paramemter: BMP name, transparemt color
@@ -881,7 +894,8 @@ void tftSelectBMP(const char* name, uint32_t trColor888) {
   char hash[5];
   sprintf(hash, "%04X", trColor);
   strcat(extendedName, hash);
-  if (!strncmp(tft_bmp.name, extendedName, 17) && tft_bmp.img) return; // Exit if it's already selected
+  laaStrToUpper(extendedName);
+  if (!strncasecmp(tft_bmp.name, extendedName, 17) && tft_bmp.img) return; // Exit if it's already selected
   uint8_t *found = tftFindObject(extendedName);
   if (!found) found = tftLoadBMP(name, extendedName, trColor);
   if (!found) {

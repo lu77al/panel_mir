@@ -8,7 +8,7 @@
    
 extern SDRAM_HandleTypeDef hsdram1;
 
-uint8_t  *sd_buf = (uint8_t *)SD_BUFFER; //TODO move it to sdcard
+uint8_t  *sd_buf = (uint8_t *)SD_BUFFER; // TODO move it to sdcard
 
 FMC_SDRAM_CommandTypeDef command;
 __IO HAL_StatusTypeDef hal_stat;

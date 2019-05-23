@@ -20,5 +20,7 @@ typedef struct { // GPIO_Pin
 
 void    laaWritePin(LAA_GPIO pin, uint8_t state);
 uint8_t laaReadPin(LAA_GPIO pin);
+void laaStrToUpper(char *str);
+
 
 #endif // __AL_UTILS_H__

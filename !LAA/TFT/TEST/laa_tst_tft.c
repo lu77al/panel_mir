@@ -570,6 +570,8 @@ void tstPrepareBackground() {
   */
 }  
 
+//extern const char SF_08x12[] = "KC8x12.FNT";
+
 void tstDrawFrame() {
   scrResetPoint(1);
   scrGoDouble();
@@ -581,6 +583,11 @@ void tstDrawFrame() {
     tftMoveAxis(&ballX[i], &ballDX[i], TFT_WIDTH - 20);
     tftMoveAxis(&ballY[i], &ballDY[i], TFT_HEIGHT - 20);
   }  
+  scrSetFG(0xFFFFFF);
+  scrSetFont("KC8x12.FNT");
+  scrSetTextTransparency(1);
+  scrSetTextPos(10, 10);
+  scrTextOut("HELLO System Font :)", 100);
   scrStartRender();
 }
 

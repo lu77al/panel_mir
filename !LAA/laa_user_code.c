@@ -38,17 +38,14 @@ void userMain() {
     
     if (scrIsRenderComplete()) {
       tstDrawFrame();
-    }  
-    
-    
-    
+    }
 
 // --- 500 Hz TIM10 driven processes ---
     if (__HAL_TIM_GET_FLAG(&htim10, TIM_FLAG_UPDATE) != RESET) {
       __HAL_TIM_CLEAR_IT(&htim10, TIM_IT_UPDATE);
 
       main_tic_cnt++;
-      kbdScan();      
+      kbdScan();
       
       if ((main_tic_cnt &= 0x7f) == 0x20) {           // 3.90625 Hz
       } else if ((main_tic_cnt &= 0x3f) == 0x10) {    // 7.8125  Hz #1

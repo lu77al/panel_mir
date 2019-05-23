@@ -1253,6 +1253,12 @@
     <group>
       <name>UTILS</name>
       <file>
+        <name>$PROJ_DIR$\..\!LAA\UTILS\laa_crc16.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\UTILS\laa_crc16.h</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\!LAA\UTILS\laa_math.c</name>
       </file>
       <file>

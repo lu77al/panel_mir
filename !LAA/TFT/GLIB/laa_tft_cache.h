@@ -9,7 +9,7 @@
 uint8_t *tftFindObject(const char *id);
 uint8_t *tftLocateCache(uint32_t size, const char* id);
 void    tftClearCache();
-
+void    tftDeleteLast();
 
 #endif // __AL_TFT_CACHE_H__
 

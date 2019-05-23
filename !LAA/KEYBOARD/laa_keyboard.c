@@ -9,10 +9,10 @@
 #include "string.h"
 #include "laa_utils.h"
    
-#define  KBD_SIZE   21 // Key count
-#define  KBD_LEN    32 // Queues lengths (keys and events)
-#define  KBD_HEIGHT 5  // Count of scan lines (energizing)
-#define  KBD_WIDTH  5  // Count of scan columns (reading)
+#define  KBD_SIZE   21  // Key count
+#define  KBD_LEN    32  // Queues lengths (keys and events)
+#define  KBD_HEIGHT 5   // Count of scan lines (energizing)
+#define  KBD_WIDTH  5   // Count of scan columns (reading)
 
 #define KBD_PRESS_THH   3
 #define KBD_HYST        3
@@ -20,10 +20,10 @@
 #define KBD_RESTART     50
 
 uint8_t  kbd_key[KBD_SIZE + 1]; // Keys state counters
-uint8_t  kbd_input[KBD_LEN];   // key input queue buffer
+uint8_t  kbd_input[KBD_LEN];    // key input queue buffer
 uint8_t  kbd_input_front = 0;
 uint8_t  kbd_input_cnt = 0;
-uint16_t kbd_event[KBD_LEN];  // key event queue buffer
+uint16_t kbd_event[KBD_LEN];    // key event queue buffer
 uint8_t  kbd_event_front = 0;
 uint8_t  kbd_event_cnt = 0;
 
