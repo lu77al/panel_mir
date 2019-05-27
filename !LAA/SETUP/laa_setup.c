@@ -13,7 +13,9 @@
 #define SYS_SEL_FG      0x0000ff
 #define SYS_MNU_FONT    SF_12x24
 
-TListMenu root_menu;   
+TListMenu root_menu;
+   
+TListMenu *active_menu = &root_menu;  
 
 void stpFillMenuTemplate(TListMenu *mnu);
 
@@ -34,10 +36,16 @@ void stpRootMenuCreate() {
 void stpRootMenuShow() {
   cmpShowMenu(&root_menu);
 }
-
+   
+void stpMenuInput(uint8_t key) {
+  cmpMenuUserInput(active_menu, key);
+}
+   
+   
 // ------------ Common rootines -------------
 void stpInitSetup() {
   stpRootMenuCreate();
+   
 }
 
 void stpFillMenuTemplate(TListMenu *mnu) {

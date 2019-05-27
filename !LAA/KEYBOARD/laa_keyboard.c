@@ -167,6 +167,7 @@ uint8_t kbdPollKey() {
   if (kbd_input_cnt == 0) return 0;
   uint8_t result = kbd_input[kbd_input_front];
   kbd_input_front++;
+  kbd_input_cnt--;
   kbd_input_front %= KBD_LEN;
   return result;
 }  
@@ -192,6 +193,7 @@ int16_t kbdPollEvent() {
   if (kbd_event_cnt == 0) return 0;
   int16_t result = kbd_event[kbd_event_front];
   kbd_event_front++;
+  kbd_event_cnt--;
   kbd_event_front %= KBD_LEN;
   return result;
 }  

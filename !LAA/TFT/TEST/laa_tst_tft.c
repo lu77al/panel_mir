@@ -10,6 +10,7 @@
 #include "math.h"
 #include "stdlib.h"
 #include "laa_setup.h"
+#include "laa_interface.h"
 
 
 /*   
@@ -591,6 +592,6 @@ void tstDrawFrame() {
   scrSetTextPos(255, 10);
   scrTextOut("HELLO System Font :)");
   stpRootMenuShow();
-  scrStartRender();
+  uiNeedUpdate = 1;
 }
 

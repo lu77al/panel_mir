@@ -1161,6 +1161,15 @@
   <group>
     <name>!LAA</name>
     <group>
+      <name>INTERFACE</name>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\INTERFACE\laa_interface.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\INTERFACE\laa_interface.h</name>
+      </file>
+    </group>
+    <group>
       <name>KEYBOARD</name>
       <file>
         <name>$PROJ_DIR$\..\!LAA\KEYBOARD\laa_keyboard.c</name>

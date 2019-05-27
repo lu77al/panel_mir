@@ -10,6 +10,7 @@
 #include "laa_scr_tasks.h"
 #include "laa_keyboard.h"
 #include "laa_setup.h"
+#include "laa_interface.h"
 
 //extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim10;
@@ -35,13 +36,17 @@ void userMain() {
   userInit();
 
   tstPrepareBackground();
+   
+  uiDrawScreenRoutine = tstDrawFrame;
+  uiNextKeyRoutine = stpMenuInput;
+  uiNeedUpdate = 1; 
   
   while (1) {
     scrPerformNextTask();
-    
-    if (scrIsRenderComplete()) {
-      tstDrawFrame();
-    }
+
+    uiProcessUserInput();
+   
+    uiDrawScreen();
 
 // --- 500 Hz TIM10 driven processes ---
     if (__HAL_TIM_GET_FLAG(&htim10, TIM_FLAG_UPDATE) != RESET) {

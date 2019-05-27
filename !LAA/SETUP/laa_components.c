@@ -5,7 +5,9 @@
 #include "stdlib.h"
 #include "string.h"
 #include "laa_scr_tasks.h"
-
+#include "laa_interface.h"
+#include "laa_keyboard.h"
+  
 void cmpCreateMenuItems(TListMenu *mnu, const char *text) {
   uint8_t len;
   TMenuItem *last_item;
@@ -47,7 +49,8 @@ void cmpShowMenu(TListMenu *mnu) {
   scrSetFontStatic(mnu->font);  // Prepare drawing visible items
   uint8_t item_index = mnu->first_item;
   uint8_t y = mnu->y;
-  uint8_t x = mnu->x;
+  uint8_t item_x = mnu->x + mnu->font_width / 2;
+  uint8_t text_x = item_x;
   TMenuItem *item = cmpMenuItem(mnu, item_index);
   for (uint8_t i = 0; item && i < mnu->lines; i++, item_index++) { // Draw items
     if (item_index == mnu->cur_item) {  // Draw selection and set text color
@@ -60,36 +63,45 @@ void cmpShowMenu(TListMenu *mnu) {
     if (mnu->show_numbers) {    // Show item number and update x
       char num[4];
       sprintf(num, "%hu", item_index + 1);
-      scrSetTextPos(mnu->x, y);
+      scrSetTextPos(item_x, y);
       scrTextOut(num);
-      x = mnu->x + mnu->font_width * (strlen(num) + 1);
+      text_x = item_x + mnu->font_width * (strlen(num) + 1);
     }
-    cmpShowItem(item, x, y);
+    cmpShowItem(item, text_x, y);
     y += mnu->step;
     item = item->next;
   }
+  if (mnu->first_item != 0) {  // Top scroll line
+    scrSetBG(mnu->bg_selected);
+    scrSetFG(mnu->bg_color);
+    scrSetLinePattern(0xCCCCCCCC);
+    scrSetLineWidth(1);
+    scrBar(mnu->x, mnu->y, mnu->width, 1);
+    scrLine(mnu->x, mnu->y, mnu->x + mnu->width, mnu->y);
+  }
+  if (mnu->first_item + mnu->lines < mnu->item_count) {  // Bottom scroll line
+    scrSetBG(mnu->bg_selected);
+    scrSetFG(mnu->bg_color);
+    scrSetLinePattern(0xCCCCCCCC);
+    scrSetLineWidth(1);
+    uint16_t bottom = mnu->y + mnu->lines * mnu->step;
+    scrBar(mnu->x, bottom, mnu->width, 1);
+    scrLine(mnu->x, bottom, mnu->x + mnu->width, bottom);
+  }
 }
 
+void cmpMenuUserInput(TListMenu *mnu, uint8_t key) {
+  switch (key) {
+  case KEY_UP:
+    if (mnu->cur_item == 0) break;
+    mnu->cur_item--;
+    uiNeedUpdate = 1;
+    break;
+  case KEY_DOWN:
+    if (mnu->cur_item >= mnu->item_count - 1) break;
+    mnu->cur_item++;
+    uiNeedUpdate = 1;
+    break;
+  }
+}
    
-//char* stp_menu_content = 0;
-//void stpSetMenuContent
-/*
-  M
-
-
-
-*/
-
-
-void stpIdeasTest() {
-  uint16_t* smth = malloc(10);
-//  strcasecmp(
-}  
-
-
-/* Draw menu items from string buffer, selection
- */
-void stpDrawMenuItems() {
-//  if (!stp_menu_content) return;
-  
-}
