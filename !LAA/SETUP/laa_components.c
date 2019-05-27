@@ -102,6 +102,10 @@ void cmpMenuUserInput(TListMenu *mnu, uint8_t key) {
     mnu->cur_item++;
     uiNeedUpdate = 1;
     break;
+  case KEY_ENTER: {
+    TMenuItem *item = cmpMenuItem(mnu, mnu->cur_item);
+    if (item->onEnter) item->onEnter();
+    break; }
   }
 }
    

@@ -33,5 +33,7 @@ typedef struct TListMenu{
 void cmpCreateMenuItems(TListMenu *mnu, const char *text);
 void cmpShowMenu(TListMenu *mnu);
 void cmpMenuUserInput(TListMenu *mnu, uint8_t key);
+TMenuItem *cmpMenuItem(TListMenu *mnu, uint8_t index);
+
 
 #endif // __AL_COMPONENTS_H__

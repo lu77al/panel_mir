@@ -37,7 +37,7 @@ void userMain() {
 
   tstPrepareBackground();
    
-  uiDrawScreenRoutine = tstDrawFrame;
+  uiDrawScreenRoutine = stpRootMenuShow;
   uiNextKeyRoutine = stpMenuInput;
   uiNeedUpdate = 1; 
   

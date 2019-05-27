@@ -194,7 +194,7 @@ void scrSavePoint(uint8_t level) {
 }  
 
 /*  Reset saved scr_task pointer to start drawing there
- *  @par: level - index of saved point (0..15). 0 - from buffer start
+ *  @par: level - index of saved point (0..16). 0 - from buffer start
  */
 void scrResetPoint(uint8_t level) {
   if ((level == 0) || (level > 16)) {
