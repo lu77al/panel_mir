@@ -35,26 +35,36 @@ TMenuItem *cmpMenuItem(TListMenu *mnu, uint8_t index) {
   return result;
 }
 
-void cmpShowItem(TMenuItem *mnu) {
+void cmpShowItem(TMenuItem *item, uint8_t x, uint8_t y) {
+  scrSetTextPos(x, y);
+  scrTextOut(item->text);
+  
 }
 
+/* Draw menu list using scr functions
+ */
 void cmpShowMenu(TListMenu *mnu) {
-  scrSetBG(mnu->bg_color);
-  uint16_t height = mnu->lines * mnu->step;
-  scrBar(mnu->x, mnu->y, mnu->width, height);
-  scrSetBG(mnu->bg_selected);
-  uint16_t selected_y = mnu->y + (mnu->cur_item - mnu->first_item) * mnu->step;
-  scrBar(mnu->x, selected_y, mnu->width, mnu->step);
-  scrSetFontStatic(mnu->font);
+  scrSetFontStatic(mnu->font);  // Prepare drawing visible items
   uint8_t item_index = mnu->first_item;
   uint8_t y = mnu->y;
+  uint8_t x = mnu->x;
   TMenuItem *item = cmpMenuItem(mnu, item_index);
-  for (uint8_t i = 0; item && i < mnu->lines; i++, item_index++) {
-    scrSetFG(item_index == mnu->cur_item ? mnu->fg_selected : mnu->fg_color);
-    char num[4];
-    sprintf(num, "%hu", item_index + 1);
-    scrSetTextPos(mnu->x, y);
-    scrTextOut(num, 3);
+  for (uint8_t i = 0; item && i < mnu->lines; i++, item_index++) { // Draw items
+    if (item_index == mnu->cur_item) {  // Draw selection and set text color
+      scrSetBG(mnu->bg_selected);
+      scrBar(mnu->x, y, mnu->width, mnu->step);
+      scrSetFG(mnu->fg_selected);
+    } else {
+      scrSetFG(mnu->fg_color);
+    }
+    if (mnu->show_numbers) {    // Show item number and update x
+      char num[4];
+      sprintf(num, "%hu", item_index + 1);
+      scrSetTextPos(mnu->x, y);
+      scrTextOut(num);
+      x = mnu->x + mnu->font_width * (strlen(num) + 1);
+    }
+    cmpShowItem(item, x, y);
     y += mnu->step;
     item = item->next;
   }

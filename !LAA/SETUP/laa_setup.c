@@ -50,6 +50,7 @@ void stpFillMenuTemplate(TListMenu *mnu) {
   mnu->y = 38;
   mnu->width = 320;
   mnu->step = 28;
+  mnu->font_width = 12;
   mnu->lines = 8;
   mnu->show_numbers = 1;
   mnu->cur_item = 0;

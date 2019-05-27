@@ -23,6 +23,8 @@ uint32_t  tft_bg = 0x000000;
 uint16_t  tft_fg16 = 0xffff;
 uint16_t  tft_bg16 = 0x0000;
 
+static uint8_t encode_chars = 1;
+
 typedef struct {
   uint8_t   *img;  // pointer to pixels data
   uint16_t  bpc;   // bytes per char
@@ -102,7 +104,11 @@ uint8_t tftDoTheNext() {
   if (tft_poly.size >= 3) {
     tftPloyProcess();
   } else if (tft_fnt.outCnt) {
-    tftDrawChar(*(tft_fnt.nextChar++));
+    char ch = *(tft_fnt.nextChar++);
+    if (encode_chars && ch >= 192) {    // cp1251 -> cp866 encoding
+      ch = ch < 240 ? ch - 64 : ch - 16;
+    }
+    tftDrawChar(ch);
     tft_fnt.outCnt--;
   }  
   return tftIsTaskToDo();
@@ -909,3 +915,12 @@ void tftSelectBMP(const char* name, uint32_t trColor888) {
     tft_bmp.img = found + 4;
   }  
 }
+
+void tftEncodingOn() {
+  encode_chars = 1;
+}
+
+void tftEncodingOff() {
+  encode_chars = 0;
+  
+}  

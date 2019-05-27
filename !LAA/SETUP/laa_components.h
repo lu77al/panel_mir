@@ -17,7 +17,10 @@ typedef struct TListMenu{
   uint16_t  x, y; // Position
   const char *font;
   uint16_t  width;
-  uint8_t   lines, step;
+  uint16_t  param_offset;
+  uint8_t   lines;
+  uint8_t   step;
+  uint8_t   font_width;
   uint8_t   show_numbers;
   uint32_t  bg_color, fg_color;
   uint32_t  bg_selected, fg_selected;

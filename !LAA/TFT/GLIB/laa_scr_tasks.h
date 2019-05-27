@@ -24,6 +24,8 @@ void scrSetLineWidth(int8_t width);  // Set line width
 void scrSetLinePattern(int32_t pattern); // Set line pattern
 void scrSetTextTransparency(int8_t transparent); // Set font transparency
 void scrSetFont(const char *name); // Set font (save name in scr_task)
+void scrEncodingOn(const char *name); // Enable encoding chars 
+void scrEncodingOff(const char *name); // Disable encoding chars 
 void scrSetFontStatic(const char *name); // Set font with static name (save pointer to name in scr_task)
 void scrSetBMP(char *name, uint32_t trColor888);  // Set bmp (save name in scr_task)
 void scrSetBMPstatic(char *name, uint32_t trColor888); // Set bmp with static name (save pointer to name in scr_task)
@@ -36,8 +38,10 @@ void scrMoveTo(int16_t x, int16_t y);  // Move line pointer to ...
 void scrLineTo(int16_t x, int16_t y);  // Draw line to absolute
 void scrLineRel(int16_t x, int16_t y); // Draw line to relative
 void scrSetTextPos(int16_t x, int16_t y); // Set text cursor position
-void scrTextOut(void *text, uint8_t maxLen); // Print text dynamic (save text in scr_task)
-void scrTextOutStatic(void *text, uint8_t maxLen); // Print text static (save pointer to test in scr_task)
+void scrTextOutLen(const char *text, uint8_t maxLen); // Print text dynamic (save text in scr_task)
+void scrTextOutStaticLen(const char *text, uint8_t maxLen); // Print text static (save pointer to test in scr_task)
+void scrTextOut(const char *text); // Print text dynamic (save text in scr_task)
+void scrTextOutStatic(const char *text); // Print text static (save pointer to test in scr_task)
 void scrInitPoly(uint8_t filled, uint8_t closed); // Start drawing polygon
 void scrPolyVertex(int16_t x, int16_t y); // Add polygon vertex
 void scrEllipse(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t s, uint16_t e, uint8_t filled, uint8_t closed); // Ellipse

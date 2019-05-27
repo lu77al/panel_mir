@@ -14,6 +14,8 @@ uint8_t tftIsDMA2DBusy();
 uint8_t tftIsTaskToDo();
 uint8_t tftDoTheNext();
 void tftDoTheRest();
+void tftEncodingOn();
+void tftEncodingOff();
 
 //*********** COLORS + GENERAL ROUTINES **************
 void tftSetWaitDMA(uint8_t mode);

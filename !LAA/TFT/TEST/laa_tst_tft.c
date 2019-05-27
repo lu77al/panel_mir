@@ -589,7 +589,7 @@ void tstDrawFrame() {
   scrSetFont("KC8x12.FNT");
   scrSetTextTransparency(1);
   scrSetTextPos(255, 10);
-  scrTextOut("HELLO System Font :)", 100);
+  scrTextOut("HELLO System Font :)");
   stpRootMenuShow();
   scrStartRender();
 }

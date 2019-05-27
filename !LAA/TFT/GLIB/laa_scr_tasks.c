@@ -70,7 +70,9 @@ void (*imp_routine[])() = {
   impEllipse,
   impSetBMPstatic,
   impSetBMPdynamic,
-  impDrawBMP
+  impDrawBMP,
+  tftEncodingOn,
+  tftEncodingOff
 };
 
 //**************** TASK QUEUE MANAGEMENT ***************
@@ -150,6 +152,8 @@ uint32_t get_uint32() {
 #define  SCM_BMP_STATIC         20
 #define  SCM_BMP_DYNAMIC        21
 #define  SCM_BMP                22
+#define  SCM_ENCODING_ON        23
+#define  SCM_ENCODING_OFF       24
 
 //******************* USER INTERFACE ROUTINES *********************
 
@@ -274,6 +278,18 @@ void scrSetFont(const char *name) {
   push_uint8(0);
 }
 
+/* Enable encoding chars (cp1251 -> cp866 encoding to use CAD fonts inside IAR)
+ */
+void scrEncodingOn(const char *name) {
+  push_uint8(SCM_ENCODING_ON);
+}
+
+/* Disable encoding chars (CAD fonts for CAD charset)
+ */
+void scrEncodingOff(const char *name) {
+  push_uint8(SCM_ENCODING_OFF);
+}
+
 /* Set font with static name (save pointer to name in scr_task)
  * @par: name - file name  (prefix <*> - search in system ROM first)
  */
@@ -380,7 +396,7 @@ void scrSetTextPos(int16_t x, int16_t y) {
  * @par: (void *)text - pointer to text. Can be null-terminated
  * @par: maxLen - Maximum length of the text (if not null-terminated)
  */
-void scrTextOut(void *text, uint8_t maxLen) {
+void scrTextOutLen(const char *text, uint8_t maxLen) {
   push_uint8(SCM_TEXT_DYNAMIC);
   uint8_t len = strlen(text);
   if (maxLen > len) maxLen = len;
@@ -393,10 +409,30 @@ void scrTextOut(void *text, uint8_t maxLen) {
  * @par: (void *)text - pointer to text. Can be null-terminated
  * @par: maxLen - Maximum length of the text (if not null-terminated)
  */
-void scrTextOutStatic(void *text, uint8_t maxLen) {
+void scrTextOutStaticLen(const char *text, uint8_t maxLen) {
   push_uint8(SCM_TEXT_STATIC);
   push_uint8(maxLen);
   push_uint32((uint32_t)text);
+}
+
+/* Print text dynamic (save pointer to test in scr_task)
+ * @par: (void *)text - pointer to text. Must be null-terminated
+ */
+void scrTextOutStatic(const char *text) {
+  push_uint8(SCM_TEXT_STATIC);
+  push_uint8(255);
+  push_uint32((uint32_t)text);
+}
+
+/* Print text dynamic (save text in scr_task)
+ * @par: (void *)text - pointer to text. Must be null-terminated
+ */
+void scrTextOut(const char *text) {
+  push_uint8(SCM_TEXT_DYNAMIC);
+  uint8_t len = strlen(text);
+  push_uint8(len);
+  memcpy(&scr_task[scr_end], text, len);
+  scr_end += len;
 }
 
 /* Start drawing polygon
