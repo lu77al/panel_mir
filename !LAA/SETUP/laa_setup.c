@@ -9,17 +9,85 @@
 #include "string.h"
 #include "stdlib.h"
 
-#define SYS_MNU_BG      0x000088
-#define SYS_MNU_FG      0xffffff
-#define SYS_SEL_BG      0xffff00
-#define SYS_SEL_FG      0x0000ff
-#define SYS_MNU_FONT    SF_12x24
-#define SYS_MNU_FONT_HEIGHT 24
-#define SYS_HDR_FG      0x88ff88
-#define SYS_HDR_FONT    SF_16x32
-#define SYS_HDR_FONT_WIDTH 16
+/*
 
-TListMenu root_menu;
+static const char root_text[] =
+  "K1021 / V2.0 / 21.05.2019\x00"
+  "Вверх/Вниз; Enter: Пуск; <- Назад\x00"
+  "Запустить проект\x00"
+  "Связь с ПК (K753)\x00"
+  "Тесты\x00"
+  "Настройка\x00";
+
+static const TMenuItem root_items[] = {
+  {.onEnter = 0, .value = 0, .extended = 0},
+  {.onEnter = 0, .value = 0, .extended = 0}
+};
+
+
+typedef struct TMenuValue {
+  uint8_t    *value;
+  uint8_t    min;
+  uint8_t    max;
+  const char *text;
+  void      (*onChange)();
+} TMenuValue;
+
+typedef struct TMenuItem {
+  const char *text;
+  void      (*onEnter)();
+  TMenuValue *value;
+  void       *extended;
+} TMenuItem;
+
+typedef struct TListMenuState {
+  uint8_t    count;
+  uint8_t    first;
+  uint8_t    current;
+} TListMenuState;
+
+typedef struct TListMenu {
+  const TMenuItem   *item;
+  uint16_t          selection_width;
+  TListMenuState    *state;
+} TListMenu;
+*/
+
+TListMenu root_menu = {
+  .header = "K1021 / V2.0 / 21.05.2019",
+  .status = "Вверх/Вниз; Enter: Пуск; <- Назад",
+  .item = (TMenuItem[]){
+    { .text = "Запустить проект",  .onEnter = 0,
+      .value = 0, .extended = 0
+    },
+    { .text = "Связь с ПК (K753)", .onEnter = 0,
+      .value = 0, .extended = 0
+    },
+    { .text = "Тесты",             .onEnter = 0,
+      .value = 0, .extended = 0
+    },
+    { .text = "Настройка",         .onEnter = 0, // \x00 - Terminator
+      .value = 0, .extended = 0
+    },
+    { .text =  0, .onEnter = 0,   // Terminator
+      .value = 0, .extended = 0
+    }
+  },
+  .onExit = 0,
+  .selection_width = 300,
+  .state = 0  
+};    
+
+void stpShowActiveMenu() {
+  cmpDrawMenu(&root_menu);
+}
+
+void stpMenuInput(uint8_t key) {
+  cmpMenuUserInput(&root_menu, key);
+}
+
+/*
+
 TListMenu test_menu;
    
 TListMenu *active_menu = &root_menu;  
@@ -144,4 +212,4 @@ void stpFillMenuTemplate(TListMenu *mnu) {
   mnu->cur_item = 0;
   mnu->first_item = 0;
 }
-
+*/

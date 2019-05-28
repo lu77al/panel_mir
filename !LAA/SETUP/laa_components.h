@@ -3,37 +3,44 @@
 
 #include "stm32f7xx_hal.h"
 
-#define SYS_MNU_BG      0x000088
+typedef struct TMenuValue {
+  uint8_t    *value;
+  uint8_t    min;
+  uint8_t    max;
+  const char *text;
+  void      (*onChange)();
+} TMenuValue;
 
 typedef struct TMenuItem {
-  struct TMenuItem *next;
-  uint8_t type;
   const char *text;
-  void       *value;
   void      (*onEnter)();
+  TMenuValue *value;
+  void       *extended;
 } TMenuItem;
 
-typedef struct TListMenu{
-  uint16_t  x, y; // Position
-  const char *font;
-  uint16_t  width;
-  uint16_t  param_offset;
-  uint8_t   lines;
-  uint8_t   step;
-  uint8_t   font_width;
-  uint8_t   show_numbers;
-  uint32_t  bg_color, fg_color;
-  uint32_t  bg_selected, fg_selected;
-  uint8_t   item_count;
-  uint8_t   cur_item;
-  uint8_t   first_item;
-  TMenuItem *head_item;
+typedef struct TListMenuState {
+  uint8_t    count;
+  uint8_t    first;
+  uint8_t    current;
+} TListMenuState;
+
+typedef struct TListMenu {
+  const char       *header;
+  const char       *status;
+  const TMenuItem  *item;
+  void      (*onExit)();
+  uint16_t         selection_width;
+  TListMenuState   *state;
 } TListMenu;
 
+void cmpDrawMenu(TListMenu *mnu);
+void cmpMenuUserInput(TListMenu *mnu, uint8_t key);
+
+/*
 void cmpCreateMenuItems(TListMenu *mnu, const char *text);
 void cmpShowMenu(TListMenu *mnu);
 void cmpMenuUserInput(TListMenu *mnu, uint8_t key);
 TMenuItem *cmpMenuItem(TListMenu *mnu, uint8_t index);
-
+*/
 
 #endif // __AL_COMPONENTS_H__

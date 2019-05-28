@@ -29,15 +29,15 @@ void userInit() {
   tftInit();
   kbdInit();
   
-  stpInitSetup();
+//  stpInitSetup();
 }  
 
 void userMain() {
   userInit();
 
-  tstPrepareBackground();
+//  tstPrepareBackground();
    
-  uiDrawScreenRoutine = stpRootMenuShow;
+  uiDrawScreenRoutine = stpShowActiveMenu;
   uiNextKeyRoutine = stpMenuInput;
   uiNeedUpdate = 1; 
   
