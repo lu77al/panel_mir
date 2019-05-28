@@ -102,7 +102,7 @@ void kbdScan() {
       if (*key == KBD_PRESS_THH) { // First press
         *key += KBD_HYST;
  //if (ui_state == UIS_TEST_KEYBOARD) kbd_sound_time = 12; // 2
-        kbd_sound_time = 8;
+//        kbd_sound_time = 8;
         kbdAddKey(kbd_code[scn]);
         kbdAddEvent((int16_t)kbd_code[scn]);
       } else if (*key == KBD_REPEAT_THH) { // Repeat pressed key

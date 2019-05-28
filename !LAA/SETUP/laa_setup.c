@@ -9,53 +9,14 @@
 #include "string.h"
 #include "stdlib.h"
 
-/*
-
-static const char root_text[] =
-  "K1021 / V2.0 / 21.05.2019\x00"
-  "Вверх/Вниз; Enter: Пуск; <- Назад\x00"
-  "Запустить проект\x00"
-  "Связь с ПК (K753)\x00"
-  "Тесты\x00"
-  "Настройка\x00";
-
-static const TMenuItem root_items[] = {
-  {.onEnter = 0, .value = 0, .extended = 0},
-  {.onEnter = 0, .value = 0, .extended = 0}
-};
-
-
-typedef struct TMenuValue {
-  uint8_t    *value;
-  uint8_t    min;
-  uint8_t    max;
-  const char *text;
-  void      (*onChange)();
-} TMenuValue;
-
-typedef struct TMenuItem {
-  const char *text;
-  void      (*onEnter)();
-  TMenuValue *value;
-  void       *extended;
-} TMenuItem;
-
-typedef struct TListMenuState {
-  uint8_t    count;
-  uint8_t    first;
-  uint8_t    current;
-} TListMenuState;
-
-typedef struct TListMenu {
-  const TMenuItem   *item;
-  uint16_t          selection_width;
-  TListMenuState    *state;
-} TListMenu;
-*/
+void stpEnterTests();
+void stpExitTests();
+void stpEnterSetup();
+void stpExitSetup();
 
 TListMenu root_menu = {
   .header = "K1021 / V2.0 / 21.05.2019",
-  .status = "Вверх/Вниз; Enter: Пуск; <- Назад",
+  .status = "Вверх/Вниз: Выбор; Enter: Пуск",
   .item = (TMenuItem[]){
     { .text = "Запустить проект",  .onEnter = 0,
       .value = 0, .extended = 0
@@ -63,10 +24,13 @@ TListMenu root_menu = {
     { .text = "Связь с ПК (K753)", .onEnter = 0,
       .value = 0, .extended = 0
     },
-    { .text = "Тесты",             .onEnter = 0,
+    { .text = "Тесты",             .onEnter = stpEnterTests,
       .value = 0, .extended = 0
     },
-    { .text = "Настройка",         .onEnter = 0, // \x00 - Terminator
+    { .text = "Настройка",         .onEnter = stpEnterSetup,
+      .value = 0, .extended = 0
+    },
+    { .text = "Файловый менеджер", .onEnter = 0,
       .value = 0, .extended = 0
     },
     { .text =  0, .onEnter = 0,   // Terminator
@@ -78,138 +42,151 @@ TListMenu root_menu = {
   .state = 0  
 };    
 
+TListMenu tests_menu = {
+  .header = "K1021 -> ТЕСТЫ",
+  .status = "Вверх/Вниз; Enter: Пуск; <- Назад",
+  .item = (TMenuItem[]){
+    { .text = "Тест клавиатуры",    .onEnter = 0,
+      .value = 0, .extended = 0
+    },
+    { .text = "Тест портов",        .onEnter = 0,
+      .value = 0, .extended = 0
+    },
+    { .text = "Тест дисплея",       .onEnter = 0,
+      .value = 0, .extended = 0
+    },
+    { .text = "Тест карты памяти",  .onEnter = 0,
+      .value = 0, .extended = 0
+    },
+    { .text = "Тест ОЗУ",           .onEnter = 0,
+      .value = 0, .extended = 0
+    },
+    { .text =  0, .onEnter = 0,   // Terminator
+      .value = 0, .extended = 0
+    }
+  },
+  .onExit = stpExitTests,
+  .selection_width = 300,
+  .state = 0  
+};    
+
+uint8_t prof = 1;
+uint8_t bright = 7;
+uint8_t sleep = 2;
+uint8_t sound = 0;
+uint8_t addr = 0;
+uint8_t bitrate = 2;
+uint8_t buscheck = 1;
+
+TListMenu setup_menu = {
+  .header = "K1021 -> НАСТРОЙКА",
+  .status = "Вверх/Вниз; Enter: Пуск; <- Назад",
+  .item = (TMenuItem[]){
+    { .text = "Активный профиль",     .onEnter = 0,
+      .value = &((TMenuValue){
+         .value = &prof,
+         .min = 1,
+         .max = 5,
+         .text = 0, .onChange = 0
+      }),
+      .extended = 0
+    },
+    { .text = "Яркость подсветки",    .onEnter = 0,
+      .value = &((TMenuValue){
+         .value = &bright,
+         .min = 1,
+         .max = 10,
+         .text = 0, .onChange = 0
+      }),
+      .extended = 0
+    },
+    { .text = "Отключение экрана",    .onEnter = 0,
+      .value = &((TMenuValue){
+         .value = &sleep,
+         .min = 0,
+         .max = 11,
+         .text = "1 мин\x00""2 мин\x00""3 мин\x00""5 мин\x00""10 мин\x00""15 мин\x00"
+                 "30 мин\x00""45 мин\x00""1 час\x00""2 часа\x00""3 часа\x00""никогда",
+         .onChange = 0
+      }),
+      .extended = 0
+    },
+    { .text = "Звук кнопок",          .onEnter = 0,
+      .value = &((TMenuValue){
+         .value = &sound,
+         .min = 0,
+         .max = 1,
+         .text =   "Откл\x00""Вкл\x00",
+         .onChange = 0
+      }),
+      .extended = 0
+    },
+    { .text = "Адрес ModBus",         .onEnter = 0,
+      .value = &((TMenuValue){
+         .value = &addr,
+         .min = 0,
+         .max = 255,
+         .text = 0, .onChange = 0
+      }),
+      .extended = 0
+    },
+    { .text = "Скорость ModBus",      .onEnter = 0,
+      .value = &((TMenuValue){
+         .value = &bitrate,
+         .min = 0,
+         .max = 4,
+         .text = "9600\x00""19200\x00""38400\x00""57600\x00""115200",
+         .onChange = 0
+      }),
+      .extended = 0
+    },
+    { .text = "Проверка ModBus",      .onEnter = 0,
+      .value = &((TMenuValue){
+         .value = &buscheck,
+         .min = 0,
+         .max = 2,
+         .text = "без проверки\x00""на четность\x00""на нечетность",
+         .onChange = 0
+      }),
+      .extended = 0
+    },
+    { .text =  0, .onEnter = 0,   // Terminator
+      .value = 0, .extended = 0
+    }
+  },
+  .onExit = stpExitSetup,
+  .selection_width = 445,
+  .state = 0  
+};    
+
+TListMenu *active_menu = &root_menu;
+
 void stpShowActiveMenu() {
-  cmpDrawMenu(&root_menu);
+  if (!active_menu) return;
+  cmpDrawMenu(active_menu);
 }
 
 void stpMenuInput(uint8_t key) {
-  cmpMenuUserInput(&root_menu, key);
-}
-
-/*
-
-TListMenu test_menu;
-   
-TListMenu *active_menu = &root_menu;  
-
-void stpFillMenuTemplate(TListMenu *mnu);
-void stpPrepareSystemScreen(const char *header, const char *status);
-void stpMenuInput(uint8_t key);
-void stpTestMenuShow();
-
-static const char menu_hint[] = "Вверх/Вниз: Выбор; Enter: Пуск";
-
-// -------------- Root menu ----------------
-static const char root_menu_header[] = "K1021 / V2.0 / 21.05.2019";
-static const char root_menu_hint[] = "Вверх/Вниз; Enter: Пуск; <- Назад";
-  
-static const char root_menu_lines[] =
-  "Запустить проект\x00"
-  "Связь с ПК (K753)\x00"
-  "Тесты\x00"
-  "Настройка\x00";
-
-volatile uint16_t lll;
-   
-void stpStartProject() {
-  root_menu.cur_item = 0;
-  uiNeedUpdate = 1;
-}
-
-void stpConnectPC() {
-  root_menu.cur_item = 0;
-  uiNeedUpdate = 1;
+  if (!active_menu) return;
+  cmpMenuUserInput(active_menu, key);
 }
 
 void stpEnterTests() {
-  active_menu = &test_menu;
-  uiDrawScreenRoutine = stpTestMenuShow;
+  active_menu = &tests_menu;
+  uiNeedUpdate = 1;
+}
+
+void stpExitTests() {
+  active_menu = &root_menu;
   uiNeedUpdate = 1;
 }
 
 void stpEnterSetup() {
-  root_menu.cur_item = 0;
+  active_menu = &setup_menu;
   uiNeedUpdate = 1;
 }
 
-void stpRootMenuCreate() {
-  TListMenu *mnu = &root_menu;
-  stpFillMenuTemplate(mnu);
-  cmpCreateMenuItems(mnu, root_menu_lines);
-  TMenuItem *item = mnu->head_item;
-  item->onEnter = stpStartProject; // Запустить проект
-  item = item->next;
-  item->onEnter = stpConnectPC; // Связь с ПК (K753)
-  item = item->next;
-  item->onEnter = stpEnterTests; // Тесты
-  item = item->next;
-  item->onEnter = stpEnterSetup; // Настройка
-}  
-   
-void stpRootMenuShow() {
-  stpPrepareSystemScreen(root_menu_header, root_menu_hint); 
-  cmpShowMenu(&root_menu);
+void stpExitSetup() {
+  active_menu = &root_menu;
+  uiNeedUpdate = 1;
 }
-
-// -------------- Root menu ----------------
-static const char test_menu_header[] = "K1021 -> ТЕСТЫ";
-static const char test_menu_lines[] =
-  "Тест клавиатуры\x00"
-  "Тест портов\x00"
-  "Тест дисплея\x00"
-  "Тест карты памяти\x00"
-  "Тест ОЗУ\x00";
-
-void stpTestMenuCreate() {
-  TListMenu *mnu = &test_menu;
-  stpFillMenuTemplate(mnu);
-  cmpCreateMenuItems(mnu, test_menu_lines);
-}  
-
-void stpTestMenuShow() {
-  stpPrepareSystemScreen(test_menu_header, menu_hint); 
-  cmpShowMenu(&root_menu);
-}
-   
-// ------------ Common routines -------------
-void stpMenuInput(uint8_t key) {
-  cmpMenuUserInput(active_menu, key);
-}
-
-void stpPrepareSystemScreen(const char *header, const char *status) {
-  scrResetPoint(0);
-  scrCLS(SYS_MNU_BG);
-  int16_t x = (TFT_WIDTH - SYS_HDR_FONT_WIDTH * strlen(header)) / 2;
-  scrSetFG(SYS_HDR_FG);
-  scrSetFontStatic(SYS_HDR_FONT);
-  scrSetTextPos(x, 0);
-  scrTextOutStatic(header);
-  scrSetFontStatic(SYS_MNU_FONT);
-  int16_t y = TFT_HEIGHT - SYS_MNU_FONT_HEIGHT;
-  scrSetTextPos(5, y);
-  scrTextOutStatic(status);
-}
-
-
-void stpInitSetup() {
-  stpRootMenuCreate();
-  stpTestMenuCreate();
-}
-
-void stpFillMenuTemplate(TListMenu *mnu) {
-  mnu->bg_color = SYS_MNU_BG;
-  mnu->fg_color = SYS_MNU_FG;
-  mnu->bg_selected = SYS_SEL_BG;
-  mnu->fg_selected = SYS_SEL_FG;
-  mnu->font = SYS_MNU_FONT;  
-  mnu->x = 10;
-  mnu->y = 38;
-  mnu->width = 320;
-  mnu->step = SYS_MNU_FONT_HEIGHT + 4;
-  mnu->font_width = 12;
-  mnu->lines = 8;
-  mnu->show_numbers = 1;
-  mnu->cur_item = 0;
-  mnu->first_item = 0;
-}
-*/

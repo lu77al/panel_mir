@@ -19,6 +19,7 @@ const uint8_t kbd_code[KBD_SIZE] = { // KeyCodes
 #define KEY_LEFT    0x70
 #define KEY_RIGHT   0x73
 #define KEY_ENTER   0x13
+#define KEY_BACK    0x7F
 
 void kbdInit(); // Init structures
 void kbdClear(); // Clear queues

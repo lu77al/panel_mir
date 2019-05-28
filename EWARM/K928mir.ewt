@@ -1163,6 +1163,12 @@
     <group>
       <name>INTERFACE</name>
       <file>
+        <name>$PROJ_DIR$\..\!LAA\INTERFACE\laa_components.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\INTERFACE\laa_components.h</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\!LAA\INTERFACE\laa_interface.c</name>
       </file>
       <file>
@@ -1198,12 +1204,6 @@
     </group>
     <group>
       <name>SETUP</name>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_components.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_components.h</name>
-      </file>
       <file>
         <name>$PROJ_DIR$\..\!LAA\SETUP\laa_setup.c</name>
       </file>
