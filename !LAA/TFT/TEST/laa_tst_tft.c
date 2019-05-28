@@ -591,7 +591,7 @@ void tstDrawFrame() {
   scrSetTextTransparency(1);
   scrSetTextPos(255, 10);
   scrTextOut("HELLO System Font :)");
-  stpRootMenuShow();
+//  stpRootMenuShow();
   uiNeedUpdate = 1;
 }
 
