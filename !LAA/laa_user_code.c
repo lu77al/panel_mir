@@ -11,6 +11,7 @@
 #include "laa_keyboard.h"
 #include "laa_setup.h"
 #include "laa_interface.h"
+#include "laa_components.h"
 
 //extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim10;
@@ -32,14 +33,29 @@ void userInit() {
 //  stpInitSetup();
 }  
 
+void tstKeyRur(uint8_t key) {
+  if (key == KEY_ENTER) {
+    cmpLogMemoNextLine();
+  } else {
+    cmpLogMemoPrintColor(" Red",  0xff0000);
+    cmpLogMemoPrintColor(" Green", 0x00ff00);
+    cmpLogMemoPrintColor(" Blue",  0x0000ff);
+  }
+}
+  
 void userMain() {
   userInit();
 
 //  tstPrepareBackground();
-   
+
+/*  
   uiDrawScreenRoutine = stpShowActiveMenu;
   uiNextKeyRoutine = stpMenuInput;
   uiNeedUpdate = 1; 
+*/
+  uiNextKeyRoutine = tstKeyRur;
+
+  cmpLogMemoInit("Тест LOG_MEMO", "не реагирую на клавиатуру");
   
   while (1) {
     scrPerformNextTask();
@@ -55,10 +71,11 @@ void userMain() {
       main_tic_cnt++;
       kbdScan();
       
-      if ((main_tic_cnt &= 0x7f) == 0x20) {           // 3.90625 Hz
-      } else if ((main_tic_cnt &= 0x3f) == 0x10) {    // 7.8125  Hz #1
-      } else if ((main_tic_cnt &= 0x3f) == 0x30) {    // 7.8125  Hz #2
-      } else if ((main_tic_cnt &= 0x07) == 0x02) {    // 62.5    Hz
+      if ((main_tic_cnt & 0x7f) == 0x20) {           // 3.90625 Hz
+      } else if ((main_tic_cnt & 0x3f) == 0x10) {    // 7.8125  Hz #1
+        cmpLogMemoForceUpdate();
+      } else if ((main_tic_cnt & 0x3f) == 0x30) {    // 7.8125  Hz #2
+      } else if ((main_tic_cnt & 0x07) == 0x02) {    // 62.5    Hz
       }  
       
     }

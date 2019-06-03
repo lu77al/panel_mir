@@ -24,6 +24,12 @@ typedef struct { // GPIO_Pin
 void    laaWritePin(LAA_GPIO pin, uint8_t state);
 uint8_t laaReadPin(LAA_GPIO pin);
 void laaStrToUpper(char *str);
+uint16_t laaGet16(void *mem);
+uint32_t laaGet24(void *mem);
+uint32_t laaGet32(void *mem);
+void laaSet24(void *mem, uint32_t val);
+
+
 
 
 #endif // __AL_UTILS_H__

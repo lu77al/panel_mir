@@ -44,6 +44,7 @@ void impEllipse();
 void impSetBMPstatic();
 void impSetBMPdynamic();
 void impDrawBMP();
+void impCopyRect();
 
 //******* Implementation routine ppointers ******** 
 #define  SCM_COUNT  (sizeof(imp_routine)/sizeof(imp_routine[0]))
@@ -72,7 +73,8 @@ void (*imp_routine[])() = {
   impSetBMPdynamic,
   impDrawBMP,
   tftEncodingOn,
-  tftEncodingOff
+  tftEncodingOff,
+  impCopyRect
 };
 
 //**************** TASK QUEUE MANAGEMENT ***************
@@ -154,6 +156,7 @@ uint32_t get_uint32() {
 #define  SCM_BMP                22
 #define  SCM_ENCODING_ON        23
 #define  SCM_ENCODING_OFF       24
+#define  SCM_COPY_RECT          25
 
 //******************* USER INTERFACE ROUTINES *********************
 
@@ -488,6 +491,22 @@ void scrDrawBMP(int16_t x, int16_t y, uint8_t alpha) {
   push_uint8(alpha);
 }
 
+/* Copy rectangular area in buffer
+ * @par: sx, sy - left top corner of source
+ * @par: w, h - size of rectangle
+ * @par: sx, sy - left top corner of destination
+ */
+void scrCopyRect(int16_t sx, int16_t sy, uint16_t w, uint16_t h, int16_t dx, int16_t dy) {
+  push_uint8(SCM_COPY_RECT);
+  push_uint16(sx);
+  push_uint16(sy);
+  push_uint16(w);
+  push_uint16(h);
+  push_uint16(dx);
+  push_uint16(dy);
+}
+
+
 //**************** RENDER TASKS IMPLEMENTATION PRIMITIVES ***************
 void impGoDoubleBuffered() {
   tftGoDoubleBuffered();
@@ -626,3 +645,13 @@ void impDrawBMP() {
   uint8_t  alpha = get_uint8();
   tftDrawBMP(x, y, alpha);  
 }  
+
+void impCopyRect() {
+  uint16_t sx = get_uint16();
+  uint16_t sy = get_uint16();
+  uint16_t w  = get_uint16();
+  uint16_t h  = get_uint16();
+  uint16_t dx = get_uint16();
+  uint16_t dy = get_uint16();
+  tftCopyRect(sx, sy, w, h, dx, dy);
+}

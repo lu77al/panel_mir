@@ -8,7 +8,6 @@
 uint8_t uiNeedUpdate = 0;
 
 void (*uiDrawScreenRoutine)() = 0;
-
 void (*uiNextKeyRoutine)(uint8_t key) = 0;
 
 void uiDrawScreen() {

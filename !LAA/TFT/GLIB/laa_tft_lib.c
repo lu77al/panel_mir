@@ -223,6 +223,7 @@ void tftRect(int16_t x, int16_t y, uint16_t w, uint16_t h) {
   if (y < 0) { h += y; y = 0; }
   uint32_t addr = tft_addr + TFT_PIXEL * (y * TFT_WIDTH + x);
   hdma2d.Init.Mode = DMA2D_R2M;
+  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
   hdma2d.Init.OutputOffset = TFT_WIDTH - w;
   if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) return;
   if (HAL_DMA2D_Start(&hdma2d, tft_bg, addr, w, h) != HAL_OK) return;
@@ -922,5 +923,23 @@ void tftEncodingOn() {
 
 void tftEncodingOff() {
   encode_chars = 0;
-  
 }  
+
+void tftCopyRect(int16_t sx, int16_t sy, uint16_t w, uint16_t h, int16_t dx, int16_t dy) {
+  uint32_t s_addr = tft_addr + TFT_PIXEL * (sy * TFT_WIDTH + sx);
+  uint32_t d_addr = tft_addr + TFT_PIXEL * (dy * TFT_WIDTH + dx);
+  hdma2d.Init.Mode = DMA2D_M2M;
+  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
+  hdma2d.Init.OutputOffset = TFT_WIDTH - w;
+  hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+  hdma2d.LayerCfg[1].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB565;
+  hdma2d.LayerCfg[1].InputOffset = TFT_WIDTH - w;
+  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK) return;
+  if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) != HAL_OK) return;
+  if (HAL_DMA2D_Start(&hdma2d, s_addr, d_addr, w, h) != HAL_OK) return;
+  if (tft_wait_dma)
+    HAL_DMA2D_PollForTransfer(&hdma2d, 200); 
+  else
+    tft_waiting_dma = 1;
+}

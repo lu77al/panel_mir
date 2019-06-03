@@ -45,9 +45,13 @@ void tftDrawChar(char ch);
 void tftPrint(char *text, uint8_t length);
 void tftSetTextPos(int16_t x, int16_t y);
 void tftSetTextTransparency(int8_t tr);
+
 //*********** BITMAPS **************
 void tftSelectBMP(const char* name, uint32_t trColor);
 void tftDrawBMP(int16_t x, int16_t y, uint8_t alpha);
+
+//*********** COPY RECT **************
+void tftCopyRect(int16_t sx, int16_t sy, uint16_t w, uint16_t h, int16_t dx, int16_t dy);
 
 #endif // __AL_TFT_LIB_H__
 

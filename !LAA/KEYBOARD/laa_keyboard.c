@@ -17,7 +17,7 @@
 #define KBD_PRESS_THH   3
 #define KBD_HYST        3
 #define KBD_REPEAT_THH  80
-#define KBD_RESTART     50
+#define KBD_RESTART     65
 
 uint8_t  kbd_key[KBD_SIZE + 1]; // Keys state counters
 uint8_t  kbd_input[KBD_LEN];    // key input queue buffer

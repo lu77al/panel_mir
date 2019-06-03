@@ -35,5 +35,10 @@ typedef struct TListMenu {
 
 void cmpDrawMenu(TListMenu *mnu);
 void cmpMenuUserInput(TListMenu *mnu, uint8_t key);
+void cmpLogMemoInit(const char *header, const char *status);
+void cmpLogMemoPrint(const char *text);
+void cmpLogMemoPrintColor(const char *text, uint32_t color);
+void cmpLogMemoNextLine();
+void cmpLogMemoForceUpdate();
 
 #endif // __AL_COMPONENTS_H__

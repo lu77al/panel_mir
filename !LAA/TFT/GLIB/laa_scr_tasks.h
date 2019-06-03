@@ -47,5 +47,8 @@ void scrPolyVertex(int16_t x, int16_t y); // Add polygon vertex
 void scrEllipse(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t s, uint16_t e, uint8_t filled, uint8_t closed); // Ellipse
 void scrDrawBMP(int16_t x, int16_t y, uint8_t alpha); // Draw selected bmp with alpha
 
+//--- Copy Rect ---
+void scrCopyRect(int16_t sx, int16_t sy, uint16_t w, uint16_t h, int16_t dx, int16_t dy); 
+
 #endif // __AL_SCR_TASKS_H__
 
