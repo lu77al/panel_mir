@@ -29,33 +29,11 @@ void userInit() {
   sdMount();                    // Mount SD card
   tftInit();
   kbdInit();
-  
-//  stpInitSetup();
+  stpStartSetup();
 }  
-
-/*
-void tstKeyRur(uint8_t key) {
-  if (key == KEY_ENTER) {
-    cmpLMNextLine();
-  } else {
-    cmpLMPrintColor(" Red",  0xff0000);
-    cmpLMPrintColor(" Green", 0x00ff00);
-    cmpLMPrintColor(" Blue",  0x0000ff);
-  }
-}
-*/
   
 void userMain() {
   userInit();
-
-//  tstPrepareBackground();
-/*  
-  uiDrawScreenRoutine = stpShowActiveMenu;
-  uiNextKeyRoutine = stpMenuInput;
-  uiNeedUpdate = 1; 
-*/
-//  uiNextKeyRoutine = tstKeyRur;
-//  cmpLogMemoActivate("Тест LOG_MEMO", "не реагирую на клавиатуру");
   
   stpStartSetup();
   

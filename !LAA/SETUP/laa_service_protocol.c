@@ -104,6 +104,11 @@ void spReply(const uint8_t *data, uint16_t len) {
   spSendReply();
 }
 
+void spClearCode() {
+  memset((uint8_t *)POJECT_ADDR, 0, 16);
+}  
+
+
 void spProcesMessage() {
   uiSPProcesMessage = 0;
   uint16_t len = rx_pnt - rx_buf;
@@ -112,28 +117,39 @@ void spProcesMessage() {
     if (len != 4) return;
     if (memcmp(rx_buf, (const uint8_t[]){0x00, 0xE0, 0x6F, 0x18}, 4)) return;
     spReply((uint8_t *)&repy_id, 24);
-    cmpLMPrint("Запрос IDE");
-    cmpLMNextLine();
+    cmpLMPrintLn("Запрос IDE");
     return;
   case 0x34:   // Request OREC
     if (len != 1) return;
     spReply((uint8_t *)&orec + 2, 18);
-    cmpLMPrint("Запрос OREC");
-    cmpLMNextLine();
+    cmpLMPrintLn("Запрос OREC");
     return;
   case 0x30:   // Read memory
-    if (len != 6) return;
-    uint8_t size = rx_buf[5];
-    if (size == 0) return;
-    uint8_t *addr = (uint8_t *)laaGet32(&rx_buf[1]);
-    spReply(addr, size);
-    if (addr == (uint8_t *)POJECT_ADDR) {
-      cmpLMPrint("Запрос длины проекта");
-      cmpLMNextLine();
-    } else if (addr == (uint8_t *)(POJECT_ADDR + (*((uint32_t *)POJECT_ADDR) & 0xFFFFFF))) {
-      cmpLMPrint("Запрос CRC проекта");
-      cmpLMNextLine();
-    }
+    {
+      if (len != 6) return;
+      uint8_t size = rx_buf[5];
+      if (size == 0) return;
+      uint8_t *addr = (uint8_t *)laaGet32(&rx_buf[1]);
+      spReply(addr, size);
+      if (addr == (uint8_t *)POJECT_ADDR) {
+        cmpLMPrintLn("Запрос длины проекта");
+      } else if (addr == (uint8_t *)(POJECT_ADDR + (*((uint32_t *)POJECT_ADDR) & 0xFFFFFF))) {
+        cmpLMPrintLn("Запрос CRC проекта");
+      }
+      return;
+    }  
+  case 0x0B:   // Clear panel
+    if (len != 1) return;
+    spReply(0, 0);
+    spClearCode();
+    cmpLMPrintLn("Очистить панель");
+    return;
+  case 0x2C:   // Delete project SRC
+    if (len != 17) return;
+    if (memcmp(rx_buf, (const uint8_t[]){0x2C, 0x0F, 0x43, 0x3A, 0x5C, 0x50, 0x50, 0x43,
+               0x5C, 0x70, 0x72, 0x6A, 0x2E, 0x70, 0x70, 0x63, 0x00}, 17)) return;
+    spReply(0, 0);
+    cmpLMPrintLn("Удалить исходный файл проекта");
     return;
   }
 }

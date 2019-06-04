@@ -13,8 +13,8 @@ extern char SDPath[4];   /* SD logical drive path */
 extern FATFS SDFatFS;    /* File system object for SD logical drive */
 extern FIL SDFile;       /* File object for SD */
 
-static char sd_curdir[64] = "";
-static uint8_t sd_ok = 0;
+static char     sd_curdir[64] = "";
+static uint8_t  sd_ok = 0;
 static uint16_t sd_file_crc16;
 static uint32_t sd_file_size;
 static uint32_t sd_file_pos;

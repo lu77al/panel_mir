@@ -237,6 +237,11 @@ void cmpLMPrint(const char *text) {
   uiNeedUpdate = 1;
 }
 
+void cmpLMPrintLn(const char *text) {
+  cmpLMPrint(text);
+  cmpLMNextLine();
+}
+
 /* interface: Set FG color and print text to LogMemo
  */
 void cmpLMPrintColor(const char *text, uint32_t color) {
@@ -245,6 +250,11 @@ void cmpLMPrintColor(const char *text, uint32_t color) {
   laaSet24(&log_data[log_len], color);
   log_len += 3;
   cmpLMPrint(text);
+}
+
+void cmpLMPrintLnColor(const char *text, uint32_t color) {
+  cmpLMPrintColor(text, color);
+  cmpLMNextLine();
 }
 
 /* interface: Enter next line

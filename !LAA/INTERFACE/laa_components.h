@@ -39,6 +39,9 @@ void cmpLogMemoActivate(const char *header, const char *status); // Set Header/S
 void cmpLMPrint(const char *text);
 void cmpLMPrintColor(const char *text, uint32_t color);
 void cmpLMNextLine();
+void cmpLMPrintLn(const char *text);
+void cmpLMPrintLnColor(const char *text, uint32_t color);
+
 void cmpLogMemoForceUpdate();
 
 #endif // __AL_COMPONENTS_H__
