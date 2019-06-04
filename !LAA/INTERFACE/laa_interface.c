@@ -11,6 +11,7 @@ void (*uiDrawScreenRoutine)() = 0;
 void (*uiNextKeyRoutine)(uint8_t key) = 0;
 
 void (*uiSPNextByte)(uint8_t rxb) = 0;
+void (*uiSPProcesMessage)() = 0;
 
 void uiDrawScreen() {
   if (!scrIsRenderComplete()) return;

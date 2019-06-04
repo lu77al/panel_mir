@@ -65,6 +65,8 @@ void userMain() {
     uiProcessUserInput();
    
     uiDrawScreen();
+    
+    if (uiSPProcesMessage) uiSPProcesMessage();
 
 // --- 500 Hz TIM10 driven processes ---
     if (__HAL_TIM_GET_FLAG(&htim10, TIM_FLAG_UPDATE) != RESET) {

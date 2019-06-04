@@ -7,6 +7,7 @@ extern void (*uiDrawScreenRoutine)();
 extern void (*uiNextKeyRoutine)(uint8_t key);
 
 extern void (*uiSPNextByte)(uint8_t rxb);
+extern void (*uiSPProcesMessage)();
 
 extern uint8_t uiNeedUpdate;
 

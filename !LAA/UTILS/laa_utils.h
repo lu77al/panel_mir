@@ -13,8 +13,8 @@
 #define SWAP16(a,b) {int16_t t=a; a=b; b=t;}
 #define SWAP32(a,b) {int32_t t=a; a=b; b=t;}
 
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
-#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#define LAA_MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define LAA_MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 typedef struct { // GPIO_Pin
   GPIO_TypeDef*  Port;
