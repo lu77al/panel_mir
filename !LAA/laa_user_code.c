@@ -33,29 +33,31 @@ void userInit() {
 //  stpInitSetup();
 }  
 
+/*
 void tstKeyRur(uint8_t key) {
   if (key == KEY_ENTER) {
-    cmpLogMemoNextLine();
+    cmpLMNextLine();
   } else {
-    cmpLogMemoPrintColor(" Red",  0xff0000);
-    cmpLogMemoPrintColor(" Green", 0x00ff00);
-    cmpLogMemoPrintColor(" Blue",  0x0000ff);
+    cmpLMPrintColor(" Red",  0xff0000);
+    cmpLMPrintColor(" Green", 0x00ff00);
+    cmpLMPrintColor(" Blue",  0x0000ff);
   }
 }
+*/
   
 void userMain() {
   userInit();
 
 //  tstPrepareBackground();
-
 /*  
   uiDrawScreenRoutine = stpShowActiveMenu;
   uiNextKeyRoutine = stpMenuInput;
   uiNeedUpdate = 1; 
 */
-  uiNextKeyRoutine = tstKeyRur;
-
-  cmpLogMemoInit("Тест LOG_MEMO", "не реагирую на клавиатуру");
+//  uiNextKeyRoutine = tstKeyRur;
+//  cmpLogMemoActivate("Тест LOG_MEMO", "не реагирую на клавиатуру");
+  
+  stpStartSetup();
   
   while (1) {
     scrPerformNextTask();

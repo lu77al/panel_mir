@@ -129,12 +129,10 @@ void tftResetObjects() {
   tft_fnt.y = 0;
   tft_fnt.transparent = 1;
   tft_fnt.outCnt = 0;
-//  tft_pen.pattern = 0xffffffff;
   tftSetPenWidth(1);
   tft_pen.bigWidth = 0;
-  tftSetPenPattern(0x0f0f0f0f);
+  tftSetPenPattern(0xffffffff);
   tft_pen.patternPoint = 1;
-  
   tft_poly.size = 0;
 }
 

@@ -27,11 +27,13 @@
 #define HEAD_FNT_H  32
 #define HEAD_FG     0x88ff88
 
-/* There is an idea ...
- *  - don't use single buffered mode
- *  - instead of this use some simplified string pool to implement logpad
- */
 
+//*********** LIST MENU **************
+
+static TListMenu *active_menu = 0;
+
+/* internal: Init state of menu, count items, only once
+ */
 void cmpInitMenu(TListMenu *mnu) {
   mnu->state = malloc(sizeof(TListMenuState));
   uint8_t cnt = 0;
@@ -45,10 +47,13 @@ void cmpInitMenu(TListMenu *mnu) {
   mnu->state->first = 0;
 }
 
+/* internal: Show menu to sctreen
+ */
 void cmpDrawMenu(TListMenu *mnu) {
   if (!mnu->state) cmpInitMenu(mnu); // Check init
   TListMenuState *state = mnu->state;
   scrResetPoint(0);  // Start drawing
+  scrSetTextTransparency(1);
   scrGoDouble();
   scrCLS(SYS_BG);     // Clear screen
   scrSetFG(HEAD_FG);    // Header
@@ -108,6 +113,8 @@ void cmpDrawMenu(TListMenu *mnu) {
   }
 }
 
+/* internal: User input (navigate, select, chanhge pars)
+ */
 void cmpMenuUserInput(TListMenu *mnu, uint8_t key) {
   if (!mnu->state) cmpInitMenu(mnu); // Check init
   TListMenuState *state = mnu->state;
@@ -157,7 +164,37 @@ void cmpMenuUserInput(TListMenu *mnu, uint8_t key) {
   }
 }
 
+/* internal: Show handler
+ */
+void cmpShowActiveMenu() {
+  if (!active_menu) return;
+  cmpDrawMenu(active_menu);
+}
+
+/* internal: User input handler
+ */
+void cmpMenuInput(uint8_t key) {
+  if (!active_menu) return;
+  cmpMenuUserInput(active_menu, key);
+}
+
+/* interface: Set active menu, activate handlers
+ */
+void cmpListMenuActivate(TListMenu *mnu) {
+  active_menu = mnu;
+  uiDrawScreenRoutine = cmpShowActiveMenu;
+  uiNextKeyRoutine = cmpMenuInput;
+  uiNeedUpdate = 1; 
+}
+
+//*********** LOG MEMO **************
+
 #define MEMO_BUF_SIZE  127
+#define MEMO_X0  (ITEM_FNT_W / 2)
+#define MEMO_Y0  (HEAD_FNT_H + ITEM_FNT_H / 2)
+#define MEMO_W   (TFT_WIDTH / ITEM_FNT_W - 1)
+#define MEMO_H   ((TFT_HEIGHT - HEAD_FNT_H) / ITEM_FNT_H - 2)
+
 static uint16_t memo_col;
 static uint16_t memo_row;
 static uint32_t memo_color;
@@ -168,15 +205,12 @@ static const char *memo_status;
 static char     log_data[MEMO_BUF_SIZE + 1];
 static uint8_t  log_len;
 
-#define MEMO_X0  (ITEM_FNT_W / 2)
-#define MEMO_Y0  (HEAD_FNT_H + ITEM_FNT_H / 2)
-#define MEMO_W   (TFT_WIDTH / ITEM_FNT_W - 1)
-#define MEMO_H   ((TFT_HEIGHT - HEAD_FNT_H) / ITEM_FNT_H - 2)
-
 void cmpLogMemoDraw();
 void cmpLogMemoHidePointer();
 
-void cmpLogMemoInit(const char *header, const char *status) {
+/* interface: Activate LogMemo (user input handler), set header and status
+ */
+void cmpLogMemoActivate(const char *header, const char *status) {
   memo_header = header;
   memo_status = status;
   memo_ready = 0;
@@ -190,7 +224,9 @@ void cmpLogMemoInit(const char *header, const char *status) {
   uiDrawScreenRoutine = cmpLogMemoDraw;
 }
 
-void cmpLogMemoPrint(const char *text) {
+/* interface: Print text to LogMemo
+ */
+void cmpLMPrint(const char *text) {
   int16_t text_len = strlen(text);
   if (text_len > MEMO_BUF_SIZE - log_len) {
     text_len = MEMO_BUF_SIZE - log_len;
@@ -201,26 +237,34 @@ void cmpLogMemoPrint(const char *text) {
   uiNeedUpdate = 1;
 }
 
-void cmpLogMemoPrintColor(const char *text, uint32_t color) {
+/* interface: Set FG color and print text to LogMemo
+ */
+void cmpLMPrintColor(const char *text, uint32_t color) {
   log_data[log_len++] = 0;
   log_data[log_len++] = 0;
   laaSet24(&log_data[log_len], color);
   log_len += 3;
-  cmpLogMemoPrint(text);
+  cmpLMPrint(text);
 }
 
+/* interface: Enter next line
+ */
+void cmpLMNextLine() {
+  log_data[log_len++] = 0;
+  log_data[log_len++] = 1;
+  uiNeedUpdate = 1;
+}  
+
+/* interface: Start update for pointer animation
+ */
 void cmpLogMemoForceUpdate() {
   if (uiDrawScreenRoutine == cmpLogMemoDraw) {
     uiNeedUpdate = 1;
   }
 }
 
-void cmpLogMemoNextLine() {
-  log_data[log_len++] = 0;
-  log_data[log_len++] = 1;
-  uiNeedUpdate = 1;
-}  
-
+/* internal: GoSingle, Clear screen, show header and status (once)
+ */
 void cmpLogMemoInitDraw() {
   memo_ready = 1;
   scrGoSingle();
@@ -228,7 +272,7 @@ void cmpLogMemoInitDraw() {
   scrSetBG(SYS_BG);
   scrSetFG(HEAD_FG);    // Header
   scrSetFontStatic(HEAD_FNT);
-  scrSetTextTransparency(0);
+  scrSetTextTransparency(1);
   scrSetTextPos((TFT_WIDTH - HEAD_FNT_W * strlen(memo_header)) / 2, 0);
   scrTextOutStatic(memo_header);
   scrSetFontStatic(ITEM_FNT); // Status / hint
@@ -238,20 +282,27 @@ void cmpLogMemoInitDraw() {
 
 static const char pointer[] = "-\\|/"; 
 
+/* internal: Update pointer
+ */
 void cmpLogMemoShowPointer() {
   scrSetFG(ITEM_FG);
+  scrSetTextTransparency(0);
   scrSetTextPos(MEMO_X0 + memo_col * ITEM_FNT_W, MEMO_Y0 + memo_row * ITEM_FNT_H);
   scrTextOutLen(&pointer[memo_pinter_index], 1);
   memo_pinter_index++;
   memo_pinter_index &= 3;
 }
 
+/* internal: Hide pointer (for next line)
+ */
 void cmpLogMemoHidePointer() {
+  scrSetTextTransparency(0);
   scrSetTextPos(MEMO_X0 + memo_col * ITEM_FNT_W, MEMO_Y0 + memo_row * ITEM_FNT_H);
   scrTextOutLen(" ", 1);
 }
 
-
+/* internal: Go next line and scroll if needed
+ */
 void cmpLogMemoNextLine_() {
   memo_col = 0;
   if (memo_row < MEMO_H - 1) {
@@ -265,7 +316,10 @@ void cmpLogMemoNextLine_() {
   }
 }
 
+/* internal: Draw text portion, split it by lines
+ */
 void cmpLogMemoPrintString(char *ch, uint8_t len) {
+  scrSetTextTransparency(0);
   while (len) {
     uint8_t print_len = MEMO_W - memo_col;
     if (print_len > len) print_len = len;
@@ -281,6 +335,8 @@ void cmpLogMemoPrintString(char *ch, uint8_t len) {
   }
 }
 
+/* internal: Draw handler: init screen, update pointer, draw data from buffer
+ */
 void cmpLogMemoDraw() {
   scrResetPoint(0);     // Start drawing
   if (!memo_ready) cmpLogMemoInitDraw();

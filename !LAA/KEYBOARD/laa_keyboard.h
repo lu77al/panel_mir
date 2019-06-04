@@ -34,4 +34,6 @@ int16_t kbdPollEvent();  // Get next event
 int16_t kbdPeekEvent();  // Get next event (but leave it in the queue)
 void kbdAddEvent(int16_t event); // Add event to queue
 
+const char* kbdGetKeyName(uint8_t key_code);
+
 #endif // __AL_KEYBOARD_H__

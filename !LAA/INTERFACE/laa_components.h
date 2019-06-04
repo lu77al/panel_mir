@@ -33,12 +33,12 @@ typedef struct TListMenu {
   TListMenuState   *state;
 } TListMenu;
 
-void cmpDrawMenu(TListMenu *mnu);
-void cmpMenuUserInput(TListMenu *mnu, uint8_t key);
-void cmpLogMemoInit(const char *header, const char *status);
-void cmpLogMemoPrint(const char *text);
-void cmpLogMemoPrintColor(const char *text, uint32_t color);
-void cmpLogMemoNextLine();
+void cmpListMenuActivate(TListMenu *mnu); // Set active_menu, draw and user_input handlers
+
+void cmpLogMemoActivate(const char *header, const char *status); // Set Header/Status, reset state, set draw handler
+void cmpLMPrint(const char *text);
+void cmpLMPrintColor(const char *text, uint32_t color);
+void cmpLMNextLine();
 void cmpLogMemoForceUpdate();
 
 #endif // __AL_COMPONENTS_H__

@@ -6,6 +6,7 @@
 #include "laa_scr_tasks.h"
 #include "laa_tft_lib.h"
 #include "laa_interface.h"
+#include "laa_keyboard.h"
 #include "string.h"
 #include "stdlib.h"
 
@@ -13,6 +14,7 @@ void stpEnterTests();
 void stpExitTests();
 void stpEnterSetup();
 void stpExitSetup();
+void stpTestKeybordStart();
 
 TListMenu root_menu = {
   .header = "K1021 / V2.0 / 21.05.2019",
@@ -46,7 +48,7 @@ TListMenu tests_menu = {
   .header = "K1021 -> ТЕСТЫ",
   .status = "Вверх/Вниз; Enter: Пуск; <- Назад",
   .item = (TMenuItem[]){
-    { .text = "Тест клавиатуры",    .onEnter = 0,
+    { .text = "Тест клавиатуры",    .onEnter = stpTestKeybordStart,
       .value = 0, .extended = 0
     },
     { .text = "Тест портов",        .onEnter = 0,
@@ -159,34 +161,38 @@ TListMenu setup_menu = {
   .state = 0  
 };    
 
-TListMenu *active_menu = &root_menu;
-
-void stpShowActiveMenu() {
-  if (!active_menu) return;
-  cmpDrawMenu(active_menu);
+void stpStartSetup() {
+  cmpListMenuActivate(&root_menu);
 }
 
-void stpMenuInput(uint8_t key) {
-  if (!active_menu) return;
-  cmpMenuUserInput(active_menu, key);
+void stpTestKeyboardOnKey(uint8_t key) {
+  if (key == KEY_BACK) {
+    cmpListMenuActivate(&tests_menu);
+  } else {
+    cmpLMPrint(" ");
+    cmpLMPrint(kbdGetKeyName(key));
+    cmpLMPrint(" ");
+  }
+}
+
+void stpTestKeybordStart() {
+  cmpLogMemoActivate("Тест клавиатуры",
+                     "<- выход");
+  uiNextKeyRoutine = stpTestKeyboardOnKey;
 }
 
 void stpEnterTests() {
-  active_menu = &tests_menu;
-  uiNeedUpdate = 1;
+  cmpListMenuActivate(&tests_menu);
 }
 
 void stpExitTests() {
-  active_menu = &root_menu;
-  uiNeedUpdate = 1;
+  cmpListMenuActivate(&root_menu);
 }
 
 void stpEnterSetup() {
-  active_menu = &setup_menu;
-  uiNeedUpdate = 1;
+  cmpListMenuActivate(&setup_menu);
 }
 
 void stpExitSetup() {
-  active_menu = &root_menu;
-  uiNeedUpdate = 1;
+  cmpListMenuActivate(&root_menu);
 }

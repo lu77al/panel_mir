@@ -38,17 +38,17 @@ const uint8_t kbd_code[KBD_SIZE] = { // KeyCodes
   0x70, 0x72, 0x73
 };  
 
-const uint8_t kbd_name[KBD_SIZE][6] = {
+static const char kbd_name[KBD_SIZE][6] = {
   "7",    "8",    "9",      //  0   1   2    
   "4",    "5",    "6",      //  3   4   5    
   "1",    "2",    "3",      //  6   7   8
   "0",    ",",   "+/-",     //  9  10  11
- "Menu", "Back", "Enter"    // 12  13  14
+ "Menu", "Back", "Enter",   // 12  13  14
   "F",    "Up",  "Set",     // 15  16  17
  "Left", "Down", "Right"    // 18  19  20
 };    
 
-const LAA_GPIO kbd_line_pin[KBD_HEIGHT] = {
+static const LAA_GPIO kbd_line_pin[KBD_HEIGHT] = {
   {GPIOB, GPIO_PIN_8},
   {GPIOB, GPIO_PIN_9},
   {GPIOB, GPIO_PIN_14},
@@ -56,7 +56,7 @@ const LAA_GPIO kbd_line_pin[KBD_HEIGHT] = {
   {GPIOA, GPIO_PIN_8}
 };
 
-const uint8_t kbd_scancode[KBD_HEIGHT][KBD_WIDTH] = {
+static const uint8_t kbd_scancode[KBD_HEIGHT][KBD_WIDTH] = {
   {20, 15,  2,  1,  0},   // PB8:   Right, F, 9, 8, 7
   {21, 16,  5,  4,  3},   // PB9:   -/-,  Up, 6, 5, 4
   {21, 17,  8,  7,  6},   // PB14:  -/-, SET, 3, 2, 1
@@ -64,11 +64,23 @@ const uint8_t kbd_scancode[KBD_HEIGHT][KBD_WIDTH] = {
   {21, 19, 14, 13, 12}    // PA8:   -/-, Down, Enter, "<=", Menu
 };
 
-uint8_t kbd_line = 0;
-uint8_t kbd_sound_time = 0;
-uint8_t kbd_sound_on = 0;
+static uint8_t kbd_line = 0;
+static uint8_t kbd_sound_time = 0;
+static uint8_t kbd_sound_on = 0;
 
 extern TIM_HandleTypeDef htim12;
+
+
+/* Return key name by key code (for tests and so on)
+ */
+const char* kbdGetKeyName(uint8_t key_code) {
+  for (uint8_t i = 0; i < KBD_SIZE; i++) {
+    if (key_code == kbd_code[i]) {
+      return kbd_name[i];
+    }
+  }
+  return "Unknown";
+}
 
 /* Start / correct stop of buzzer PWM
  */
