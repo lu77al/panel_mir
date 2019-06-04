@@ -1037,6 +1037,12 @@
         <name>$PROJ_DIR$\..\!LAA\SETUP\laa_service_protocol.h</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_settings.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_settings.h</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\!LAA\SETUP\laa_setup.c</name>
       </file>
       <file>
