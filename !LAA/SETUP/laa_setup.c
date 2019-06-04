@@ -7,6 +7,7 @@
 #include "laa_tft_lib.h"
 #include "laa_interface.h"
 #include "laa_keyboard.h"
+#include "laa_service_protocol.h"
 #include "string.h"
 #include "stdlib.h"
 
@@ -15,6 +16,7 @@ void stpExitTests();
 void stpEnterSetup();
 void stpExitSetup();
 void stpTestKeybordStart();
+void stpRunServiceProtocol();
 
 TListMenu root_menu = {
   .header = "K1021 / V2.0 / 21.05.2019",
@@ -23,7 +25,7 @@ TListMenu root_menu = {
     { .text = "Запустить проект",  .onEnter = 0,
       .value = 0, .extended = 0
     },
-    { .text = "Связь с ПК (K753)", .onEnter = 0,
+    { .text = "Связь с ПК (K753)", .onEnter = stpRunServiceProtocol,
       .value = 0, .extended = 0
     },
     { .text = "Тесты",             .onEnter = stpEnterTests,
@@ -179,6 +181,20 @@ void stpTestKeybordStart() {
   cmpLogMemoActivate("Тест клавиатуры",
                      "<- выход");
   uiNextKeyRoutine = stpTestKeyboardOnKey;
+}
+
+void stpServceProtocolOnKey(uint8_t key) {
+  if (key == KEY_BACK) {
+    cmpListMenuActivate(&root_menu);
+    spStop();
+  }
+}
+
+void stpRunServiceProtocol() {
+  cmpLogMemoActivate("СВЯЗЬ С ПК (К753)",
+                     "<- выход");
+  uiNextKeyRoutine = stpServceProtocolOnKey;
+  spRun();
 }
 
 void stpEnterTests() {

@@ -1,6 +1,8 @@
 #include "laa_utils.h"
 #include "ctype.h"
 
+uint8_t silent_return = 1;
+
 void laaWritePin(LAA_GPIO pin, uint8_t state) {
   HAL_GPIO_WritePin(pin.Port, pin.Pin, (GPIO_PinState)(state));
 }  
