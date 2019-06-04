@@ -2,6 +2,7 @@
  *  Service protocol with CAD
  ******************************************************************************/
 #include "laa_service_protocol.h"
+#include "laa_interface.h"
 #include "string.h"
 #include "stdlib.h"
 #include "usbd_cdc_if.h"
@@ -16,27 +17,24 @@ static uint8_t tx_buf[SP_TX_SIZE];
 static uint8_t *rx_pnt;   // RX pointer
 static uint8_t *tx_pnt;   // TX pointer
 static uint8_t checksum;  // Checksum for RX process
-
-void (*uiSPNextByte)() = 0;
-
-
-void spRun() {
-  USBD_Start(&hUsbDeviceFS);
-}
-
-void spStop() {
-  USBD_Stop(&hUsbDeviceFS);
-}
-
-
-#ifdef nothing   
    
-//*** Line Data Handlers ***
 void spInputStartFirst(uint8_t rxb);  // [10h] 02h ... 10h 03h CS
 void spInputStartSecond(uint8_t rxb); // 10h [02h] ... 10h 03h CS
 void spInputData(uint8_t rxb);        // 10h 02h [...] 10h 03h CS
 void spInputCommand(uint8_t rxb);     // 10h 02h ... 10h [03h] CS
 void spInputChecksum(uint8_t rxb);    // 10h 02h ... 10h 03h [CS]
+
+void spRun() {
+  USBD_Start(&hUsbDeviceFS);
+  uiSPNextByte = spInputStartFirst;
+}
+
+void spStop() {
+  USBD_Stop(&hUsbDeviceFS);
+  uiSPNextByte = 0;
+}
+
+//*** Line Data Handlers ***
 
 void spInputStartFirst(uint8_t rxb) {  // [10h] 02h ... 10h 03h CS
   if (rxb == 0x10) {
@@ -66,6 +64,7 @@ void spInputData(uint8_t rxb) {         // 10h 02h [...] 10h 03h CS
 void spInputCommand(uint8_t rxb) {      // 10h 02h ... 10h [03h] CS
   if (rxb == 0x03) {
     uiSPNextByte = spInputChecksum;
+    checksum = ~checksum + 1;
   } else if (rxb == 0x10) { // Stuffing inside data
     *(rx_pnt++) = rxb;
     checksum += rxb;
@@ -81,4 +80,3 @@ void spInputChecksum(uint8_t rxb) {      // 10h 02h ... 10h 03h [CS]
   }
 }
 
-#endif

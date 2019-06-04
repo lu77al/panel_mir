@@ -52,6 +52,8 @@
 
 /* USER CODE BEGIN INCLUDE */
 
+#include "laa_interface.h"
+
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -291,6 +293,13 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
+  uint8_t *rxb = Buf;
+  for (uint32_t i = 0; i < *Len; i++) {
+    if (uiSPNextByte) {
+      uiSPNextByte(*rxb);
+      rxb++;
+    }
+  }  
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
   return (USBD_OK);

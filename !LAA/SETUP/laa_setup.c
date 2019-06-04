@@ -120,7 +120,7 @@ TListMenu setup_menu = {
          .value = &sound,
          .min = 0,
          .max = 1,
-         .text =   "Откл\x00""Вкл\x00",
+         .text = "Откл\x00""Вкл\x00",
          .onChange = 0
       }),
       .extended = 0
