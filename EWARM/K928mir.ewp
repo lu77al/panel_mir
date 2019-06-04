@@ -1031,6 +1031,12 @@
     <group>
       <name>SETUP</name>
       <file>
+        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_service_protocol.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\SETUP\laa_service_protocol.h</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\!LAA\SETUP\laa_setup.c</name>
       </file>
       <file>
