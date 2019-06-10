@@ -20,19 +20,18 @@
 
 #define SDRAM_BANK_ADDR                         ((uint32_t)0xC0000000) // Phisical adress of SDRAM start
 
+#define RESET_DATA_LEN  0x200
 // --- My memory map of SDRAM -------------------------------------------------------------------------------------------
 //         NAME           Value (Address)                     Purpose                          Size
 #define POJECT_ADDR     SDRAM_BANK_ADDR                 // Project to execute           0x2EB800 = 3061760
-#define POJECT_END      SD_BUFFER
-#define SD_BUFFER       (SDRAM_BANK_ADDR + 0x2EB800)    // SD read / write buffer       0x4000 = 16384   
+#define RESET_DATA      (POJECT_END - RESET_DATA_LEN)
+#define POJECT_END      VARS_INTEGER
 #define VARS_INTEGER    (SDRAM_BANK_ADDR + 0x2EF800)    // Internal integer vars        0x9C50 = 40016
-#define VARS_REAL       (SDRAM_BANK_ADDR + 0x2F9450)    // Internal real vars           0x9C50 = 40016
-#define TFT_CACHE       (SDRAM_BANK_ADDR + 0x3030A0)    // Heap with fonts, bmps, ...   0x385F60 = 3694432
+#define VARS_REAL       (SDRAM_BANK_ADDR + 0x2F5450)    // Internal real vars           0x9C50 = 40016
+#define TFT_CACHE       (SDRAM_BANK_ADDR + 0x2FF0A0)    // Heap with fonts, bmps, ...   0x385F60 = 3694432
 #define TFT_CACHE_END   TFT_SCREEN
 #define TFT_SCREEN      (SDRAM_BANK_ADDR + 0x689000)    // TFT video memory double buffered 
 #define SDRAM_END       (SDRAM_BANK_ADDR + 0x800000)    // Accessing this address causes hard fault
-
-extern uint8_t  *sd_buf;  //TODO move it to sdcard
 
 void sdramInit();
 

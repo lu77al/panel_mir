@@ -8,6 +8,7 @@
 #include "laa_interface.h"
 #include "laa_keyboard.h"
 #include "laa_service_protocol.h"
+#include "laa_config.h"
 #include "string.h"
 #include "stdlib.h"
 
@@ -17,6 +18,7 @@ void stpEnterSetup();
 void stpExitSetup();
 void stpTestKeybordStart();
 void stpRunServiceProtocol();
+void stpChangeProfile();
 
 TListMenu root_menu = {
   .header = "K1021 / V2.0 / 21.05.2019",
@@ -74,6 +76,7 @@ TListMenu tests_menu = {
   .state = 0  
 };    
 
+/*   
 uint8_t prof = 1;
 uint8_t bright = 7;
 uint8_t sleep = 2;
@@ -81,6 +84,7 @@ uint8_t sound = 0;
 uint8_t addr = 0;
 uint8_t bitrate = 2;
 uint8_t buscheck = 1;
+*/
 
 TListMenu setup_menu = {
   .header = "K1021 -> НАСТРОЙКА",
@@ -88,14 +92,14 @@ TListMenu setup_menu = {
   .item = (TMenuItem[]){
     { .text = "Активный профиль",     .onEnter = 0,
       .value = &((TMenuValue){
-         .value = &prof,
+         .value = &cfg_cur_profile,
          .min = 1,
          .max = 5,
-         .text = 0, .onChange = 0
+         .text = 0, .onChange = stpChangeProfile
       }),
       .extended = 0
     },
-    { .text = "Яркость подсветки",    .onEnter = 0,
+/*    { .text = "Яркость подсветки",    .onEnter = 0,
       .value = &((TMenuValue){
          .value = &bright,
          .min = 1,
@@ -103,10 +107,10 @@ TListMenu setup_menu = {
          .text = 0, .onChange = 0
       }),
       .extended = 0
-    },
+    }, */
     { .text = "Отключение экрана",    .onEnter = 0,
       .value = &((TMenuValue){
-         .value = &sleep,
+         .value = &(cfg_profile[0].ScreenSaverTime),
          .min = 0,
          .max = 11,
          .text = "1 мин\x00""2 мин\x00""3 мин\x00""5 мин\x00""10 мин\x00""15 мин\x00"
@@ -117,17 +121,17 @@ TListMenu setup_menu = {
     },
     { .text = "Звук кнопок",          .onEnter = 0,
       .value = &((TMenuValue){
-         .value = &sound,
+         .value = &(cfg_profile[0].buttonSound),
          .min = 0,
          .max = 1,
          .text = "Откл\x00""Вкл\x00",
-         .onChange = 0
+         .onChange = cfgApply
       }),
       .extended = 0
     },
-    { .text = "Адрес ModBus",         .onEnter = 0,
+    { .text = "Адрес ПЛК на ModBus",  .onEnter = 0,
       .value = &((TMenuValue){
-         .value = &addr,
+         .value = &(cfg_profile[0].plcAddress),
          .min = 0,
          .max = 255,
          .text = 0, .onChange = 0
@@ -136,7 +140,7 @@ TListMenu setup_menu = {
     },
     { .text = "Скорость ModBus",      .onEnter = 0,
       .value = &((TMenuValue){
-         .value = &bitrate,
+         .value = &(cfg_profile[0].bitRate),
          .min = 0,
          .max = 4,
          .text = "9600\x00""19200\x00""38400\x00""57600\x00""115200",
@@ -146,7 +150,7 @@ TListMenu setup_menu = {
     },
     { .text = "Проверка ModBus",      .onEnter = 0,
       .value = &((TMenuValue){
-         .value = &buscheck,
+         .value = &(cfg_profile[0].parityCheck),
          .min = 0,
          .max = 2,
          .text = "без проверки\x00""на четность\x00""на нечетность",
@@ -205,10 +209,27 @@ void stpExitTests() {
   cmpListMenuActivate(&root_menu);
 }
 
+void stpUpdateSetupPointers() {
+  TProfile *prf = &cfg_profile[cfg_cur_profile - 1];
+  setup_menu.item[1].value->value = &(prf->ScreenSaverTime);
+  setup_menu.item[2].value->value = &(prf->buttonSound);
+  setup_menu.item[3].value->value = &(prf->plcAddress);
+  setup_menu.item[4].value->value = &(prf->bitRate);
+  setup_menu.item[5].value->value = &(prf->parityCheck);
+}
+
+void stpChangeProfile() {
+  stpUpdateSetupPointers();
+  cfgApply();
+}
+
 void stpEnterSetup() {
+  stpUpdateSetupPointers();
   cmpListMenuActivate(&setup_menu);
 }
 
 void stpExitSetup() {
   cmpListMenuActivate(&root_menu);
+  cfgSave();
+  cfgApply();
 }

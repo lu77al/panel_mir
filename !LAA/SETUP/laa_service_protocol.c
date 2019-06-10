@@ -108,7 +108,6 @@ void spClearCode() {
   memset((uint8_t *)POJECT_ADDR, 0, 16);
 }  
 
-
 void spProcesMessage() {
   uiSPProcesMessage = 0;
   uint16_t len = rx_pnt - rx_buf;

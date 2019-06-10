@@ -829,6 +829,8 @@ void tftAddTransparency(uint16_t *data, uint16_t length, uint16_t trColor) {
   }  
 }  
 
+static uint32_t line_buf[3072];
+
 uint8_t *tftLoadBMP(const char* name, const char* extendedName, uint16_t trColor) {
   if (!sdOpenForRead(name)) return 0;
   if (!tftPrepareDMA2D_LOAD_BMP(trColor != 0)) return 0;
@@ -859,13 +861,13 @@ uint8_t *tftLoadBMP(const char* name, const char* extendedName, uint16_t trColor
     uint8_t  load_handicap = 4;
     HAL_DMA2D_PollForTransfer(&hdma2d, 100);
     ok = 1;
-    while (load_cnt || conv_cnt) {
+    while (load_cnt || conv_cnt) { // TODO simplify that handicap
       if (load_cnt) {
-        if (!sdRead((void *)sd_buf, src_line_size)) {
+        if (!sdRead((void *)line_buf, src_line_size)) {
           ok = 0;
           break;
         }
-        HAL_DMA2D_Start(&hdma2d, (uint32_t)sd_buf, (uint32_t)load_addr, width, 1);
+        HAL_DMA2D_Start(&hdma2d, (uint32_t)line_buf, (uint32_t)load_addr, width, 1);
         load_addr -= width;
         load_cnt--;
       }

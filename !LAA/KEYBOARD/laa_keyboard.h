@@ -21,6 +21,8 @@ const uint8_t kbd_code[KBD_SIZE] = { // KeyCodes
 #define KEY_ENTER   0x13
 #define KEY_BACK    0x7F
 
+extern uint8_t kbd_sound_enabled;
+
 void kbdInit(); // Init structures
 void kbdClear(); // Clear queues
 uint8_t kbdIsKeyPressed(uint8_t key); // Check key state

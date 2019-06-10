@@ -10,7 +10,7 @@
 #include "laa_scr_tasks.h"
 #include "laa_keyboard.h"
 #include "laa_setup.h"
-#include "laa_settings.h"
+#include "laa_config.h"
 #include "laa_interface.h"
 #include "laa_components.h"
 
@@ -35,6 +35,10 @@ void userInit() {
   
 void userMain() {
   userInit();
+  
+  cfgCheckResetStatus();
+  
+  cfgRead();
   
   stpStartSetup();
   

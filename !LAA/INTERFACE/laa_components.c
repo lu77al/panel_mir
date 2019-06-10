@@ -150,6 +150,7 @@ void cmpMenuUserInput(TListMenu *mnu, uint8_t key) {
     } else {
       (*(value->value))--;
     }
+    if (value->onChange) value->onChange();
     uiNeedUpdate = 1;
     break;
   case KEY_RIGHT:
@@ -159,6 +160,7 @@ void cmpMenuUserInput(TListMenu *mnu, uint8_t key) {
     } else {
       (*(value->value))++;
     }
+    if (value->onChange) value->onChange();
     uiNeedUpdate = 1;
     break;
   }

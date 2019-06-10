@@ -37,13 +37,16 @@ uint8_t sdOk() {
 
 void sdSetCurDir(char *dir) {
   strcpy(sd_curdir, SDPath);
-  strcat(sd_curdir, dir);
-  strcat(sd_curdir, "/");
+  if (*dir) {
+    strcat(sd_curdir, dir);
+    strcat(sd_curdir, "/");
+  }
 }
+
+char full_name[72];
 
 uint8_t sdOpen(const char *name,  BYTE mode) {
   if (!sd_ok) return 0;
-  char full_name[72];
   strcpy(full_name, sd_curdir);
   strcat(full_name, name);
   if (f_open(&SDFile, full_name, mode) != FR_OK) return 0;
@@ -107,6 +110,25 @@ uint8_t sdRead(uint8_t *buffer, uint32_t size) {
   }  
   return 1;
 }
+
+uint8_t sdWrite(uint8_t *buffer, uint32_t size) {
+  uint32_t written;
+  uint32_t portion;
+  while (size) {
+    portion = size > SD_BUF_SIZE ? SD_BUF_SIZE : size;
+    memcpy(sdbuf, buffer, portion);
+    if (f_write(&SDFile, sdbuf, portion, (void *)&written) != FR_OK) return 0;
+    if (written != portion) return 0;
+    for (uint16_t i = 0; i < portion; i++) {
+      add_byte_to_crc16((void *)&sd_file_crc16, sdbuf[i]);
+    }
+    buffer += portion;
+    sd_file_pos += portion;
+    size -= portion;
+  }  
+  return 1;
+}
+
 
 /*
 uint8_t sdSeek(uint32_t pos) {

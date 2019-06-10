@@ -19,13 +19,15 @@
 #define KBD_REPEAT_THH  80
 #define KBD_RESTART     65
 
-uint8_t  kbd_key[KBD_SIZE + 1]; // Keys state counters
-uint8_t  kbd_input[KBD_LEN];    // key input queue buffer
-uint8_t  kbd_input_front = 0;
-uint8_t  kbd_input_cnt = 0;
-uint16_t kbd_event[KBD_LEN];    // key event queue buffer
-uint8_t  kbd_event_front = 0;
-uint8_t  kbd_event_cnt = 0;
+static uint8_t  kbd_key[KBD_SIZE + 1]; // Keys state counters
+static uint8_t  kbd_input[KBD_LEN];    // key input queue buffer
+static uint8_t  kbd_input_front = 0;
+static uint8_t  kbd_input_cnt = 0;
+static uint16_t kbd_event[KBD_LEN];    // key event queue buffer
+static uint8_t  kbd_event_front = 0;
+static uint8_t  kbd_event_cnt = 0;
+
+uint8_t kbd_sound_enabled;
 
 uint8_t kbd_index[255]; // KeyCode -> index
 const uint8_t kbd_code[KBD_SIZE] = { // KeyCodes
@@ -114,7 +116,9 @@ void kbdScan() {
       if (*key == KBD_PRESS_THH) { // First press
         *key += KBD_HYST;
  //if (ui_state == UIS_TEST_KEYBOARD) kbd_sound_time = 12; // 2
-//        kbd_sound_time = 8;
+        if (kbd_sound_enabled) {
+          kbd_sound_time = 8;
+        }
         kbdAddKey(kbd_code[scn]);
         kbdAddEvent((int16_t)kbd_code[scn]);
       } else if (*key == KBD_REPEAT_THH) { // Repeat pressed key
