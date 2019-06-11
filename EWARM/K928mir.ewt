@@ -1185,6 +1185,15 @@
       </file>
     </group>
     <group>
+      <name>PROJECT</name>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\PROJECT\laa_proj_structure.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\PROJECT\laa_proj_structure.h</name>
+      </file>
+    </group>
+    <group>
       <name>SDCard</name>
       <file>
         <name>$PROJ_DIR$\..\!LAA\SDCARD\laa_sdcard.c</name>

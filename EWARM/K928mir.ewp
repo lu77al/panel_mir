@@ -327,6 +327,7 @@
           <state>$PROJ_DIR$/../!LAA/SETUP</state>
           <state>$PROJ_DIR$/../!LAA/KEYBOARD</state>
           <state>$PROJ_DIR$/../!LAA/INTERFACE</state>
+          <state>$PROJ_DIR$/../!LAA/PROJECT</state>
           <state>D:/LIUSHNIA/Soft/CubeMX/F7/STM32Cube_FW_F7_V1.9.0/Drivers/STM32F7xx_HAL_Driver/Inc</state>
           <state>D:/LIUSHNIA/Soft/CubeMX/F7/STM32Cube_FW_F7_V1.9.0/Drivers/STM32F7xx_HAL_Driver/Inc/Legacy</state>
           <state>D:/LIUSHNIA/Soft/CubeMX/F7/STM32Cube_FW_F7_V1.9.0/Drivers/CMSIS/Device/ST/STM32F7xx/Include</state>
@@ -1008,6 +1009,15 @@
       </file>
       <file>
         <name>$PROJ_DIR$\..\!LAA\KEYBOARD\laa_keyboard.h</name>
+      </file>
+    </group>
+    <group>
+      <name>PROJECT</name>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\PROJECT\laa_proj_structure.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\!LAA\PROJECT\laa_proj_structure.h</name>
       </file>
     </group>
     <group>

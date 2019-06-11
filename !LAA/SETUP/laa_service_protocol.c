@@ -8,6 +8,7 @@
 #include "laa_sdcard.h"
 #include "laa_config.h"
 #include "laa_utils.h"
+#include "laa_proj_structure.h"
 #include "string.h"
 #include "stdlib.h"
 #include "usbd_cdc_if.h"
@@ -110,9 +111,31 @@ void spReply(const uint8_t *data, uint16_t len) {
   spSendReply();
 }
 
-void spClearCode() {
-  memset((uint8_t *)POJECT_ADDR, 0, 16);
-}  
+char *spGetFileName(uint8_t pos, uint16_t len) {
+  if (len < pos + 3) return 0;
+  if (len != rx_buf[pos] + pos + 1) return 0;
+  char *name = strrchr((char *)&rx_buf[pos + 1], '\\');
+  if (!name) name = (char *)&rx_buf[pos];
+  name++;
+  return name;
+}
+
+uint32_t spGetCRC(uint8_t *data, uint32_t size) {
+  memset(&data[size], 0, 4);
+  int32_t crc = 0xFFFFFFFF;
+  for (uint32_t i = 0; i < size + 4; i++) {
+    uint8_t add = data[i];
+    for (uint8_t j = 1; j < 8; j++) {
+      uint8_t highByte = crc >> 24;
+      crc <<= 1;
+      if (add & 0x80) crc |= 1;
+      add <<= 1;
+      if (highByte & 0x80) crc ^= 0x04C11DB7;
+    }  
+  }
+  return crc;
+}
+
 
 void spProcesMessage() {
   uiSPProcesMessage = 0;
@@ -137,9 +160,9 @@ void spProcesMessage() {
       if (size == 0) break;
       uint8_t *addr = (uint8_t *)laaGet32(&rx_buf[1]);
       spReply(addr, size);
-      if (addr == (uint8_t *)POJECT_ADDR) {
+      if (addr == PROJECT) {
         cmpLMPrintLn("Запрос длины проекта");
-      } else if (addr == (uint8_t *)(POJECT_ADDR + (*((uint32_t *)POJECT_ADDR) & 0xFFFFFF))) {
+      } else if (addr == prjCRC()) {
         cmpLMPrintLn("Запрос CRC проекта");
       }
       break;
@@ -147,7 +170,7 @@ void spProcesMessage() {
   case 0x0B:   // Clear panel
     if (len != 1) break;
     spReply(0, 0);
-    spClearCode();
+    prjClear();
     cmpLMPrintLn("Очистить панель");
     break;
   case 0x2C:   // Delete project SRC
@@ -163,18 +186,18 @@ void spProcesMessage() {
       if (len <= 5) break;
       uint16_t size = len - 5;
       uint8_t  *addr = (uint8_t *)laaGet32(&rx_buf[1]);
-      if ((uint32_t)addr < POJECT_ADDR) return;
+      if (addr < PROJECT) return;
       if (((uint32_t)addr + size) >= POJECT_END) return;
       memcpy(addr, &rx_buf[5], size);
       spReply(0, 0);
-      if ((uint32_t)addr == POJECT_ADDR) {
+      if (addr == PROJECT) {
         cmpLMPrintLn("Начало записи проекта");
       }  
       break;
     }
   case 0x25:   // Save bytecode to SD "mainproj.mpr"
     if (len != 1) break;
-    if (cfgSaveBytecode()) {
+    if (prjSave()) {
       cmpLMPrintLnColor("Проект сохранен на диск", 0x33FF33);
     } else {
       cmpLMPrintLnColor("Ошибка сохранения проекта на диск", 0xFF3333);
@@ -192,19 +215,37 @@ void spProcesMessage() {
     if (len != rx_buf[7] + 8) break;
     memcpy(tpm_file_ptr, &rx_buf[8], rx_buf[7]);
     tpm_file_ptr += rx_buf[7];
+    spReply(0, 0);
     break;
   case 0x28:   // Close DOS file (save to SD)
     {
-      if (len < 11) break;
-      if (len != rx_buf[9] + 10) break;
-      char *name = strrchr((char *)&rx_buf[10], '\\');
-      if (!name) name = (char *)&rx_buf[9];
-      name++;
+      char *name = spGetFileName(9, len);
+      if (!name) break;
       if (sdWriteFile(name, (uint8_t *)VARS_INTEGER, tpm_file_ptr - (uint8_t *)VARS_INTEGER)) {
         cmpLMPrintColor("Сохранен на диск ", 0x33FF33);
         cmpLMPrintLnColor(name, 0x33FF33);
       } else {
         cmpLMPrintColor("Ошибка сохранения ", 0xFF3333);
+        cmpLMPrintLnColor(name, 0xFF3333);
+      }
+      spReply(0, 0);
+      break;
+    }
+  case 0x29:   // Open DOS file for read (read it in temporary buf, calculate CRC)
+    {
+      char *name = spGetFileName(1, len);
+      if (!name) break;
+      uint32_t size = sdReadFile(name, (uint8_t *)VARS_INTEGER);
+      if (size) {
+        uint32_t rep[3];
+        rep[0] = size;
+        rep[1] = 0xffffffff;
+        rep[2] = spGetCRC((uint8_t *)VARS_INTEGER, size);
+        spReply((uint8_t *)rep, 12);
+        cmpLMPrint("Чтение файла ");
+        cmpLMPrintLn(name);
+      } else {
+        cmpLMPrintColor("Ошибка чтения ", 0xFF3333);
         cmpLMPrintLnColor(name, 0xFF3333);
       }
       break;

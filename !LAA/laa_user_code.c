@@ -13,6 +13,7 @@
 #include "laa_config.h"
 #include "laa_interface.h"
 #include "laa_components.h"
+#include "laa_proj_structure.h"
 
 //extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim10;
@@ -35,22 +36,22 @@ void userInit() {
   
 void userMain() {
   userInit();
-  
+
+  prjClear();
+
   cfgCheckResetStatus();
-  
+
   cfgRead();
 
-  memset((uint8_t *)POJECT_ADDR, 0, 16);
-  
   stpStartSetup();
-  
+
   while (1) {
     scrPerformNextTask();
 
     uiProcessUserInput();
-   
+
     uiDrawScreen();
-    
+
     if (uiSPProcesMessage) uiSPProcesMessage();
 
 // --- 500 Hz TIM10 driven processes ---

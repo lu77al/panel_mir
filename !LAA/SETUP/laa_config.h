@@ -22,10 +22,6 @@ void cfgSetProjectDir();
 void cfgApply();
 void cfgDefault();
 void cfgSetProjectDir();
-uint8_t cfgSaveBytecode();
-
-
-
 
 #endif // __AL_CONFIG_H__
 

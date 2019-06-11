@@ -143,10 +143,16 @@ uint8_t sdWriteFile(const char *name, void *data, uint32_t length) {
   if (!sdOk()) return 0;
   if (!sdOpenForWrite(name)) return 0;
   uint8_t ok = 0;
-  do {
-    ok = sdWrite(data, length);
-  } while(0);
+  ok = sdWrite(data, length);
   return sdClose() && ok;
+}
+
+uint32_t sdReadFile(const char *name, void *data) {
+  if (!sdOk()) return 0;
+  if (!sdOpenForRead(name)) return 0;
+  uint8_t ok = 0;
+  ok = sdRead(data, sd_file_size);
+  return sdClose() && ok ? sd_file_size : 0;
 }
 
 
