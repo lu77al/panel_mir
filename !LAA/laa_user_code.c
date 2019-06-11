@@ -39,6 +39,8 @@ void userMain() {
   cfgCheckResetStatus();
   
   cfgRead();
+
+  memset((uint8_t *)POJECT_ADDR, 0, 16);
   
   stpStartSetup();
   

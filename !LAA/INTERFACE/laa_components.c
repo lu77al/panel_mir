@@ -10,10 +10,12 @@
 #include "laa_tft_lib.h"
 #include "laa_utils.h"
 
-#define SYS_BG      0x000088
-#define ITEM_FG     0xffffff
-#define SEL_BG      0xffff00
-#define SEL_FG      0x0000ff
+#define SYS_BG      0x8b9dc3 // 0x000088
+#define HEAD_FG     0x88ff22 // 0xffeead // 0x88ff88
+#define ITEM_FG     0xf4f4f4 // 0xffffff
+#define SEL_BG      0x3b5998 // 0xffff00
+#define SEL_FG      0xffffff // 0x0000ff
+
 #define ITEM_FNT    SF_12x24
 #define ITEM_FNT_W  12
 #define ITEM_FNT_H  24
@@ -25,7 +27,6 @@
 #define HEAD_FNT    SF_16x32
 #define HEAD_FNT_W  16
 #define HEAD_FNT_H  32
-#define HEAD_FG     0x88ff88
 
 
 //*********** LIST MENU **************
@@ -226,9 +227,15 @@ void cmpLogMemoActivate(const char *header, const char *status) {
   uiDrawScreenRoutine = cmpLogMemoDraw;
 }
 
-/* interface: Print text to LogMemo
- */
-void cmpLMPrint(const char *text) {
+void cmpLMSetColor(uint32_t color) {
+  if (MEMO_BUF_SIZE - log_len < 5) return;
+  log_data[log_len++] = 0;
+  log_data[log_len++] = 0;
+  laaSet24(&log_data[log_len], color);
+  log_len += 3;
+}
+
+void cmpLMPrintString(const char *text) {
   int16_t text_len = strlen(text);
   if (text_len > MEMO_BUF_SIZE - log_len) {
     text_len = MEMO_BUF_SIZE - log_len;
@@ -239,6 +246,13 @@ void cmpLMPrint(const char *text) {
   uiNeedUpdate = 1;
 }
 
+/* interface: Print text to LogMemo
+ */
+void cmpLMPrint(const char *text) {
+  cmpLMSetColor(ITEM_FG);
+  cmpLMPrintString(text);
+}
+
 void cmpLMPrintLn(const char *text) {
   cmpLMPrint(text);
   cmpLMNextLine();
@@ -247,11 +261,8 @@ void cmpLMPrintLn(const char *text) {
 /* interface: Set FG color and print text to LogMemo
  */
 void cmpLMPrintColor(const char *text, uint32_t color) {
-  log_data[log_len++] = 0;
-  log_data[log_len++] = 0;
-  laaSet24(&log_data[log_len], color);
-  log_len += 3;
-  cmpLMPrint(text);
+  cmpLMSetColor(color);
+  cmpLMPrintString(text);
 }
 
 void cmpLMPrintLnColor(const char *text, uint32_t color) {
@@ -262,6 +273,7 @@ void cmpLMPrintLnColor(const char *text, uint32_t color) {
 /* interface: Enter next line
  */
 void cmpLMNextLine() {
+  if (MEMO_BUF_SIZE - log_len < 2) return;
   log_data[log_len++] = 0;
   log_data[log_len++] = 1;
   uiNeedUpdate = 1;

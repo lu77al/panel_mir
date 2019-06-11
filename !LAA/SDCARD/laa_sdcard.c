@@ -45,10 +45,14 @@ void sdSetCurDir(char *dir) {
 
 char full_name[72];
 
-uint8_t sdOpen(const char *name,  BYTE mode) {
-  if (!sd_ok) return 0;
+void sdComposeFileName(const char *name) {
   strcpy(full_name, sd_curdir);
   strcat(full_name, name);
+}
+
+uint8_t sdOpen(const char *name,  BYTE mode) {
+  if (!sd_ok) return 0;
+  sdComposeFileName(name);
   if (f_open(&SDFile, full_name, mode) != FR_OK) return 0;
   init_crc16((void *)&sd_file_crc16);
   if (mode == FA_READ) {
@@ -89,7 +93,13 @@ uint8_t sdClose() {
   }  
   f_close(&SDFile);
   return res;
-}  
+}
+
+uint8_t sdDelete(const char *name) {
+  if (!sd_ok) return 0;
+  sdComposeFileName(name);
+  return f_unlink(name) == FR_OK;
+}
 
 uint8_t sdRead(uint8_t *buffer, uint32_t size) {
   uint32_t byteread;
@@ -127,6 +137,16 @@ uint8_t sdWrite(uint8_t *buffer, uint32_t size) {
     size -= portion;
   }  
   return 1;
+}
+
+uint8_t sdWriteFile(const char *name, void *data, uint32_t length) {
+  if (!sdOk()) return 0;
+  if (!sdOpenForWrite(name)) return 0;
+  uint8_t ok = 0;
+  do {
+    ok = sdWrite(data, length);
+  } while(0);
+  return sdClose() && ok;
 }
 
 

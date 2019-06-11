@@ -232,4 +232,5 @@ void stpExitSetup() {
   cmpListMenuActivate(&root_menu);
   cfgSave();
   cfgApply();
+  cfgSetProjectDir();
 }

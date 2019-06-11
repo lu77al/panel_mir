@@ -34,6 +34,13 @@ void cfgSave();
 
 const uint8_t IO_ERROR_RESET[] = "Reset after SDcard I/O error";
 
+uint8_t cfgSaveBytecode() {
+  uint32_t proj_size = (*((uint32_t *)POJECT_ADDR) & 0xFFFFFF) + 4;
+  if (proj_size < 16) return 0; 
+  if (proj_size > (POJECT_END - POJECT_ADDR)) return 0;
+  return sdWriteFile("mainproj.mpr", (void *)POJECT_ADDR, proj_size);
+}
+
 void cfgCheckResetStatus() {
   if (memcmp((void *)RESET_MESSAGE, IO_ERROR_RESET, sizeof(IO_ERROR_RESET)) == 0) {
     cfg_reset_cnt = RESET_CFG_CNT;
@@ -96,6 +103,7 @@ void cfgRead() {
   }
   cfg_reset_cnt = 0;
   cfgApply();
+  cfgSetProjectDir();
 }
 
 void cfgSave() {
