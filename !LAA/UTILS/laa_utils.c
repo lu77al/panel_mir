@@ -44,6 +44,11 @@ uint32_t laaGet32(void *mem) { // Get 32bit value from memory regardless alignme
   return val;
 }  
 
+void laaSet16(void *mem, uint16_t val) { // Set 16bit value to memory regardless alignment
+  ((uint8_t *)mem)[0] = ((uint8_t *)&val)[0];
+  ((uint8_t *)mem)[1] = ((uint8_t *)&val)[1];
+}  
+
 void laaSet24(void *mem, uint32_t val) { // Set 24bit value to memory regardless alignment
   ((uint8_t *)mem)[0] = ((uint8_t *)&val)[0];
   ((uint8_t *)mem)[1] = ((uint8_t *)&val)[1];

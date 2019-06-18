@@ -9,6 +9,7 @@
 #include "laa_config.h"
 #include "laa_utils.h"
 #include "laa_proj_structure.h"
+#include "laa_crc16.h"
 #include "string.h"
 #include "stdlib.h"
 #include "usbd_cdc_if.h"
@@ -55,6 +56,7 @@ extern USBD_HandleTypeDef hUsbDeviceFS;
 
 #define SP_RX_SIZE  350
 #define SP_TX_SIZE  700
+#define SP_BUFFER  ((uint8_t *)(VARS_INTEGER + 16)) // Temporary file buffer pointer
   
 static uint8_t rx_buf[SP_RX_SIZE];
 // ACK(0x10, 0x06) + STRT(0x10, 0x02) + CC(0x00) (fixed message start)
@@ -62,7 +64,7 @@ static uint8_t tx_buf[SP_TX_SIZE] = {0x10, 0x06, 0x10, 0x02, 0x00};
 static uint8_t *rx_pnt;   // RX pointer
 static uint8_t *tx_pnt;   // TX pointer
 static uint8_t checksum;  // Checksum for RX/TX
-static uint8_t *tpm_file_ptr;  // Temporary file buffer
+static uint8_t *tpm_file_ptr;  // Temporary file buffer pointer
    
 void spInputStartFirst(uint8_t rxb);  // [10h] 02h ... 10h 03h CS
 void spInputStartSecond(uint8_t rxb); // 10h [02h] ... 10h 03h CS
@@ -120,7 +122,7 @@ char *spGetFileName(uint8_t pos, uint16_t len) {
   return name;
 }
 
-uint32_t spGetCRC(uint8_t *data, uint32_t size) {
+uint32_t spGetFileCRC(uint8_t *data, uint32_t size) {
   memset(&data[size], 0, 4);
   int32_t crc = 0xFFFFFFFF;
   for (uint32_t i = 0; i < size + 4; i++) {
@@ -134,6 +136,16 @@ uint32_t spGetCRC(uint8_t *data, uint32_t size) {
     }  
   }
   return crc;
+}
+
+void spSendFileChank(uint8_t *data, uint8_t size) {
+  uint32_t sav = laaGet24(data - 3);
+  uint16_t crc = getCRC16(data, size);
+  data[-3] = crc;
+  data[-2] = crc >> 8;
+  data[-1] = size;
+  spReply(data - 3, size + 3);
+  laaSet24(data - 3, sav);
 }
 
 
@@ -207,7 +219,7 @@ void spProcesMessage() {
   case 0x26:   // Create DOS file
     if (len != 1) break;
     cmpLMPrintLn("Старт записи файла");
-    tpm_file_ptr = (uint8_t *)VARS_INTEGER;
+    tpm_file_ptr = SP_BUFFER;
     spReply(0, 0);
     break;
   case 0x27:   // Write data to DOS file (temporary buffer)
@@ -221,7 +233,7 @@ void spProcesMessage() {
     {
       char *name = spGetFileName(9, len);
       if (!name) break;
-      if (sdWriteFile(name, (uint8_t *)VARS_INTEGER, tpm_file_ptr - (uint8_t *)VARS_INTEGER)) {
+      if (sdWriteFile(name, SP_BUFFER, tpm_file_ptr - SP_BUFFER)) {
         cmpLMPrintColor("Сохранен на диск ", 0x33FF33);
         cmpLMPrintLnColor(name, 0x33FF33);
       } else {
@@ -235,12 +247,12 @@ void spProcesMessage() {
     {
       char *name = spGetFileName(1, len);
       if (!name) break;
-      uint32_t size = sdReadFile(name, (uint8_t *)VARS_INTEGER);
+      uint32_t size = sdReadFile(name, SP_BUFFER);
       if (size) {
         uint32_t rep[3];
         rep[0] = size;
         rep[1] = 0xffffffff;
-        rep[2] = spGetCRC((uint8_t *)VARS_INTEGER, size);
+        rep[2] = spGetFileCRC(SP_BUFFER, size);
         spReply((uint8_t *)rep, 12);
         cmpLMPrint("Чтение файла ");
         cmpLMPrintLn(name);
@@ -250,6 +262,15 @@ void spProcesMessage() {
       }
       break;
     }
+  case 0x2A:   // Read (send to sp) chunk of the openned DOS file
+    if (len != 6) break;
+    spSendFileChank(SP_BUFFER + laaGet32(&rx_buf[1]), rx_buf[5]);
+    break;
+  case 0x2B:   // Close DOS file (after reading)
+    if (len != 1) break;
+    cmpLMPrintLn("Чтение завершено");
+    spReply(0, 0);
+    break;
   }
 }
 

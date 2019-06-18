@@ -27,6 +27,7 @@ void laaStrToUpper(char *str);
 uint16_t laaGet16(void *mem);
 uint32_t laaGet24(void *mem);
 uint32_t laaGet32(void *mem);
+void laaSet16(void *mem, uint16_t val);
 void laaSet24(void *mem, uint32_t val);
 extern uint8_t silent_return;
 

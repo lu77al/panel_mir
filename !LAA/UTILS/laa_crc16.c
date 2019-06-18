@@ -54,3 +54,18 @@ void init_crc16(uint8_t *CRC16) {
  *crcH = 0xff;
  *crcL = 0xff;
 }  
+
+uint16_t getCRC16(uint8_t *data, uint32_t size) {
+  uint16_t crc =  0xffff;
+  uint8_t *crcH = (uint8_t *)&crc;
+  uint8_t *crcL = crcH + 1;
+  uint8_t *b = data;
+  uint8_t *end = data + size;
+  uint8_t i;
+  for (; b < end; b++) {
+    i = *crcH ^ *b;
+    *crcH = *crcL ^ tabCRCH[i];
+    *crcL = tabCRCL[i];
+  }
+  return crc;
+}
